@@ -1,9 +1,9 @@
 # Projektbeschreibung
 
-**Projektname:** [Hier den Projektnamen einfügen]  
-**Autor:** [Dein Name]  
+**Projektname:** JAEM - Jet another encryption messenger
+**Autor:** Lennard Stubbe
 **Version:** 1.0  
-**Letzte Aktualisierung:** [Datum]
+**Letzte Aktualisierung:** 12.02.2025
 
 ---
 
