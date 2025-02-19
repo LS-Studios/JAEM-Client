@@ -10,7 +10,8 @@ import androidx.room.PrimaryKey
  * @param senderId: ID des Absenders (Profile)
  * @param receiverId: ID des Empfängers (Profile)
  * @param chatId: Zugehörige Chat-ID
- * @param content: Inhalt der Nachricht
+ * @param stringContent: Textinhalt der Nachricht
+ * @param filePath: Pfad zur Datei (nullable)
  * @param sendTime: Zeitstempel des Sendens
  * @param deliveryTime: Zeitstempel der Zustellung (nullable)
  */
@@ -21,7 +22,8 @@ data class MessageModel(
     val senderId: Int,
     val receiverId: Int,
     val chatId: Int,
-    val content: String,
+    val stringContent: String?,
+    val filePath: String?,
     val sendTime: Long,
     val deliveryTime: Long?
 )

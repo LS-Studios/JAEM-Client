@@ -5,16 +5,20 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Update
 
+/**
+ * Basisklasse für alle DAOs.
+ * Sie enthält die grundlegenden Methoden zum Einfügen, Aktualisieren und Löschen von Einträgen.
+ */
 @Dao
 interface BaseDao<T> {
 
     @Insert
-    suspend fun insert(vararg item: T)
+    suspend fun insert(item: T): Long
 
     @Update
-    suspend fun update(vararg item: T)
+    suspend fun update(item: T)
 
     @Delete
-    suspend fun delete(vararg item: T)
+    suspend fun delete(item: T)
 
 }

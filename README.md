@@ -3,7 +3,7 @@
 **Projektname:** JAEM - Jet another encryption messenger
 **Autor:** Lennard Stubbe
 **Version:** 1.0  
-**Letzte Aktualisierung:** 12.02.2025
+**Letzte Aktualisierung:** 12.02.202
 
 ---
 

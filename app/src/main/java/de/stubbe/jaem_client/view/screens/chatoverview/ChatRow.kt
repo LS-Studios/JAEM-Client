@@ -1,0 +1,173 @@
+package de.stubbe.jaem_client.view.screens.chatoverview
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import de.stubbe.jaem_client.model.NavRoute
+import de.stubbe.jaem_client.model.entries.ChatPresentationModel
+import de.stubbe.jaem_client.utils.formatTime
+import de.stubbe.jaem_client.utils.toLocalTime
+import de.stubbe.jaem_client.view.components.ProfilePicture
+import de.stubbe.jaem_client.view.variables.Dimensions
+import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
+import de.stubbe.jaem_client.view.variables.JaemTextStyle
+import de.stubbe.jaem_client.viewmodel.ChatOverviewViewModel
+import de.stubbe.jaem_client.viewmodel.NavigationViewModel
+
+/**
+ * Darstellung einer Chatzeile
+ *
+ * @param navigationViewModel Navigation view model
+ * @param chatPresentationModel Chat presentation model
+ */
+@Composable
+fun ChatRow(
+    navigationViewModel: NavigationViewModel,
+    chatOverviewViewModel: ChatOverviewViewModel,
+    chatPresentationModel: ChatPresentationModel
+) {
+    val userProfileId by chatOverviewViewModel.userProfileId.collectAsState()
+
+    Row(
+        Modifier
+            .clickable {
+                navigationViewModel.changeScreen(NavRoute.Chat(chatPresentationModel.chat.id))
+            }
+            .padding(
+                horizontal = Dimensions.Padding.Medium,
+                vertical = Dimensions.Padding.Tiny
+            )
+            .height(IntrinsicSize.Max)
+        ,
+        horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        //Profile picture
+        ProfilePicture(
+            modifier = Modifier
+                .size(Dimensions.Size.Medium),
+            profilePicture = chatPresentationModel.profilePicture
+        )
+
+        // Chat title and last message
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            // Chat title
+            Text(
+                text = chatPresentationModel.name,
+                style = JaemTextStyle(MaterialTheme.typography.titleLarge)
+            )
+
+            // Last message
+            if (chatPresentationModel.lastMessages.isNotEmpty()) {
+                Row(
+                    modifier = Modifier,
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Tiny)
+                ) {
+                    val lastMessage = chatPresentationModel.lastMessages.last()
+
+                    // Checkmark if message was delivered
+                    if (lastMessage.deliveryTime != null && lastMessage.senderId == userProfileId) {
+                        Icon(
+                            modifier = Modifier
+                                .size(Dimensions.Size.Tiny),
+                            imageVector = Icons.Default.DoneAll,
+                            contentDescription = null,
+                            tint = JAEMThemeProvider.current.textSecondary
+                        )
+                    }
+                    if (lastMessage.filePath != null) {
+                        Text(
+                            text = "\uD83D\uDCCE",
+                            style = JaemTextStyle(
+                                MaterialTheme.typography.titleMedium,
+                                color = JAEMThemeProvider.current.textSecondary
+                            )
+                        )
+                    }
+                    Text(
+                        text = lastMessage.stringContent ?: "",
+                        style = JaemTextStyle(
+                            MaterialTheme.typography.titleMedium,
+                            color = JAEMThemeProvider.current.textSecondary
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+        // Extra information
+        Column(
+            verticalArrangement = Arrangement.SpaceAround,
+            horizontalAlignment = Alignment.End
+        ) {
+            val unreadMessages = chatPresentationModel.lastMessages.filter { it.deliveryTime == null && it.senderId != userProfileId }.size
+
+            // Send time of last message
+            Text(
+                text = chatPresentationModel.lastMessages.lastOrNull()?.sendTime?.toLocalTime()?.formatTime() ?: "",
+                style = JaemTextStyle(
+                    MaterialTheme.typography.titleSmall,
+                    color = if (unreadMessages > 0) JAEMThemeProvider.current.accent else JAEMThemeProvider.current.textSecondary
+                )
+            )
+
+            // Streak and unread messages
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Streak
+                Text(
+                    text = "\uD83D\uDD25 35",
+                    style = JaemTextStyle(
+                        MaterialTheme.typography.titleSmall,
+                        color = JAEMThemeProvider.current.textSecondary
+                    )
+                )
+
+                // Unread messages count
+                if (unreadMessages > 0) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                JAEMThemeProvider.current.accent,
+                                shape = CircleShape
+                            )
+                            .sizeIn(minWidth = Dimensions.Size.Tiny, maxHeight = Dimensions.Size.Tiny)
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .align(Alignment.Center),
+                            text = unreadMessages.toString(),
+                            style = JaemTextStyle(MaterialTheme.typography.titleSmall)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

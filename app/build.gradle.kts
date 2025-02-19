@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
     id("com.google.protobuf")
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 android {
@@ -69,6 +70,21 @@ dependencies {
     //Datastore
     implementation(libs.androidx.datastore)
     implementation(libs.protobuf.javalite)
+
+    //Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    //Icons
+    implementation(libs.androidx.material.icons.extended.v131)
+
+    //Theme
+    implementation(libs.accompanist.systemuicontroller)
+
+    //Kotlin serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // Image loading
+    implementation(libs.coil.compose)
 }
 
 protobuf {

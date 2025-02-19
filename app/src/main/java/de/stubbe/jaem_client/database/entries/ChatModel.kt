@@ -13,5 +13,6 @@ import androidx.room.PrimaryKey
 data class ChatModel(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
-    val userIds: List<Int>,
+    val profileId: Int,
+    val chatPartnerId: Int
 )

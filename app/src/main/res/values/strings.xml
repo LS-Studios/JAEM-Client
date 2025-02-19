@@ -1,4 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">JAEM</string>
+    <string name="cd_profile_button">Profilaktionen öffnen</string>
+    <string name="change_profile">Profil wechseln</string>
+    <string name="share_profile">Profil teilen</string>
+    <string name="edit_profile">Profil bearbeiten</string>
+    <string name="add_profile">Profil erstellen</string>
+    <string name="add_chat">Neuen chat starten</string>
+    <string name="search_for_item">Nach Element suchen</string>
+    <string name="search_for_chat">Nach Chat suchen …</string>
+    <string name="search_for_message">Nach Nachicht suchen …</string>
+    <string name="message">Nachicht</string>
+    <string name="new_messages">Neue Nachichten</string>
+    <string name="share">Teilen</string>
+    <string name="search">Suchen</string>
+    <string name="delete">%1$s Löschen</string>
+    <string name="block">%1$s Blockiern</string>
+
+    <string name="back_bt">Zurück</string>
+    <string name="attachment_bt">Anhang hinzufügen</string>
+    <string name="camera_bt">Foto aufnehmen</string>
+    <string name="send_message_bt">Nachicht abschicken</string>
+    <string name="clear_text_field_bt">Suchfeld leeren</string>
+    <string name="search_for_element_bt">Nach Element Suchen</string>
+    <string name="more_actions_bt">Mehr actionen</string>
+    <string name="next_found_element_bt">Nächstes gedundendes Element</string>
+    <string name="last_found_element_bt">Letztes gefundenes Element</string>
 </resources>

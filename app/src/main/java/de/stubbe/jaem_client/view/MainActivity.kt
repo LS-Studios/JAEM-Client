@@ -4,22 +4,23 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import de.stubbe.jaem_client.utils.userPreferencesDataStore
-import de.stubbe.jaem_client.view.theme.JAEMClientTheme
-import de.stubbe.jaem_client.viewmodel.AppViewModelProvider
-import de.stubbe.jaem_client.viewmodel.MainActivityViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.stubbe.jaem_client.datastore.UserPreferences
+import de.stubbe.jaem_client.view.screens.Navigation
+import de.stubbe.jaem_client.view.variables.JAEMTheme
+import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
+import de.stubbe.jaem_client.viewmodel.AppViewModelProvider
+import de.stubbe.jaem_client.viewmodel.MainActivityViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,17 +30,25 @@ class MainActivity : ComponentActivity() {
             val viewModel: MainActivityViewModel = viewModel(factory = AppViewModelProvider.Factory)
             val userPreferences by viewModel.userPreferences.collectAsState()
 
-            JAEMClientTheme(
-                darkTheme = when(userPreferences.theme) {
-                    UserPreferences.Theme.LIGHT -> false
-                    UserPreferences.Theme.DARK -> true
-                    UserPreferences.Theme.SYSTEM -> isSystemInDarkTheme()
-                    UserPreferences.Theme.UNRECOGNIZED -> false
-                    null -> false
-                },
-            ) {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            LaunchedEffect(Unit) {
+                viewModel.updateTheme(UserPreferences.Theme.DARK)
 
+                //viewModel.deleteExampleData(this@MainActivity)
+                //viewModel.addExampleData()
+                //viewModel.printData()
+            }
+
+            JAEMTheme(
+                theme = userPreferences.theme
+            ) {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = JAEMThemeProvider.current.background,
+                    contentWindowInsets = WindowInsets(0)
+                ) { innerPadding ->
+                    Navigation(
+                        Modifier.padding(innerPadding).consumeWindowInsets(innerPadding).systemBarsPadding()
+                    )
                 }
             }
         }
