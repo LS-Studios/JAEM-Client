@@ -6,19 +6,21 @@ import androidx.room.PrimaryKey
 
 /**
  *  Model zur Speicherung von Profilinformationen
- *  @param id: Eindeutige ID des Profils
+ *  @param id: Eindeutige ID des Profils in der lokalen Datenbank
+ *  @param uid: Eindeutige ID des Profils für alle Benutzer
  *  @param name: Name des Benutzers
- *  @param image: URL oder Pfad zum Profilbild
+ *  @param profilePicture: URL oder Pfad zum Profilbild
  *  @param description: Beschreibung oder Status des Benutzers
  */
 @Entity(tableName = "profiles")
 data class ProfileModel(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
+    val uid: String,
     val name: String,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
-    val image: ByteArray?,
-    val description: String
+    val profilePicture: ByteArray?,
+    val description: String,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -27,8 +29,9 @@ data class ProfileModel(
         other as ProfileModel
 
         if (id != other.id) return false
+        if (uid != other.uid) return false
         if (name != other.name) return false
-        if (!image.contentEquals(other.image)) return false
+        if (!profilePicture.contentEquals(other.profilePicture)) return false
         if (description != other.description) return false
 
         return true
@@ -36,8 +39,9 @@ data class ProfileModel(
 
     override fun hashCode(): Int {
         var result = id
+        result = 31 * result + uid.hashCode()
         result = 31 * result + name.hashCode()
-        result = 31 * result + image.contentHashCode()
+        result = 31 * result + profilePicture.contentHashCode()
         result = 31 * result + description.hashCode()
         return result
     }

@@ -28,6 +28,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -85,6 +86,16 @@ dependencies {
 
     // Image loading
     implementation(libs.coil.compose)
+
+    // QR codes
+    implementation(libs.zxing)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // Reflection
+    implementation(kotlin("reflect"))
 }
 
 protobuf {

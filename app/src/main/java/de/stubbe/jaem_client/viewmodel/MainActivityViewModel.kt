@@ -3,15 +3,22 @@ package de.stubbe.jaem_client.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
+import de.stubbe.jaem_client.database.entries.AsymmetricKeyPairModel
 import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.database.entries.ProfileModel
+import de.stubbe.jaem_client.database.entries.SymmetricKeyModel
 import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.datastore.UserPreferences.Theme
-import de.stubbe.jaem_client.repositories.ChatRepository
-import de.stubbe.jaem_client.repositories.MessageRepository
-import de.stubbe.jaem_client.repositories.ProfileRepository
+import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
+import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
+import de.stubbe.jaem_client.repositories.database.AsymmetricKeyPairRepository
+import de.stubbe.jaem_client.repositories.database.ChatRepository
+import de.stubbe.jaem_client.repositories.database.MessageRepository
+import de.stubbe.jaem_client.repositories.database.ProfileRepository
+import de.stubbe.jaem_client.repositories.database.SymmetricKeyRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
@@ -25,13 +32,15 @@ class MainActivityViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val chatRepository: ChatRepository,
     private val profileRepository: ProfileRepository,
-    private val messageRepository: MessageRepository
+    private val messageRepository: MessageRepository,
+    private val asymmetricKeyPairRepository: AsymmetricKeyPairRepository,
+    private val symmetricKeyRepository: SymmetricKeyRepository
 ): ViewModel() {
 
     val userPreferences = userPreferencesRepository.userPreferencesFlow
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
             initialValue = UserPreferences.getDefaultInstance()
         )
 
@@ -84,8 +93,9 @@ class MainActivityViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val profile1 = ProfileModel(
                 id = 0,
+                uid = "123",
                 name = "Max Mustermann",
-                image = fetchPicture(),
+                profilePicture = fetchPicture(),
                 description = "Ich bin ein Beispielprofil",
             )
 
@@ -93,8 +103,9 @@ class MainActivityViewModel(
 
             val profile2 = ProfileModel(
                 id = 0,
+                uid = "456",
                 name = "Lisa Mustermann",
-                image = fetchPicture(),
+                profilePicture = fetchPicture(),
                 description = "Ich bin ein anderes Beispielprofil",
             )
 
@@ -102,8 +113,9 @@ class MainActivityViewModel(
 
             val profile3 = ProfileModel(
                 id = 0,
+                uid = "789",
                 name = "Ulrich Mustermann",
-                image = fetchPicture(),
+                profilePicture = fetchPicture(),
                 description = "Ich bin ein noch anderes Beispielprofil",
             )
 
@@ -163,6 +175,48 @@ class MainActivityViewModel(
             )
 
             val newMessage3Id = messageRepository.insertMessage(message3).toInt()
+
+            val symmetricKey = SymmetricKeyModel(
+                id = 0,
+                key = "1234567890123456",
+                profileId = newProfile2Id,
+                encryption = SymmetricEncryption.AES
+            )
+
+            symmetricKeyRepository.insertSymmetricKeyPair(symmetricKey)
+
+            val asymmetricKeyPair1 = AsymmetricKeyPairModel(
+                id = 0,
+                name = "Schlüssel 1",
+                publicKey = "1234567890123456",
+                privateKey = "1234567890123456",
+                profileId = newProfile2Id,
+                encryption = AsymmetricEncryption.ED25519
+            )
+
+            asymmetricKeyPairRepository.insertAsymmetricKeyPair(asymmetricKeyPair1)
+
+            val asymmetricKeyPair2 = AsymmetricKeyPairModel(
+                id = 0,
+                name = "Schlüssel 2",
+                publicKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
+                privateKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
+                profileId = newProfile2Id,
+                encryption = AsymmetricEncryption.ED25519
+            )
+
+            asymmetricKeyPairRepository.insertAsymmetricKeyPair(asymmetricKeyPair2)
+
+            val asymmetricKeyPair3 = AsymmetricKeyPairModel(
+                id = 0,
+                name = "Schlüssel 3",
+                publicKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
+                privateKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
+                profileId = newProfile2Id,
+                encryption = AsymmetricEncryption.ED25519
+            )
+
+            asymmetricKeyPairRepository.insertAsymmetricKeyPair(asymmetricKeyPair3)
         }
     }
 }

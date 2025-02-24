@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.model.ButtonActionModel
+import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.view.components.ButtonActions
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
@@ -115,7 +116,7 @@ fun ChatOverviewScreen(
                         contentDescription = stringResource(R.string.add_chat),
                         alignment = Alignment.BottomEnd,
                         onClick = {
-
+                            navigationViewModel.changeScreen(NavRoute.CreateChat)
                         }
                     )
                 )

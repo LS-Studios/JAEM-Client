@@ -34,8 +34,8 @@ class MainActivity : ComponentActivity() {
                 viewModel.updateTheme(UserPreferences.Theme.DARK)
 
                 //viewModel.deleteExampleData(this@MainActivity)
-                //viewModel.addExampleData()
-                //viewModel.printData()
+//                viewModel.addExampleData()
+//                viewModel.printData()
             }
 
             JAEMTheme(

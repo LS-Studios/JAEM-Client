@@ -11,9 +11,15 @@ sealed class NavRoute {
     data object ChatOverview : NavRoute()
 
     @Serializable
-    data class Chat(val chatId: Int) : NavRoute()
+    data class Chat(
+        val chatId: Int = -1,
+        var searchEnabled: Boolean = false
+    ) : NavRoute()
 
     @Serializable
-    data class ProfileInfo(val profileId: Int) : NavRoute()
+    data class ProfileInfo(val profileId: Int = -1) : NavRoute()
+
+    @Serializable
+    data object CreateChat : NavRoute()
 
 }

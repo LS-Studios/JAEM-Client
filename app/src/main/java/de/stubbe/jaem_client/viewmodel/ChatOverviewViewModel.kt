@@ -2,11 +2,12 @@ package de.stubbe.jaem_client.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
 import de.stubbe.jaem_client.model.entries.ChatPresentationModel
-import de.stubbe.jaem_client.repositories.ChatRepository
-import de.stubbe.jaem_client.repositories.MessageRepository
-import de.stubbe.jaem_client.repositories.ProfileRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
+import de.stubbe.jaem_client.repositories.database.ChatRepository
+import de.stubbe.jaem_client.repositories.database.MessageRepository
+import de.stubbe.jaem_client.repositories.database.ProfileRepository
 import de.stubbe.jaem_client.utils.toBitmap
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -39,7 +40,7 @@ class ChatOverviewViewModel(
                 }.orEmpty()
 
             ChatPresentationModel(
-                profilePicture = chatPartner.image?.toBitmap(),
+                profilePicture = chatPartner.profilePicture?.toBitmap(),
                 name = chatPartner.name,
                 lastMessages = lastMessages,
                 streak = 1,
@@ -48,7 +49,7 @@ class ChatOverviewViewModel(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Lazily,
+        started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
         initialValue = emptyList()
     )
 
@@ -56,7 +57,7 @@ class ChatOverviewViewModel(
         .map { it.userProfileId }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
             initialValue = null
         )
 

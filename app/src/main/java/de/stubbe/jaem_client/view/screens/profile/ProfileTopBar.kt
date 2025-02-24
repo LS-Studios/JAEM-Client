@@ -1,69 +1,82 @@
 package de.stubbe.jaem_client.view.screens.profile
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
-import de.stubbe.jaem_client.database.entries.ProfileModel
-import de.stubbe.jaem_client.utils.toBitmap
+import de.stubbe.jaem_client.data.PROFILE_PICTURE_TRANSITION
+import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.view.components.ProfilePicture
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 
-/**
- * TopBar für ein Profil.
- *
- * @param profilePicture Profilbild
- * @param profileName Profilname
- */
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileTopBar(
-    profile: ProfileModel?,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    sharedTransitionScope: SharedTransitionScope,
+    profile: ProfilePresentationModel?,
     onClose: () -> Unit,
 ) {
-    Row(
+    CenterAlignedTopAppBar(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimensions.Padding.Small),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        IconButton(
-            onClick =  {
-                onClose()
+            .height(Dimensions.Size.Huge)
+            .padding(Dimensions.Padding.TopBar),
+        title = {
+            with(sharedTransitionScope) {
+                ProfilePicture(
+                    modifier = Modifier
+                        .size(Dimensions.Size.Huge)
+                        .sharedElement(
+                            rememberSharedContentState(key = PROFILE_PICTURE_TRANSITION),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ),
+                    profilePicture = profile?.profilePicture
+                )
             }
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.back_bt),
-                tint = JAEMThemeProvider.current.textPrimary
-            )
-        }
-
-        ProfilePicture(
-            modifier = Modifier.size(Dimensions.Size.Huge),
-            profilePicture = profile?.image?.toBitmap()
-        )
-
-        IconButton(
-            onClick =  {
-
+        },
+        navigationIcon = {
+            IconButton(
+                onClick =  {
+                    onClose()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back_bt),
+                    tint = JAEMThemeProvider.current.textPrimary
+                )
             }
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = stringResource(R.string.more_actions_bt),
-                tint = JAEMThemeProvider.current.textPrimary
-            )
-        }
-    }
+        },
+        actions = {
+            IconButton(
+                onClick =  {
+
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(R.string.more_actions_bt),
+                    tint = JAEMThemeProvider.current.textPrimary
+                )
+            }
+        },
+        windowInsets = WindowInsets(0),
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = JAEMThemeProvider.current.background),
+    )
 }

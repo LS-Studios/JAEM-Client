@@ -1,9 +1,12 @@
 package de.stubbe.jaem_client.view.screens.profile
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,8 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,28 +26,31 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.stubbe.jaem_client.R
-import de.stubbe.jaem_client.database.entries.ProfileModel
 import de.stubbe.jaem_client.model.NavRoute
+import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.utils.addViewModelExtras
 import de.stubbe.jaem_client.view.components.Divider
+import de.stubbe.jaem_client.view.components.ShareProfileBottomSheet
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
+import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JaemTextStyle
 import de.stubbe.jaem_client.viewmodel.AppViewModelProvider
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 import de.stubbe.jaem_client.viewmodel.ProfileViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ProfileScreen(
     navigationViewModel: NavigationViewModel,
     profileInfoArguments: NavRoute.ProfileInfo,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    sharedTransitionScope: SharedTransitionScope,
     viewModel: ProfileViewModel = viewModel(
         factory = AppViewModelProvider.Factory,
         extras = addViewModelExtras {
@@ -51,10 +59,13 @@ fun ProfileScreen(
     )
 ) {
     val profile by viewModel.profile.collectAsState()
+    val isShareProfileBottomSheetVisible by viewModel.isShareProfileBottomSheetVisible.collectAsState()
 
     ScreenBase(
         topBar = {
             ProfileTopBar(
+                animatedVisibilityScope = animatedVisibilityScope,
+                sharedTransitionScope = sharedTransitionScope,
                 profile = profile,
                 onClose = {
                     navigationViewModel.goBack()
@@ -74,14 +85,20 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .padding(horizontal = Dimensions.Padding.Medium),
                 text = profile?.name ?: "",
-                style = JaemTextStyle(MaterialTheme.typography.headlineMedium).copy(
+                style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
                     textAlign = TextAlign.Center
                 )
             )
 
             ProfileMainActions(
-                onShareClick = { },
-                onSearchClick = { }
+                onShareClick = {
+                    viewModel.openShareProfileBottomSheet()
+                },
+                onSearchClick = {
+                    navigationViewModel.goBack<NavRoute.Chat> {
+                        copy(searchEnabled = true)
+                    }
+                }
             )
 
             Divider()
@@ -91,7 +108,7 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .padding(horizontal = Dimensions.Padding.Medium),
                 text = profile?.description ?: "",
-                style = JaemTextStyle(MaterialTheme.typography.titleLarge).copy(
+                style = JAEMTextStyle(MaterialTheme.typography.titleLarge).copy(
                     fontSize = Dimensions.FontSize.Medium,
                     textAlign = TextAlign.Center
                 )
@@ -103,6 +120,17 @@ fun ProfileScreen(
                 profile = profile,
                 onDelete = { },
                 onBlock = { }
+            )
+        }
+
+        if (profile != null) {
+            ShareProfileBottomSheet(
+                isVisible = isShareProfileBottomSheetVisible,
+                onClose = {
+                    viewModel.closeShareProfileBottomSheet()
+                },
+                profile = profile!!,
+                profileViewModel = viewModel
             )
         }
     }
@@ -120,8 +148,8 @@ private fun ProfileMainActions(
         horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium)
     ) {
         ProfileMainActionButton(
-            icon = Icons.Default.Share,
-            text = stringResource(R.string.share),
+            icon = Icons.Default.Key,
+            text = stringResource(R.string.key_data),
             onClick = onShareClick
         )
         ProfileMainActionButton(
@@ -138,35 +166,43 @@ private fun RowScope.ProfileMainActionButton(
     text: String,
     onClick: () -> Unit
 ) {
-    Column(
+    Button(
+        onClick = onClick,
         modifier = Modifier
             .weight(1f)
-            .clip(Dimensions.Shape.Rounded.Small)
-            .clickable { onClick() }
-            .border(
-                width = Dimensions.Border.ThinBorder,
-                color = JAEMThemeProvider.current.border,
-                shape = Dimensions.Shape.Rounded.Small
-            )
-            .padding(Dimensions.Padding.Small),
-        verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Tiny),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(
+                horizontal = Dimensions.Padding.Medium,
+                vertical = Dimensions.Padding.Small
+            ),
+        colors = ButtonDefaults.buttonColors().copy(
+            containerColor = JAEMThemeProvider.current.background
+        ),
+        shape = Dimensions.Shape.Rounded.Small,
+        border = BorderStroke(
+            width = Dimensions.Border.ThinBorder,
+            color = JAEMThemeProvider.current.border
+        )
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = text,
-            tint = JAEMThemeProvider.current.textPrimary
-        )
-        Text(
-            text = text,
-            style = JaemTextStyle(MaterialTheme.typography.bodyMedium)
-        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Tiny),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = text,
+                tint = JAEMThemeProvider.current.textPrimary
+            )
+            Text(
+                text = text,
+                style = JAEMTextStyle(MaterialTheme.typography.bodyMedium)
+            )
+        }
     }
 }
 
 @Composable
 private fun ProfileActions(
-    profile: ProfileModel?,
+    profile: ProfilePresentationModel?,
     onDelete: () -> Unit,
     onBlock: () -> Unit
 ) {
@@ -192,16 +228,17 @@ private fun ProfileActionButton(
     text: String,
     onClick: () -> Unit
 ) {
-    Row(
+    Button(
+        onClick = onClick,
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(
-                horizontal = Dimensions.Padding.Medium,
-                vertical = Dimensions.Padding.Small
-            ),
-        horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxWidth(),
+        contentPadding = PaddingValues(
+            horizontal = Dimensions.Padding.Medium,
+        ),
+        shape = Dimensions.Shape.Rectangle,
+        colors = ButtonDefaults.buttonColors().copy(
+            containerColor = JAEMThemeProvider.current.background
+        ),
     ) {
         Icon(
             modifier = Modifier
@@ -212,7 +249,7 @@ private fun ProfileActionButton(
         )
         Text(
             text = text,
-            style = JaemTextStyle(
+            style = JAEMTextStyle(
                 MaterialTheme.typography.titleMedium,
                 color = JAEMThemeProvider.current.error
             ).copy(

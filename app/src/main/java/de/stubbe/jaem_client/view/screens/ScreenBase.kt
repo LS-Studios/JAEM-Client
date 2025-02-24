@@ -1,11 +1,13 @@
 package de.stubbe.jaem_client.view.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import de.stubbe.jaem_client.view.components.Divider
+import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 
 /**
  * Basis für einen Bildschirm
@@ -22,6 +24,7 @@ fun ScreenBase(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(JAEMThemeProvider.current.background)
     ) {
         topBar()
 

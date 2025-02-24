@@ -9,9 +9,7 @@ import de.stubbe.jaem_client.datastore.UserPreferences.Theme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 
-/**
- * Repository für die UserPreferences Datenbank.
- */
+
 class UserPreferencesRepository(
     private val userPreferencesStore: DataStore<UserPreferences>
 ) {

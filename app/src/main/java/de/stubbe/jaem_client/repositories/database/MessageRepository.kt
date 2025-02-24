@@ -1,11 +1,8 @@
-package de.stubbe.jaem_client.repositories
+package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.database.daos.MessageDao
 import de.stubbe.jaem_client.database.entries.MessageModel
 
-/**
- * Repository für die Message Datenbank.
- */
 class MessageRepository(private val messageDao: MessageDao) {
 
     suspend fun getMessageById(id: Int) = messageDao.getMessageById(id)

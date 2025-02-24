@@ -2,11 +2,13 @@ package de.stubbe.jaem_client.view.screens.chatoverview
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,13 +37,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.view.components.CrossSlide
+import de.stubbe.jaem_client.view.variables.Dimensions
+import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JaemTextStyle
 import de.stubbe.jaem_client.view.variables.RaviPrakash
 
-/**
- * TopBar für die Chat Übersicht.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatOverviewTopBar(
@@ -79,13 +79,19 @@ fun ChatOverviewTopBar(
             BasicTextField(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .background(
+                        color = JAEMThemeProvider.current.secondary,
+                        shape = CircleShape
+                    ),
                 value = searchText,
                 onValueChange = { newText: String ->
                     onSearchTextChange(newText)
                 },
                 singleLine = true,
-                textStyle = JaemTextStyle(MaterialTheme.typography.titleMedium),
+                textStyle = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
+                    fontSize = Dimensions.FontSize.Medium
+                ),
                 cursorBrush = SolidColor(JAEMThemeProvider.current.accent),
                 decorationBox = { innerTextField ->
                     Row(
@@ -103,9 +109,11 @@ fun ChatOverviewTopBar(
                             if (searchText.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.search_for_chat),
-                                    style = JaemTextStyle(
+                                    style = JAEMTextStyle(
                                         MaterialTheme.typography.titleMedium,
                                         color = JAEMThemeProvider.current.textSecondary
+                                    ).copy(
+                                        fontSize = Dimensions.FontSize.Medium
                                     )
                                 )
                             }
@@ -125,7 +133,7 @@ fun ChatOverviewTopBar(
                                 translationY = 12f
                             },
                         text = stringResource(R.string.app_name),
-                        style = JaemTextStyle(MaterialTheme.typography.headlineLarge, fontFamily = RaviPrakash),
+                        style = JAEMTextStyle(MaterialTheme.typography.headlineLarge, fontFamily = RaviPrakash),
                     )
                 },
                 actions = {

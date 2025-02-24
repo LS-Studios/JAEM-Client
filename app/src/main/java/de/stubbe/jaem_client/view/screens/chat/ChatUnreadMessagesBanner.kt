@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JaemTextStyle
+import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 
 @Composable
 fun ChatUnreadMessagesBanner() {
@@ -39,7 +39,7 @@ fun ChatUnreadMessagesBanner() {
                     horizontal = Dimensions.Padding.Medium
                 ),
             text = stringResource(R.string.new_messages),
-            style = JaemTextStyle(MaterialTheme.typography.titleSmall),
+            style = JAEMTextStyle(MaterialTheme.typography.titleSmall),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center

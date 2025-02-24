@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,11 +27,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ChatPresentationModel
 import de.stubbe.jaem_client.utils.formatTime
-import de.stubbe.jaem_client.utils.toLocalTime
+import de.stubbe.jaem_client.utils.toLocalDateTime
 import de.stubbe.jaem_client.view.components.ProfilePicture
 import de.stubbe.jaem_client.view.variables.Dimensions
+import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JaemTextStyle
 import de.stubbe.jaem_client.viewmodel.ChatOverviewViewModel
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 
@@ -50,7 +51,12 @@ fun ChatRow(
 
     Row(
         Modifier
-            .clickable {
+            .clickable(
+                interactionSource = null,
+                indication = ripple(
+                    bounded = true
+                )
+            ) {
                 navigationViewModel.changeScreen(NavRoute.Chat(chatPresentationModel.chat.id))
             }
             .padding(
@@ -76,7 +82,7 @@ fun ChatRow(
             // Chat title
             Text(
                 text = chatPresentationModel.name,
-                style = JaemTextStyle(MaterialTheme.typography.titleLarge)
+                style = JAEMTextStyle(MaterialTheme.typography.titleLarge)
             )
 
             // Last message
@@ -101,7 +107,7 @@ fun ChatRow(
                     if (lastMessage.filePath != null) {
                         Text(
                             text = "\uD83D\uDCCE",
-                            style = JaemTextStyle(
+                            style = JAEMTextStyle(
                                 MaterialTheme.typography.titleMedium,
                                 color = JAEMThemeProvider.current.textSecondary
                             )
@@ -109,7 +115,7 @@ fun ChatRow(
                     }
                     Text(
                         text = lastMessage.stringContent ?: "",
-                        style = JaemTextStyle(
+                        style = JAEMTextStyle(
                             MaterialTheme.typography.titleMedium,
                             color = JAEMThemeProvider.current.textSecondary
                         ),
@@ -128,8 +134,8 @@ fun ChatRow(
 
             // Send time of last message
             Text(
-                text = chatPresentationModel.lastMessages.lastOrNull()?.sendTime?.toLocalTime()?.formatTime() ?: "",
-                style = JaemTextStyle(
+                text = chatPresentationModel.lastMessages.lastOrNull()?.sendTime?.toLocalDateTime()?.formatTime() ?: "",
+                style = JAEMTextStyle(
                     MaterialTheme.typography.titleSmall,
                     color = if (unreadMessages > 0) JAEMThemeProvider.current.accent else JAEMThemeProvider.current.textSecondary
                 )
@@ -143,7 +149,7 @@ fun ChatRow(
                 // Streak
                 Text(
                     text = "\uD83D\uDD25 35",
-                    style = JaemTextStyle(
+                    style = JAEMTextStyle(
                         MaterialTheme.typography.titleSmall,
                         color = JAEMThemeProvider.current.textSecondary
                     )
@@ -163,7 +169,7 @@ fun ChatRow(
                             modifier = Modifier
                                 .align(Alignment.Center),
                             text = unreadMessages.toString(),
-                            style = JaemTextStyle(MaterialTheme.typography.titleSmall)
+                            style = JAEMTextStyle(MaterialTheme.typography.titleSmall)
                         )
                     }
                 }

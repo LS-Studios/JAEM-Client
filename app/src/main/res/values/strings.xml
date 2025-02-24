@@ -13,11 +13,24 @@
     <string name="message">Nachicht</string>
     <string name="new_messages">Neue Nachichten</string>
     <string name="share">Teilen</string>
+    <string name="key_data">Schlüsseldaten</string>
     <string name="search">Suchen</string>
     <string name="delete">%1$s Löschen</string>
     <string name="block">%1$s Blockiern</string>
+    <string name="key_qr_code">Schlüssel QR-Code</string>
+    <string name="copy">Kopieren</string>
+    <string name="link_available_for_n_minutes">Dieser Link ist noch %1$d Minuten gültig</string>
+    <string name="create_chat">Chat erstellen</string>
+    <string name="profile_picture">Profilbild</string>
+    <string name="profile_name">Profilname</string>
+    <string name="profile_description">Profilbeschreibung</string>
 
+    <string name="reply_bt">Antworten</string>
+    <string name="close_bt">Schließen</string>
     <string name="back_bt">Zurück</string>
+    <string name="last_key_bt">Letzter Schlüssel</string>
+    <string name="next_key_bt">Nächster Schlüssel</string>
+    <string name="encryption_bt">Verschlüsselung anpassen</string>
     <string name="attachment_bt">Anhang hinzufügen</string>
     <string name="camera_bt">Foto aufnehmen</string>
     <string name="send_message_bt">Nachicht abschicken</string>

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,10 +32,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.semantics.Role
 import de.stubbe.jaem_client.model.ButtonActionModel
 import de.stubbe.jaem_client.view.variables.Dimensions
+import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JaemTextStyle
 import kotlinx.coroutines.delay
 
 /**
@@ -193,18 +195,26 @@ private fun ActionButton(
     onClick: () -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .background(
-                JAEMThemeProvider.current.primary,
-                Dimensions.Shape.Rounded.Small
-            )
-            .border(
-                Dimensions.Border.ThinBorder,
-                JAEMThemeProvider.current.border,
-                Dimensions.Shape.Rounded.Small
-            )
-            .clickable { onClick() }
-            .then(modifier),
+        modifier = Modifier.run {
+            background(
+                    JAEMThemeProvider.current.primary,
+                    Dimensions.Shape.Rounded.Small
+                )
+                .border(
+                    Dimensions.Border.ThinBorder,
+                    JAEMThemeProvider.current.border,
+                    Dimensions.Shape.Rounded.Small
+                )
+                .clickable(
+                    onClick = onClick,
+                    role = Role.Button,
+                    interactionSource = null,
+                    indication = ripple(
+                        bounded = true,
+                    )
+                )
+                .then(modifier)
+        },
         horizontalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -216,7 +226,7 @@ private fun ActionButton(
         if (text != null) {
             Text(
                 text = text,
-                style = JaemTextStyle(MaterialTheme.typography.titleMedium)
+                style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
             )
         }
     }

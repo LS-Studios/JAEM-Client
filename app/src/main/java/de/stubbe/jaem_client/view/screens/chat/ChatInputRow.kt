@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.outlined.Attachment
 import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +32,7 @@ import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JaemTextStyle
+import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 import java.io.File
 
 /**
@@ -51,6 +52,7 @@ fun ChatInputRow(
     messageString: String,
     onMessageChange: (String) -> Unit,
     attachment: File?,
+    onClickEncryption: () -> Unit,
     onClickAttache: () -> Unit,
     onClickCamera: () -> Unit,
     onSendMessage: (String) -> Unit
@@ -75,10 +77,7 @@ fun ChatInputRow(
                     shape = Dimensions.Shape.Rounded.Small
                 )
                 .padding(
-                    start = Dimensions.Padding.Medium,
-                    end = Dimensions.Padding.Small,
-                    top = if (isMultiline) Dimensions.Padding.Small else Dimensions.Padding.None,
-                    bottom = if (isMultiline) Dimensions.Padding.Small else Dimensions.Padding.None
+                    end = Dimensions.Padding.Small
                 )
                 .weight(1f),
             value = messageString,
@@ -90,27 +89,45 @@ fun ChatInputRow(
             },
             singleLine = false,
             maxLines = 6,
-            textStyle = JaemTextStyle(MaterialTheme.typography.titleMedium),
+            textStyle = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
+                fontSize = Dimensions.FontSize.Medium
+            ),
             cursorBrush = SolidColor(JAEMThemeProvider.current.accent),
             decorationBox = { innerTextField ->
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .sizeIn(minHeight = Dimensions.Size.Medium)
-                        .clip(Dimensions.Shape.Rounded.Small)
+                        .clip(Dimensions.Shape.Rounded.Small),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    IconButton(
+                        modifier = Modifier
+                            .align(Alignment.Bottom) ,
+                        onClick = onClickEncryption) {
+                        Icon(
+                            Icons.Outlined.Lock,
+                            contentDescription = stringResource(R.string.encryption_bt),
+                            tint = JAEMThemeProvider.current.textSecondary
+                        )
+                    }
                     Box(modifier = Modifier
                         .weight(1f)
-                        .padding(end = Dimensions.Padding.Small)
+                        .padding(
+                            end = Dimensions.Padding.Small,
+                            top = if (isMultiline) Dimensions.Padding.Small else Dimensions.Padding.None,
+                            bottom = if (isMultiline) Dimensions.Padding.Small else Dimensions.Padding.None
+                        )
                     ) {
                         // Platzhalter
                         if (messageString.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.message),
-                                style = JaemTextStyle(
+                                style = JAEMTextStyle(
                                     MaterialTheme.typography.titleMedium,
                                     color = JAEMThemeProvider.current.textSecondary
+                                ).copy(
+                                    fontSize = Dimensions.FontSize.Medium
                                 )
                             )
                         }

@@ -1,5 +1,6 @@
 package de.stubbe.jaem_client.view.variables
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
@@ -13,6 +14,11 @@ object Dimensions {
         val Medium = 16.dp
         val Large = 24.dp
         val Huge = 64.dp
+        val TopBar = PaddingValues(
+            top = Tiny,
+            start = Small,
+            end = Small
+        )
     }
 
     object Border {
@@ -86,5 +92,8 @@ object Dimensions {
         val Medium = 48.dp
         val Large = 64.dp
         val Huge = 140.dp
+        val SuperHuge = 200.dp
+        val TopBar = 56.dp
     }
+
 }

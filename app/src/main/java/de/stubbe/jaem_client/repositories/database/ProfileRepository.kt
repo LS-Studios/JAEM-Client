@@ -1,11 +1,8 @@
-package de.stubbe.jaem_client.repositories
+package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.database.daos.ProfileDao
 import de.stubbe.jaem_client.database.entries.ProfileModel
 
-/**
- * Repository für die Profile Datenbank.
- */
 class ProfileRepository(private val profileDao: ProfileDao) {
 
     suspend fun getProfileById(id: Int) = profileDao.getProfileById(id)

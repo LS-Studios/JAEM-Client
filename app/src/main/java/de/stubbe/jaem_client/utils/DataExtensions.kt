@@ -8,7 +8,9 @@ import de.stubbe.jaem_client.data.USER_PREFERENCES_NAME
 import de.stubbe.jaem_client.data.UserPreferencesSerializer
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 
@@ -21,17 +23,17 @@ val Context.userPreferencesDataStore by dataStore(
 )
 
 /**
- * Umwandlung eines Long Wertes in ein LocalDateTime.
+ * Konvertiert einen Long-Wert (Millisekunden seit der Unix-Epoche) in ein LocalDateTime.
  */
-fun Long.toLocalTime(): LocalDateTime {
-    return LocalDateTime.ofEpochSecond(this, 0, ZoneOffset.UTC)
+fun Long.toLocalDateTime(): LocalDateTime {
+    return LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault())
 }
 
 /**
- * Umwandlung eines LocalDateTime in einen Long Wert.
+ * Konvertiert ein LocalDateTime in einen Long-Wert (Millisekunden seit der Unix-Epoche).
  */
-fun LocalDateTime.toLong(): Long {
-    return this.toEpochSecond(ZoneOffset.UTC)
+fun LocalDateTime.toEpochMillis(): Long {
+    return this.toInstant(ZoneOffset.UTC).toEpochMilli()
 }
 
 /**

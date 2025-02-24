@@ -1,16 +1,11 @@
 package de.stubbe.jaem_client.viewmodel
 
 import android.annotation.SuppressLint
-import androidx.collection.intIntMapOf
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import de.stubbe.jaem_client.JAEMApplication
-import de.stubbe.jaem_client.repositories.UserPreferencesRepository
-import de.stubbe.jaem_client.utils.userPreferencesDataStore
 
 /**
  * Factory für die ViewModels
@@ -23,7 +18,9 @@ object AppViewModelProvider {
                 jaemApplication().container.userPreferencesRepository,
                 jaemApplication().container.chatRepository,
                 jaemApplication().container.profileRepository,
-                jaemApplication().container.messageRepository
+                jaemApplication().container.messageRepository,
+                jaemApplication().container.asymmetricKeyPairRepository,
+                jaemApplication().container.symmetricKeyRepository
             )
         }
 
@@ -41,11 +38,14 @@ object AppViewModelProvider {
         }
 
         initializer {
+            val chatId = this[ChatViewModel.CHAT_ID_KEY] as Int
+
             ChatViewModel(
                 jaemApplication().container.messageRepository,
                 jaemApplication().container.chatRepository,
                 jaemApplication().container.profileRepository,
-                jaemApplication().container.userPreferencesRepository
+                jaemApplication().container.userPreferencesRepository,
+                chatId
             )
         }
 
@@ -54,7 +54,17 @@ object AppViewModelProvider {
 
             ProfileViewModel(
                 jaemApplication().container.profileRepository,
+                jaemApplication().container.asymmetricKeyPairRepository,
+                jaemApplication().container.symmetricKeyRepository,
+                jaemApplication().container.networkRepository,
                 profileId
+            )
+        }
+
+        initializer {
+            CreateChatViewModel(
+                jaemApplication().container.chatRepository,
+                jaemApplication().container.profileRepository
             )
         }
     }
