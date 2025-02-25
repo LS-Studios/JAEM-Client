@@ -1,15 +1,36 @@
 
 package de.stubbe.jaem_client.model.enums
 
+import java.security.Key
+import java.security.KeyPair
+import javax.crypto.KeyGenerator
+
 enum class SymmetricEncryption(
     val algorithm: String,
-    val encrypt: (String) -> String,
-    val decrypt: (String) -> String
+    val generate: ()->Key,
+    val encrypt: (String, Key) -> String,
+    val decrypt: (String, Key) -> String
 ) {
-    AES(
+    RSA(
         "AES",
-        { it },
-        { it }
+        {
+            java.security.Security.addProvider(org.bouncycastle.jce.provider.BouncyCastleProvider())
+            val keyGen = KeyGenerator.getInstance("AES", "BC")
+            keyGen.init(2048)
+            keyGen.generateKey()
+        },
+        { message, recipientPublicKey ->
+            val cipher = javax.crypto.Cipher.getInstance("RSA/CBC/PKCS5Padding", "BC")
+            cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, recipientPublicKey)
+            val cipherText = cipher.doFinal(message.toByteArray())
+            cipherText.toString()
+        },
+        { message, privateKey ->
+            val cipher = javax.crypto.Cipher.getInstance("RSA/ECB/RKCS1Padding", "BC")
+            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey)
+            val decryptedText = String(cipher.doFinal(message.toByteArray()))
+            decryptedText
+        }
     )
 }
 
