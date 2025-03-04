@@ -12,18 +12,22 @@ import java.security.SignatureException
 
 class EncryptionHelper(
     val encryption: SymmetricEncryption,
+    val client: ED25519Client? = null
     val otherClient: ED25519Client? = null
 ) {
-    val client: ED25519Client? = if (encryption == SymmetricEncryption.ED25519) ED25519Client() else null
     var aesKey: ByteArray? = null
         private set
 
     init {
         Security.addProvider(BouncyCastleProvider())
-        otherClient?.let { setCommunicationPartner(it) }
+        otherClient?.let { client?.let { setCommunicationPartner(it) }}
     }
 
     fun setCommunicationPartner(otherClient: ED25519Client) {
+        this.aesKey = encryption.generateSymmetricKey(otherClient.x25519PublicKey!!, client.x25519PrivateKey!!)
+    }
+
+    fun setCommunicationPartner(thisClient: ED25519Client,otherClient: ED25519Client) {
         this.aesKey = requireNotNull(client) {
             "Client must be initialized before setting a communication partner."
         }.let { encryption.generateSymmetricKey(otherClient.x25519PublicKey!!, it.x25519PrivateKey!!) }
