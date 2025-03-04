@@ -27,4 +27,11 @@ class ED25519Client {
         ed25519PublicKey = edPublicKey
         x25519PublicKey = xPublicKey
     }
+
+    constructor(edPublicKey: Ed25519PublicKeyParameters, edPrivateKey:Ed25519PrivateKeyParameters,xPublicKey: X25519PublicKeyParameters, xPrivateKey: X25519PrivateKeyParameters){
+        ed25519PublicKey = edPublicKey
+        ed25519PrivateKey = edPrivateKey
+        x25519PublicKey = xPublicKey
+        x25519PrivateKey = xPrivateKey
+    }
 }
