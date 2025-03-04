@@ -3,6 +3,7 @@ package de.stubbe.jaem_client.utils
 import ED25519Client
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import org.bouncycastle.util.encoders.Hex
+import java.security.AsymmetricKey
 import java.security.Security
 import java.security.SignatureException
 import java.util.Base64
@@ -11,7 +12,7 @@ import java.util.Base64
 /**
  * Hilfsklasse für die Verschlüsselung und Entschlüsselung von Daten.
  */
-class EncryptionHelper( var encryption: SymmetricEncryption) {
+class EncryptionHelper() {
     var client: ED25519Client? = null
     var aesKey: ByteArray? = null
     var otherClient: ED25519Client? = null
@@ -26,7 +27,6 @@ class EncryptionHelper( var encryption: SymmetricEncryption) {
     constructor(encryption: SymmetricEncryption, otherClient: ED25519Client) : this(encryption) {
         this.otherClient = otherClient
         this.aesKey = encryption.generateSymmetricKey(otherClient.x25519PublicKey!! , client!!.x25519PrivateKey!!)
-
     }
 
     fun setCommunicationPartner(otherClient: ED25519Client){
@@ -64,15 +64,4 @@ class EncryptionHelper( var encryption: SymmetricEncryption) {
 
         return clearText
     }
-
-    /**
-     * Setup Encryption Values
-     *
-     * @param
-     */
-    fun init( ){
-
-
-    }
-
 }

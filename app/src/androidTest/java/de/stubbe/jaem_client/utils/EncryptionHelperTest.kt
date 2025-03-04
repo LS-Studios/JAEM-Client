@@ -1,54 +1,22 @@
-package de.stubbe.jaem_client.utils
-
+import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.utils.EncryptionHelper
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
-class EncryptionHelperTest {
+class EncryptionHelperTest{
+    @Test
+    fun testSending(){
+        val thisDevice = EncryptionHelper(SymmetricEncryption.ED25519)
+        val otherDevice = EncryptionHelper(SymmetricEncryption.ED25519, thisDevice.client!!)
+        thisDevice.setCommunicationPartner(otherDevice.client!!)
 
-    @org.junit.jupiter.api.Test
-    fun getAesKey() {
-    }
+        var message = "Hello World!"
 
-    @org.junit.jupiter.api.Test
-    fun setAesKey() {
-    }
+        var encrpyted = thisDevice.encrypt(message.toByteArray())
+        assertNotNull(encrpyted)
+        var decrypted = otherDevice.decrypt(encrpyted)
+        assertNotNull(decrypted)
 
-    @org.junit.jupiter.api.Test
-    fun getOtherClient() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun setOtherClient() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun setCommunicationPartner() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun encrypt() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun decrypt() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun init() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun getClient() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun setClient() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun getEncryption() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun setEncryption() {
+        assertEquals(message, String(decrypted))
     }
 }

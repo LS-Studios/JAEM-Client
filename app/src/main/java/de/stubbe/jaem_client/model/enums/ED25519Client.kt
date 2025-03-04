@@ -5,7 +5,7 @@ import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
 import org.bouncycastle.util.encoders.Hex
 
-class ED25519Client(name: String) {
+class ED25519Client {
     var ed25519PublicKey: Ed25519PublicKeyParameters? = null
     var ed25519PrivateKey:Ed25519PrivateKeyParameters? = null
     var x25519PublicKey: X25519PublicKeyParameters? = null
@@ -18,12 +18,8 @@ class ED25519Client(name: String) {
         ed25519PublicKey = ed25519Keys.first
         ed25519PrivateKey = ed25519Keys.second
 
-        println("ED25519 Keys of " + name + ": "  + Hex.toHexString(ed25519PublicKey!!.encoded) + ", " + Hex.toHexString(ed25519PrivateKey!!.encoded))
-
         val x25519Keys = encryption.generateX25519Keys(ed25519PrivateKey!!)
         x25519PublicKey = x25519Keys.first
         x25519PrivateKey = x25519Keys.second
-
-        println("X25519 Keys of " + name + ": " + Hex.toHexString(x25519PublicKey!!.encoded) + ", " + Hex.toHexString(x25519PrivateKey!!.encoded))
     }
 }

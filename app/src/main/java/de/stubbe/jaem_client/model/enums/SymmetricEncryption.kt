@@ -40,10 +40,6 @@ enum class SymmetricEncryption(
             agreement.init(privateKey)
             agreement.calculateAgreement(publicKey, sharedSecret,0)
 
-            println(Hex.toHexString(privateKey.encoded))
-            println(Hex.toHexString(publicKey.encoded))
-
-
             val hkdf = HKDFBytesGenerator(org.bouncycastle.crypto.digests.SHA256Digest())
             val salt = ByteArray(32)
             val info = "Ed25519 Key Exchange".toByteArray()
@@ -57,7 +53,6 @@ enum class SymmetricEncryption(
             signer.init(true, privateKey)
             signer.update(message, 0 , message.size)
             val signature = signer.generateSignature()
-            println("Signatur length: " + signature.size)
             signature
         },
         { message, signature,  publicKey ->
