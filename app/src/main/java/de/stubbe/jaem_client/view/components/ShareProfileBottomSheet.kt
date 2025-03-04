@@ -16,11 +16,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,26 +33,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.DEEP_LINK_URL
-import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.utils.rememberQrBitmapPainter
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
-import de.stubbe.jaem_client.viewmodel.ProfileViewModel
+import de.stubbe.jaem_client.viewmodel.ShareProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShareProfileBottomSheet(
     isVisible: Boolean,
     onClose: () -> Unit,
-    profile: ProfilePresentationModel,
-    profileViewModel: ProfileViewModel
+    shareProfileViewModel: ShareProfileViewModel
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
 
-    val shareProfileResponse by profileViewModel.shareProfileResponse.collectAsState()
+    val shareProfileResponse by shareProfileViewModel.shareProfileResponse.collectAsState()
+    val profileToShare by shareProfileViewModel.profileToShare.collectAsState()
 
     val shareLink = remember(shareProfileResponse) {
         if (shareProfileResponse == null) {
@@ -62,10 +59,6 @@ fun ShareProfileBottomSheet(
         } else {
             "$DEEP_LINK_URL/share/${shareProfileResponse!!.profileUid}"
         }
-    }
-
-    LaunchedEffect(Unit) {
-        profileViewModel.fetchOrCreateShareProfileLink(profile)
     }
 
     if (isVisible) {
@@ -80,68 +73,73 @@ fun ShareProfileBottomSheet(
                     color = JAEMThemeProvider.current.textSecondary
                 )
             },
-            properties = ModalBottomSheetProperties(
-
-            )
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Dimensions.Padding.Medium),
-                    text = profile.name,
-                    style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-
-                Divider()
-
-                if (shareLink != null) {
-                    ShareProfileQRCode(shareLink)
-
+            LoadingIfNull(profileToShare, shareProfileResponse) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = Dimensions.Padding.Medium),
-                        text = stringResource(R.string.link_available_for_n_minutes, calculateMinutesUntilExpiration(shareProfileResponse!!.createdAt, 10)),
-                        style = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
+                        text = profileToShare?.name ?: "",
+                        style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
                             textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
                         )
                     )
-                }
 
-                Divider()
+                    Divider()
 
-                ShareProfileActions(
-                    onShare = {
-                        if (shareLink != null) {
-                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    shareLink
+                    if (shareLink != null) {
+                        ShareProfileQRCode(shareLink)
+
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Dimensions.Padding.Medium),
+                            text = stringResource(
+                                R.string.link_available_for_n_minutes,
+                                calculateMinutesUntilExpiration(
+                                    shareProfileResponse!!.createdAt,
+                                    10
                                 )
-                                type = "text/plain"
-                            }
-                            val shareIntent = Intent.createChooser(sendIntent, null)
-
-                            context.startActivity(shareIntent, null)
-                        }
-                    },
-                    onCopy = {
-                        if (shareLink != null) {
-                            clipboardManager.setText(
-                                AnnotatedString(
-                                    shareLink
-                                )
+                            ),
+                            style = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
+                                textAlign = TextAlign.Center,
                             )
-                        }
+                        )
                     }
-                )
+
+                    Divider()
+
+                    ShareProfileActions(
+                        onShare = {
+                            if (shareLink != null) {
+                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                    putExtra(
+                                        Intent.EXTRA_TEXT,
+                                        shareLink
+                                    )
+                                    type = "text/plain"
+                                }
+                                val shareIntent = Intent.createChooser(sendIntent, null)
+
+                                context.startActivity(shareIntent, null)
+                            }
+                        },
+                        onCopy = {
+                            if (shareLink != null) {
+                                clipboardManager.setText(
+                                    AnnotatedString(
+                                        shareLink
+                                    )
+                                )
+                            }
+                        }
+                    )
+                }
             }
         }
     }

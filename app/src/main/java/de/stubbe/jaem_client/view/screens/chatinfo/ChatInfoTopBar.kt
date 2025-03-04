@@ -1,5 +1,6 @@
-package de.stubbe.jaem_client.view.screens.profile
+package de.stubbe.jaem_client.view.screens.chatinfo
 
+import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -20,17 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.PROFILE_PICTURE_TRANSITION
-import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.view.components.ProfilePicture
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopBar(
+fun ChatInfoTopBar(
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
-    profile: ProfilePresentationModel?,
+    profilePicture: Bitmap?,
     onClose: () -> Unit,
 ) {
     CenterAlignedTopAppBar(
@@ -46,7 +46,7 @@ fun ProfileTopBar(
                             rememberSharedContentState(key = PROFILE_PICTURE_TRANSITION),
                             animatedVisibilityScope = animatedVisibilityScope
                         ),
-                    profilePicture = profile?.profilePicture
+                    profilePicture = profilePicture,
                 )
             }
         },

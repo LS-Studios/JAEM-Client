@@ -1,72 +1,39 @@
 package de.stubbe.jaem_client.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.navigation.toRoute
+import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
+import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.MessageModel
-import de.stubbe.jaem_client.model.entries.ChatPresentationModel
+import de.stubbe.jaem_client.model.Attachments
+import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
-import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
-import de.stubbe.jaem_client.repositories.database.ProfileRepository
-import de.stubbe.jaem_client.utils.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
+import javax.inject.Inject
 
-class ChatViewModel(
+@HiltViewModel
+class ChatViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val messageRepository: MessageRepository,
-    chatRepository: ChatRepository,
-    profileRepository: ProfileRepository,
-    userPreferencesRepository: UserPreferencesRepository,
-    val chatId: Int
+    userPreferencesRepository: UserPreferencesRepository
 ): ViewModel() {
 
-    companion object {
-        val CHAT_ID_KEY = object : CreationExtras.Key<Int> {}
-    }
+    private val chatScreenArguments = savedStateHandle.toRoute<NavRoute.ChatMessages>()
 
-    private val chatFlow = chatRepository.getAllChats()
     private val messageFlow = messageRepository.getAllMessages()
-    private val profileFlow = profileRepository.getAllProfiles()
-
-    val chat = combine(
-        chatFlow, messageFlow, profileFlow
-    ) { chats, messages, profiles ->
-        val chat = chats.find { it.id == chatId } ?: return@combine null
-
-        val chatPartner = profiles.find { it.id == chat.chatPartnerId } ?: return@combine null
-
-        val lastMessages = messages
-            .filter { it.chatId == chat.id }
-            .sortedBy { it.sendTime }
-            .takeIf { it.isNotEmpty() }?.let { msgList ->
-                msgList.filter { it.deliveryTime == null }
-                    .takeIf { it.isNotEmpty() } ?: msgList.takeLast(1)
-            }.orEmpty()
-
-        ChatPresentationModel(
-            profilePicture = chatPartner.profilePicture?.toBitmap(),
-            name = chatPartner.name,
-            lastMessages = lastMessages,
-            streak = 1,
-            chat = chat
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
-        initialValue = null
-    )
-
     val messages = messageFlow
         .map{ messages ->
-            messages.filter { it.chatId == chatId }
+            messages.filter { it.chatId == chatScreenArguments.chatId }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
@@ -82,7 +49,7 @@ class ChatViewModel(
         )
 
     val newMessageString: MutableStateFlow<String> = MutableStateFlow("")
-    val newAttachment: MutableStateFlow<File?> = MutableStateFlow(null)
+    val newAttachments: MutableStateFlow<Attachments?> = MutableStateFlow(null)
 
     val searchValue: MutableStateFlow<String> = MutableStateFlow("")
     val foundItemIndices: MutableStateFlow<List<Int>> = MutableStateFlow(listOf())
@@ -90,12 +57,17 @@ class ChatViewModel(
 
     val selectedMessages: MutableStateFlow<List<MessageModel>> = MutableStateFlow(emptyList())
 
+    val attachmentPickerIsOpen: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
     fun changeMessageString(newMessage: String) {
         newMessageString.value = newMessage
     }
 
-    fun changeAttachment(newAttachment: File) {
-        this.newAttachment.value = newAttachment
+    fun changeAttachment(newAttachments: Attachments?) {
+        this.newAttachments.value?.attachmentPaths?.forEach { path ->
+            File(path).delete()
+        }
+        this.newAttachments.value = newAttachments
     }
 
     fun changeSearchValue(newSearchValue: String) {
@@ -112,6 +84,14 @@ class ChatViewModel(
 
     fun changeSelectedMessages(newSelectedMessages: List<MessageModel>) {
         selectedMessages.value = newSelectedMessages
+    }
+
+    fun openAttachmentPicker() {
+        attachmentPickerIsOpen.value = true
+    }
+
+    fun closeAttachmentPicker() {
+        attachmentPickerIsOpen.value = false
     }
 
     /**
@@ -133,25 +113,35 @@ class ChatViewModel(
     /**
      * Sendet die Nachricht
      */
-    fun sendMessage() {
-        if (chat.value == null) return
-
+    fun sendMessage(chat: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
             messageRepository.insertMessage(
                 MessageModel(
                     id = 0,
                     senderId = userProfileId.value ?: -1,
-                    receiverId = chat.value!!.chat.chatPartnerId,
-                    chatId = chatId,
+                    receiverId = chat.chatPartnerId,
+                    chatId = chatScreenArguments.chatId,
                     stringContent = newMessageString.value,
-                    filePath = newAttachment.value?.absolutePath,
+                    attachments = newAttachments.value,
                     sendTime = System.currentTimeMillis(),
                     deliveryTime = null
                 )
             )
 
             newMessageString.value = ""
-            newAttachment.value = null
+            newAttachments.value = null
+        }
+    }
+
+    /**
+     * Löscht die ausgewählten Nachrichten
+     */
+    fun deleteSelectedMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            selectedMessages.value.forEach { message ->
+                messageRepository.deleteMessage(message)
+            }
+            selectedMessages.value = emptyList()
         }
     }
 }

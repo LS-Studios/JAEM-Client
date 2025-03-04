@@ -48,6 +48,27 @@ class NavigationViewModel: ViewModel() {
         navHostController.value?.navigate(navRoute)
     }
 
+    inline fun <reified T : Any> updateScreenArguments(update: T.() -> T) {
+        navHostController.value?.let { navHostController ->
+            val currentBackStackEntry = navHostController.currentBackStackEntry ?: return
+
+            val currentData = currentBackStackEntry.toRoute<T>()
+
+            val updatedData = currentData.update()
+
+            val currentRoute = currentBackStackEntry.destination.route ?: return
+
+            navHostController.popBackStack()
+
+            navHostController.navigate(updatedData) {
+                popUpTo(currentRoute) { inclusive = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+
     /**
      * Navigiert zurück zum vorherigen Bildschirm.
      */

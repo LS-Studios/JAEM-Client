@@ -2,8 +2,12 @@ package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.database.daos.AsymmetricKeyPairDao
 import de.stubbe.jaem_client.database.entries.AsymmetricKeyPairModel
+import javax.inject.Inject
 
-class AsymmetricKeyPairRepository(private val asymmetricKeyPairDao: AsymmetricKeyPairDao) {
+
+class AsymmetricKeyPairRepository @Inject constructor(
+    private val asymmetricKeyPairDao: AsymmetricKeyPairDao
+) {
 
     fun getAsymmetricKeyPairsById(id: Int) = asymmetricKeyPairDao.getAsymmetricKeyPairsById(id)
 

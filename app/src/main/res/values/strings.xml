@@ -4,6 +4,7 @@
     <string name="cd_profile_button">Profilaktionen öffnen</string>
     <string name="change_profile">Profil wechseln</string>
     <string name="share_profile">Profil teilen</string>
+    <string name="search_for_profile">Nach Profil suchen</string>
     <string name="edit_profile">Profil bearbeiten</string>
     <string name="add_profile">Profil erstellen</string>
     <string name="add_chat">Neuen chat starten</string>
@@ -20,10 +21,20 @@
     <string name="key_qr_code">Schlüssel QR-Code</string>
     <string name="copy">Kopieren</string>
     <string name="link_available_for_n_minutes">Dieser Link ist noch %1$d Minuten gültig</string>
-    <string name="create_chat">Chat erstellen</string>
     <string name="profile_picture">Profilbild</string>
     <string name="profile_name">Profilname</string>
     <string name="profile_description">Profilbeschreibung</string>
+    <string name="profile_share_link">Geteilter link des Profile</string>
+    <string name="save">Speichern</string>
+    <string name="requests">Anfragen</string>
+    <string name="select_file_type">Filetypen auswählen</string>
+    <string name="image">Bild</string>
+    <string name="audio">Audio</string>
+    <string name="video">Video</string>
+    <string name="storage">Datei</string>
+    <string name="image_and_video">Bild &amp; Video</string>
+    <string name="done">Fertig</string>>
+    <string name="camera">Kamera</string>
 
     <string name="reply_bt">Antworten</string>
     <string name="close_bt">Schließen</string>
@@ -36,6 +47,7 @@
     <string name="send_message_bt">Nachicht abschicken</string>
     <string name="clear_text_field_bt">Suchfeld leeren</string>
     <string name="search_for_element_bt">Nach Element Suchen</string>
+    <string name="settings_bt">Einstellungen</string>
     <string name="more_actions_bt">Mehr actionen</string>
     <string name="next_found_element_bt">Nächstes gedundendes Element</string>
     <string name="last_found_element_bt">Letztes gefundenes Element</string>

@@ -1,4 +1,4 @@
-package de.stubbe.jaem_client.view.variables
+package de.stubbe.jaem_client.data
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
+import de.stubbe.jaem_client.view.variables.Rationale
 
 @Composable
 fun JAEMTextStyle(

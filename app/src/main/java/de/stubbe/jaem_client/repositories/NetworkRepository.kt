@@ -3,11 +3,11 @@ package de.stubbe.jaem_client.repositories
 import de.stubbe.jaem_client.model.ShareProfileModel
 import de.stubbe.jaem_client.model.network.ShareProfileResponse
 import de.stubbe.jaem_client.network.JAEMApiService
-import de.stubbe.jaem_client.network.RetrofitInstance
 import retrofit2.Call
+import javax.inject.Inject
 
-class NetworkRepository(
-    val retrofitInstance: JAEMApiService = RetrofitInstance.api
+class NetworkRepository @Inject constructor(
+    val retrofitInstance: JAEMApiService
 ) {
 
     suspend fun createShareProfile(shareProfile: ShareProfileModel): Call<ShareProfileResponse> {

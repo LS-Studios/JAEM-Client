@@ -2,8 +2,11 @@ package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.database.daos.SymmetricKeyDao
 import de.stubbe.jaem_client.database.entries.SymmetricKeyModel
+import javax.inject.Inject
 
-class SymmetricKeyRepository(private val symmetricKeyDao: SymmetricKeyDao) {
+class SymmetricKeyRepository @Inject constructor(
+    private val symmetricKeyDao: SymmetricKeyDao
+) {
 
     fun getSymmetricKeyPairsById(id: Int) = symmetricKeyDao.getSymmetricKeyPairsById(id)
 

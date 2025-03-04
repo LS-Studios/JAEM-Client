@@ -1,7 +1,6 @@
 package de.stubbe.jaem_client.view.screens.chat
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,10 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -41,15 +37,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.utils.formatTime
-import de.stubbe.jaem_client.utils.toBitmap
 import de.stubbe.jaem_client.utils.toLocalDateTime
 import de.stubbe.jaem_client.view.components.HighlightText
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -58,6 +52,7 @@ fun ChatMessageBubble(
     firstMessageOfBlock: Boolean,
     isSentByUser: Boolean,
     searchValue: String,
+    selectionEnabled: Boolean,
     isSelected: Boolean,
     onSelect: (MessageModel) -> Unit,
 ) {
@@ -72,8 +67,8 @@ fun ChatMessageBubble(
     var lineCount by remember { mutableStateOf(0) }
     var isTimeTextInline by remember { mutableStateOf(false) }
 
-    val file = remember(message) { message.filePath?.let { File(it) } }
-    val bitmap = remember(file) { file?.toBitmap() }
+//    val files = remember(message) { message.filePaths.map { File(it) } }
+//    val bitmaps = remember(file) { file?.toBitmap() }
 
     // Bestimmen, ob der Zeitstempel inline angezeigt werden soll
     LaunchedEffect(reachedMaxBubbleWidth, spaceLeft) {
@@ -86,7 +81,11 @@ fun ChatMessageBubble(
         modifier = Modifier
             .height(IntrinsicSize.Min)
             .combinedClickable(
-                onClick = {},
+                onClick = {
+                    if (selectionEnabled) {
+                        onSelect(message)
+                    }
+                },
                 onLongClick = {
                     onSelect(message)
                 },
@@ -137,24 +136,24 @@ fun ChatMessageBubble(
                         }
                     }
             ) {
-                // Bild oder Datei anzeigen
-                when {
-                    file != null && bitmap != null -> Image(
-                        bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .width(200.dp)
-                            .height(200.dp)
-                            .clip(Dimensions.Shape.Rounded.Small)
-                    )
-
-                    file != null -> Text(
-                        modifier = Modifier.padding(bottom = Dimensions.Padding.Tiny),
-                        text = file.name,
-                        style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
-                    )
-                }
+//                // Bild oder Datei anzeigen
+//                when {
+//                    file != null && bitmap != null -> Image(
+//                        bitmap = bitmap.asImageBitmap(),
+//                        contentDescription = "Image",
+//                        contentScale = ContentScale.Crop,
+//                        modifier = Modifier
+//                            .width(200.dp)
+//                            .height(200.dp)
+//                            .clip(Dimensions.Shape.Rounded.Small)
+//                    )
+//
+//                    file != null -> Text(
+//                        modifier = Modifier.padding(bottom = Dimensions.Padding.Tiny),
+//                        text = file.name,
+//                        style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
+//                    )
+//                }
 
                 // Nachrichteninhalt mit Zeitstempel in einer Zeile
                 if (isTimeTextInline) {
@@ -225,7 +224,7 @@ fun ChatMessageBubble(
                 modifier = Modifier
                     .fillMaxSize()
                     .zIndex(2f)
-                    .background(JAEMThemeProvider.current.accent.copy(alpha = 0.08f))
+                    .background(JAEMThemeProvider.current.accent.copy(alpha = 0.2f))
             )
         }
     }

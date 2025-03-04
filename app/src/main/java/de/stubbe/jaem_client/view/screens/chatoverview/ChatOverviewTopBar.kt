@@ -12,8 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.view.components.CrossSlide
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.view.variables.RaviPrakash
 
@@ -148,13 +148,13 @@ fun ChatOverviewTopBar(
                         )
                     }
 
-                    // Mehr-Action
+                    // Einstellungen-Action
                     IconButton(onClick = {
 
                     }) {
                         Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.more_actions_bt),
+                            Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings_bt),
                             tint = JAEMThemeProvider.current.textPrimary
                         )
                     }

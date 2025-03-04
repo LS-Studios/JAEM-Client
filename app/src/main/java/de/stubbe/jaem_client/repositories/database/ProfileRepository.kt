@@ -2,8 +2,11 @@ package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.database.daos.ProfileDao
 import de.stubbe.jaem_client.database.entries.ProfileModel
+import javax.inject.Inject
 
-class ProfileRepository(private val profileDao: ProfileDao) {
+class ProfileRepository @Inject constructor(
+    private val profileDao: ProfileDao
+) {
 
     suspend fun getProfileById(id: Int) = profileDao.getProfileById(id)
 

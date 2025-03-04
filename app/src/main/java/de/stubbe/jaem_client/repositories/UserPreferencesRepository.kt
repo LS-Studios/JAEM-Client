@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.catch
 class UserPreferencesRepository(
     private val userPreferencesStore: DataStore<UserPreferences>
 ) {
+
     private val TAG: String = "UserPreferencesRepo"
 
     val userPreferencesFlow: Flow<UserPreferences> = userPreferencesStore.data
@@ -36,4 +37,11 @@ class UserPreferencesRepository(
             currentPreferences.toBuilder().setTheme(newTheme).build()
         }
     }
+
+    suspend fun updateUserProfileId(newProfileId: Int) {
+        userPreferencesStore.updateData { currentPreferences ->
+            currentPreferences.toBuilder().setUserProfileId(newProfileId).build()
+        }
+    }
+
 }

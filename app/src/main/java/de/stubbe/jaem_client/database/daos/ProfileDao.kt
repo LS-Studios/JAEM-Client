@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 abstract class ProfileDao: BaseDao<ProfileModel> {
 
     @Query("SELECT * FROM profiles WHERE id = :id")
-    abstract suspend fun getProfileById(id: Int): ProfileModel
+    abstract suspend fun getProfileById(id: Int): ProfileModel?
 
     @Query("SELECT * FROM profiles WHERE id = :id")
     abstract fun getProfileByIdWithChange(id: Int): Flow<ProfileModel>

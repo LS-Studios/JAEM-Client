@@ -19,21 +19,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ChatPresentationModel
+import de.stubbe.jaem_client.model.enums.AttachmentType
 import de.stubbe.jaem_client.utils.formatTime
 import de.stubbe.jaem_client.utils.toLocalDateTime
+import de.stubbe.jaem_client.view.components.ExtensionPresentation
+import de.stubbe.jaem_client.view.components.LoadingIfNull
 import de.stubbe.jaem_client.view.components.ProfilePicture
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.viewmodel.ChatOverviewViewModel
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * Darstellung einer Chatzeile
@@ -49,6 +60,8 @@ fun ChatRow(
 ) {
     val userProfileId by chatOverviewViewModel.userProfileId.collectAsState()
 
+    val context = LocalContext.current
+
     Row(
         Modifier
             .clickable(
@@ -57,7 +70,13 @@ fun ChatRow(
                     bounded = true
                 )
             ) {
-                navigationViewModel.changeScreen(NavRoute.Chat(chatPresentationModel.chat.id))
+                navigationViewModel.changeScreen(
+                    NavRoute.ChatMessages(
+                        chatPresentationModel.chat.chatPartnerId,
+                        chatPresentationModel.chat.id,
+                        false
+                    )
+                )
             }
             .padding(
                 horizontal = Dimensions.Padding.Medium,
@@ -104,14 +123,22 @@ fun ChatRow(
                             tint = JAEMThemeProvider.current.textSecondary
                         )
                     }
-                    if (lastMessage.filePath != null) {
-                        Text(
-                            text = "\uD83D\uDCCE",
-                            style = JAEMTextStyle(
-                                MaterialTheme.typography.titleMedium,
-                                color = JAEMThemeProvider.current.textSecondary
+                    if (lastMessage.attachments != null) {
+                        var file: File? by remember { mutableStateOf(null) }
+
+                        LaunchedEffect(Unit) {
+                            launch(Dispatchers.IO) {
+                                if (lastMessage.attachments.type == AttachmentType.FILE) {
+                                    file = File(lastMessage.attachments.attachmentPaths.first())
+                                }
+                            }
+                        }
+
+                        LoadingIfNull(file) {
+                            ExtensionPresentation(
+                                extension = file!!.extension
                             )
-                        )
+                        }
                     }
                     Text(
                         text = lastMessage.stringContent ?: "",

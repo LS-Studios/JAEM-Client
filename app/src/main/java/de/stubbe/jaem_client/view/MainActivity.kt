@@ -14,27 +14,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.view.screens.Navigation
 import de.stubbe.jaem_client.view.variables.JAEMTheme
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.viewmodel.AppViewModelProvider
 import de.stubbe.jaem_client.viewmodel.MainActivityViewModel
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val viewModel: MainActivityViewModel = viewModel(factory = AppViewModelProvider.Factory)
+            val viewModel: MainActivityViewModel = hiltViewModel()
             val userPreferences by viewModel.userPreferences.collectAsState()
 
             LaunchedEffect(Unit) {
                 viewModel.updateTheme(UserPreferences.Theme.DARK)
 
                 //viewModel.deleteExampleData(this@MainActivity)
-//                viewModel.addExampleData()
+                //viewModel.addExampleData()
 //                viewModel.printData()
             }
 

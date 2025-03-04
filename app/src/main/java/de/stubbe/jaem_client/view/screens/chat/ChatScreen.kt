@@ -18,16 +18,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import de.stubbe.jaem_client.model.NavRoute
-import de.stubbe.jaem_client.utils.addViewModelExtras
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import de.stubbe.jaem_client.model.Attachments
+import de.stubbe.jaem_client.model.JAEMFileType
+import de.stubbe.jaem_client.model.enums.AttachmentType
+import de.stubbe.jaem_client.utils.AppStorageHelper
 import de.stubbe.jaem_client.utils.isScrolledToEnd
 import de.stubbe.jaem_client.utils.keyboardVisibility
+import de.stubbe.jaem_client.view.components.filepicker.JAEMFilePicker
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.viewmodel.AppViewModelProvider
 import de.stubbe.jaem_client.viewmodel.ChatViewModel
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
+import de.stubbe.jaem_client.viewmodel.SharedChatViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -38,25 +42,23 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChatScreen(
     navigationViewModel: NavigationViewModel,
-    chatArguments: NavRoute.Chat,
+    sharedChatViewModel: SharedChatViewModel,
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
-    viewModel: ChatViewModel = viewModel(
-        factory = AppViewModelProvider.Factory,
-        extras = addViewModelExtras {
-            set(ChatViewModel.CHAT_ID_KEY, chatArguments.chatId)
-        }
-    )
 ) {
+    val context = LocalContext.current
+
+    val viewModel: ChatViewModel = hiltViewModel()
+
     val userProfileId by viewModel.userProfileId.collectAsState()
 
-    val chat by viewModel.chat.collectAsState()
+    val chat by sharedChatViewModel.chat.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val oldMessages = remember(messages) { messages.filter { it.deliveryTime != null || it.senderId == userProfileId } }
     val newMessages = remember(messages, userProfileId) { messages.filter { it.deliveryTime == null && it.senderId != userProfileId } }
 
     val newMessageString by viewModel.newMessageString.collectAsState()
-    val newAttachment by viewModel.newAttachment.collectAsState()
+    val newAttachment by viewModel.newAttachments.collectAsState()
 
     val selectedMessages by viewModel.selectedMessages.collectAsState()
 
@@ -69,10 +71,13 @@ fun ChatScreen(
     val foundItemIndices by viewModel.foundItemIndices.collectAsState()
     val currentFoundItemIndex by viewModel.currentFoundItemIndex.collectAsState()
 
+    val attachmentPickerIsOpen by viewModel.attachmentPickerIsOpen.collectAsState()
+
     // Neue Nachrichten als gelesen markieren wenn der Bildschirm verlassen wird
     DisposableEffect(Unit) {
         onDispose {
             viewModel.markNewMessageAsDelivered()
+            viewModel.changeAttachment(null)
         }
     }
 
@@ -121,6 +126,7 @@ fun ChatScreen(
                 animatedVisibilityScope = animatedVisibilityScope,
                 sharedTransitionScope = sharedTransitionScope,
                 chatViewModel = viewModel,
+                chat = chat,
                 onGoBack = {
                     navigationViewModel.goBack()
                 },
@@ -137,6 +143,9 @@ fun ChatScreen(
                     if (newIndex < foundItemIndices.size) {
                         viewModel.changeCurrentFoundItemIndex(newIndex)
                     }
+                },
+                onDelete = {
+                    viewModel.deleteSelectedMessages()
                 }
             )
         }
@@ -164,6 +173,7 @@ fun ChatScreen(
                         firstMessageOfBlock = firstMessageOfBlock,
                         isSentByUser = message.senderId == userProfileId,
                         searchValue = searchValue,
+                        selectionEnabled = selectedMessages.isNotEmpty(),
                         isSelected = selectedMessages.contains(message),
                         onSelect = { selectedMessage ->
                             viewModel.changeSelectedMessages(
@@ -193,6 +203,7 @@ fun ChatScreen(
                         firstMessageOfBlock = firstMessageOfBlock,
                         isSentByUser = message.senderId == userProfileId,
                         searchValue = searchValue,
+                        selectionEnabled = selectedMessages.isNotEmpty(),
                         isSelected = selectedMessages.contains(message),
                         onSelect = { selectedMessage ->
                             viewModel.changeSelectedMessages(
@@ -220,16 +231,45 @@ fun ChatScreen(
 
                 },
                 onClickAttache = {
-
+                    viewModel.openAttachmentPicker()
                 },
-                onClickCamera = {
-
+                onRemoveAttachment = {
+                    viewModel.changeAttachment(null)
                 },
                 onSendMessage = {
-                    viewModel.markNewMessageAsDelivered()
-                    viewModel.sendMessage()
+                    if (chat != null) {
+                        viewModel.markNewMessageAsDelivered()
+                        viewModel.sendMessage(chat!!.chat)
+                    }
                 }
             )
         }
+    }
+
+    if (attachmentPickerIsOpen) {
+        JAEMFilePicker(
+            maxSelection = 100,
+            types = listOf(
+                JAEMFileType.IMAGE_AND_VIDEO,
+                JAEMFileType.STORAGE
+            ),
+            onDismiss = {
+                viewModel.closeAttachmentPicker()
+            },
+            selected = { type, uris ->
+                viewModel.changeAttachment(null)
+                coroutineScope.launch {
+                    viewModel.changeAttachment(
+                        Attachments(
+                            when (type) {
+                                JAEMFileType.STORAGE -> AttachmentType.FILE
+                                else -> AttachmentType.IMAGE_AND_VIDEO
+                            },
+                            attachmentPaths = uris.mapNotNull { AppStorageHelper.copyUriToAppStorage(it, context)?.absolutePath }
+                        )
+                    )
+                }
+            }
+        )
     }
 }

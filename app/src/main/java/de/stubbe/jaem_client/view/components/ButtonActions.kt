@@ -35,7 +35,7 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.semantics.Role
 import de.stubbe.jaem_client.model.ButtonActionModel
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import kotlinx.coroutines.delay
 

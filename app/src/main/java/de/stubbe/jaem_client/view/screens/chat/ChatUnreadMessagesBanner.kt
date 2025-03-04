@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
+import de.stubbe.jaem_client.data.JAEMTextStyle
 
 @Composable
 fun ChatUnreadMessagesBanner() {

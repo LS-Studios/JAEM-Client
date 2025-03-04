@@ -2,8 +2,11 @@ package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.database.daos.ChatDao
 import de.stubbe.jaem_client.database.entries.ChatModel
+import javax.inject.Inject
 
-class ChatRepository(private val chatDao: ChatDao) {
+class ChatRepository @Inject constructor(
+    private val chatDao: ChatDao
+) {
 
     suspend fun getChatById(id: Int) = chatDao.getChatById(id)
 

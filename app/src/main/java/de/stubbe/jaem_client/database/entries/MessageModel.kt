@@ -3,6 +3,7 @@ package de.stubbe.jaem_client.database.entries
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import de.stubbe.jaem_client.model.Attachments
 
 /**
  * Model zur Speicherung von Nachrichteninformationen
@@ -12,7 +13,7 @@ import androidx.room.PrimaryKey
  * @param receiverId: ID des Empfängers (Profile)
  * @param chatId: Zugehörige Chat-ID
  * @param stringContent: Textinhalt der Nachricht
- * @param filePath: Pfad zur Datei (nullable)
+ * @param attachments: Anhänge der Nachricht
  * @param sendTime: Zeitstempel des Sendens
  * @param deliveryTime: Zeitstempel der Zustellung (nullable)
  */
@@ -28,8 +29,8 @@ data class MessageModel(
     val chatId: Int,
     @ColumnInfo(name = "string_content")
     val stringContent: String?,
-    @ColumnInfo(name = "file_path")
-    val filePath: String?,
+    @ColumnInfo(name = "attachments")
+    val attachments: Attachments?,
     @ColumnInfo(name = "send_time")
     val sendTime: Long,
     @ColumnInfo(name = "delivery_time")

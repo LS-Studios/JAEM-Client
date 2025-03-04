@@ -46,7 +46,7 @@ data class ShareProfileModel(
     }
 
     companion object {
-        fun fromProfilePresentationModel(
+        suspend fun fromProfilePresentationModel(
             profile: ProfilePresentationModel,
             asymmetricKeyPairs: List<AsymmetricKeyPairModel>,
             symmetricKeys: List<SymmetricKeyModel>
@@ -61,7 +61,7 @@ data class ShareProfileModel(
             )
         }
 
-        fun fromProfileModel(
+        suspend fun fromProfileModel(
             profile: ProfileModel,
             asymmetricKeyPairs: List<AsymmetricKeyPairModel>,
             symmetricKeys: List<SymmetricKeyModel>

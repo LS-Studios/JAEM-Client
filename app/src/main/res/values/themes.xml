@@ -2,4 +2,21 @@
 <resources>
 
     <style name="Theme.JAEMClient" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- In res/values/styles.xml -->
+    <style name="CustomCropTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Primärfarbe -->
+        <item name="colorPrimary">@color/your_primary_color</item>
+        <!-- Primärdunkel -->
+        <item name="colorPrimaryDark">@color/your_primary_dark_color</item>
+        <!-- Akzentfarbe -->
+        <item name="colorAccent">@color/your_accent_color</item>
+        <!-- Toolbar-Textfarbe -->
+        <item name="android:textColorPrimary">@color/your_toolbar_text_color</item>
+        <!-- Statusleistenfarbe -->
+        <item name="android:statusBarColor">@color/your_status_bar_color</item>
+        <!-- Hintergrundfarbe -->
+        <item name="android:windowBackground">@color/your_background_color</item>
+    </style>
+
 </resources>

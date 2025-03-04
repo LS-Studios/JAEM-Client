@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
     id("com.google.protobuf")
+    id("com.google.dagger.hilt.android")
+    id("dagger.hilt.android.plugin")
     kotlin("plugin.serialization") version "2.0.21"
 }
 
@@ -96,6 +98,15 @@ dependencies {
 
     // Reflection
     implementation(kotlin("reflect"))
+
+    // DI
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.activity.ktx)
+
+    // Image cropping
+    implementation(libs.android.image.cropper)
 }
 
 protobuf {

@@ -59,4 +59,3 @@ fun File.toBitmap(): Bitmap? {
     val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     return BitmapFactory.decodeFile(this.absolutePath, options).takeIf { options.outWidth != -1 && options.outHeight != -1 }
 }
-

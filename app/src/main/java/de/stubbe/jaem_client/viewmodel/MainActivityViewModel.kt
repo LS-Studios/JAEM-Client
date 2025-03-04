@@ -3,9 +3,11 @@ package de.stubbe.jaem_client.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
 import de.stubbe.jaem_client.database.entries.AsymmetricKeyPairModel
 import de.stubbe.jaem_client.database.entries.ChatModel
+import de.stubbe.jaem_client.database.entries.ChatRequestModel
 import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.database.entries.ProfileModel
 import de.stubbe.jaem_client.database.entries.SymmetricKeyModel
@@ -16,6 +18,7 @@ import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.AsymmetricKeyPairRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
+import de.stubbe.jaem_client.repositories.database.ChatRequestRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
 import de.stubbe.jaem_client.repositories.database.SymmetricKeyRepository
@@ -27,14 +30,17 @@ import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import javax.inject.Inject
 
-class MainActivityViewModel(
+@HiltViewModel
+class MainActivityViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val chatRepository: ChatRepository,
     private val profileRepository: ProfileRepository,
     private val messageRepository: MessageRepository,
     private val asymmetricKeyPairRepository: AsymmetricKeyPairRepository,
-    private val symmetricKeyRepository: SymmetricKeyRepository
+    private val symmetricKeyRepository: SymmetricKeyRepository,
+    private val chatRequestRepository: ChatRequestRepository
 ): ViewModel() {
 
     val userPreferences = userPreferencesRepository.userPreferencesFlow
@@ -91,6 +97,15 @@ class MainActivityViewModel(
         }
 
         viewModelScope.launch(Dispatchers.IO) {
+            val chatRequest1 = ChatRequestModel(
+                id = 0,
+                publicKey = "1234567890123456",
+                profileId = 10,
+                chatPartnerId = 20
+            )
+
+            chatRequestRepository.insertChatRequest(chatRequest1)
+
             val profile1 = ProfileModel(
                 id = 0,
                 uid = "123",
@@ -100,6 +115,8 @@ class MainActivityViewModel(
             )
 
             val newProfile1Id = profileRepository.insertProfile(profile1).toInt()
+
+            userPreferencesRepository.updateUserProfileId(newProfile1Id)
 
             val profile2 = ProfileModel(
                 id = 0,
@@ -135,7 +152,7 @@ class MainActivityViewModel(
                 receiverId = newProfile1Id,
                 chatId = newChat1Id,
                 stringContent = "Hallo!",
-                filePath = null,
+                attachments = null,
                 sendTime = System.currentTimeMillis(),
                 deliveryTime = null
             )
@@ -156,7 +173,7 @@ class MainActivityViewModel(
                 receiverId = newProfile1Id,
                 chatId = newChat2Id,
                 stringContent = "Ne oder?",
-                filePath = null,
+                attachments = null,
                 sendTime = System.currentTimeMillis(),
                 deliveryTime = null
             )
@@ -169,7 +186,7 @@ class MainActivityViewModel(
                 receiverId = newProfile1Id,
                 chatId = newChat2Id,
                 stringContent = "Du bist echt durch Junge \uD83D\uDE02!",
-                filePath = null,
+                attachments = null,
                 sendTime = System.currentTimeMillis(),
                 deliveryTime = null
             )

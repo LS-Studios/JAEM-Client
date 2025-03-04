@@ -46,6 +46,7 @@ object Dimensions {
             val Medium = RoundedCornerShape(0.dp, 0.dp, 24.dp, 24.dp)
         }
         object Rounded {
+            val Tiny = RoundedCornerShape(4.dp)
             val Small = RoundedCornerShape(12.dp)
             val Medium = RoundedCornerShape(24.dp)
         }
@@ -94,6 +95,10 @@ object Dimensions {
         val Huge = 140.dp
         val SuperHuge = 200.dp
         val TopBar = 56.dp
+    }
+
+    object Quality {
+        val Medium = 300
     }
 
 }

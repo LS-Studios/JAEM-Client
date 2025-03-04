@@ -1,4 +1,4 @@
-package de.stubbe.jaem_client.view.screens.createchat
+package de.stubbe.jaem_client.view.screens.editprofile
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
@@ -13,7 +13,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,7 +24,7 @@ fun CreateChatTopBar(
     TopAppBar(
         title = {
             Text(
-                text = stringResource(R.string.create_chat),
+                text = stringResource(R.string.edit_profile),
                 style = JAEMTextStyle(MaterialTheme.typography.titleLarge),
             )
         },

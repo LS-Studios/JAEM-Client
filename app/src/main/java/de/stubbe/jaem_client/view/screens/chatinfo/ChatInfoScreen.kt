@@ -1,4 +1,4 @@
-package de.stubbe.jaem_client.view.screens.profile
+package de.stubbe.jaem_client.view.screens.chatinfo
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -29,44 +29,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
-import de.stubbe.jaem_client.utils.addViewModelExtras
 import de.stubbe.jaem_client.view.components.Divider
+import de.stubbe.jaem_client.view.components.LoadingIfNull
 import de.stubbe.jaem_client.view.components.ShareProfileBottomSheet
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
-import de.stubbe.jaem_client.viewmodel.AppViewModelProvider
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
-import de.stubbe.jaem_client.viewmodel.ProfileViewModel
+import de.stubbe.jaem_client.viewmodel.ShareProfileViewModel
+import de.stubbe.jaem_client.viewmodel.SharedChatViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun ProfileScreen(
+fun ChatInfoScreen(
     navigationViewModel: NavigationViewModel,
-    profileInfoArguments: NavRoute.ProfileInfo,
+    sharedChatViewModel: SharedChatViewModel,
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
-    viewModel: ProfileViewModel = viewModel(
-        factory = AppViewModelProvider.Factory,
-        extras = addViewModelExtras {
-            set(ProfileViewModel.PROFILE_ID_KEY, profileInfoArguments.profileId)
-        }
-    )
 ) {
-    val profile by viewModel.profile.collectAsState()
-    val isShareProfileBottomSheetVisible by viewModel.isShareProfileBottomSheetVisible.collectAsState()
+    val shareProfileViewModel: ShareProfileViewModel = hiltViewModel()
+
+    val chat by sharedChatViewModel.chat.collectAsState()
+    val profile by sharedChatViewModel.profile.collectAsState()
+    val isShareProfileBottomSheetVisible by shareProfileViewModel.isShareProfileBottomSheetVisible.collectAsState()
 
     ScreenBase(
         topBar = {
-            ProfileTopBar(
+            ChatInfoTopBar(
                 animatedVisibilityScope = animatedVisibilityScope,
                 sharedTransitionScope = sharedTransitionScope,
-                profile = profile,
+                profilePicture = chat?.profilePicture,
                 onClose = {
                     navigationViewModel.goBack()
                 }
@@ -84,7 +81,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Dimensions.Padding.Medium),
-                text = profile?.name ?: "",
+                text = chat?.name ?: "",
                 style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
                     textAlign = TextAlign.Center
                 )
@@ -92,10 +89,12 @@ fun ProfileScreen(
 
             ProfileMainActions(
                 onShareClick = {
-                    viewModel.openShareProfileBottomSheet()
+                    if (profile != null) {
+                        shareProfileViewModel.openShareProfileBottomSheet(profile!!)
+                    }
                 },
                 onSearchClick = {
-                    navigationViewModel.goBack<NavRoute.Chat> {
+                    navigationViewModel.goBack<NavRoute.ChatMessages> {
                         copy(searchEnabled = true)
                     }
                 }
@@ -103,36 +102,35 @@ fun ProfileScreen(
 
             Divider()
 
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimensions.Padding.Medium),
-                text = profile?.description ?: "",
-                style = JAEMTextStyle(MaterialTheme.typography.titleLarge).copy(
-                    fontSize = Dimensions.FontSize.Medium,
-                    textAlign = TextAlign.Center
+            LoadingIfNull(profile) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimensions.Padding.Medium),
+                    text = profile?.description ?: "",
+                    style = JAEMTextStyle(MaterialTheme.typography.titleLarge).copy(
+                        fontSize = Dimensions.FontSize.Medium,
+                        textAlign = TextAlign.Center
+                    )
                 )
-            )
 
-            Divider()
+                Divider()
 
-            ProfileActions(
-                profile = profile,
-                onDelete = { },
-                onBlock = { }
-            )
+                ProfileActions(
+                    profile = profile,
+                    onDelete = { },
+                    onBlock = { }
+                )
+            }
         }
 
-        if (profile != null) {
-            ShareProfileBottomSheet(
-                isVisible = isShareProfileBottomSheetVisible,
-                onClose = {
-                    viewModel.closeShareProfileBottomSheet()
-                },
-                profile = profile!!,
-                profileViewModel = viewModel
-            )
-        }
+        ShareProfileBottomSheet(
+            isVisible = isShareProfileBottomSheetVisible,
+            onClose = {
+                shareProfileViewModel.closeShareProfileBottomSheet()
+            },
+            shareProfileViewModel = shareProfileViewModel
+        )
     }
 }
 

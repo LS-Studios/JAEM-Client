@@ -1,6 +1,7 @@
 package de.stubbe.jaem_client.view.screens.chat
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -52,11 +53,12 @@ import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.PROFILE_PICTURE_TRANSITION
 import de.stubbe.jaem_client.model.NavRoute
+import de.stubbe.jaem_client.model.entries.ChatPresentationModel
 import de.stubbe.jaem_client.utils.mirror
 import de.stubbe.jaem_client.view.components.CrossSlide
 import de.stubbe.jaem_client.view.components.ProfilePicture
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.view.variables.JAEMTextStyle
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.viewmodel.ChatViewModel
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
@@ -68,15 +70,16 @@ fun ChatTopBar(
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
     chatViewModel: ChatViewModel,
+    chat: ChatPresentationModel?,
     onGoBack: () -> Unit,
     canGoNext: Boolean,
     onNextFoundElement: () -> Unit,
     canGoLast: Boolean,
-    onLastFoundElement: () -> Unit
+    onLastFoundElement: () -> Unit,
+    onDelete: () -> Unit,
 ) {
-    val currentNavRoute by navigationViewModel.getCurrentRouteFlow<NavRoute.Chat>().collectAsState()
+    val currentNavRoute by navigationViewModel.getCurrentRouteFlow<NavRoute.ChatMessages>().collectAsState()
 
-    val chat by chatViewModel.chat.collectAsState()
     val searchText by chatViewModel.searchValue.collectAsState()
     val selectedMessages by chatViewModel.selectedMessages.collectAsState()
 
@@ -94,7 +97,7 @@ fun ChatTopBar(
     }
 
     LaunchedEffect(currentNavRoute) {
-        if (currentNavRoute is NavRoute.Chat && (currentNavRoute as NavRoute.Chat).searchEnabled) {
+        if (currentNavRoute is NavRoute.ChatMessages && (currentNavRoute as NavRoute.ChatMessages).searchEnabled) {
             isSearchActive = true
         }
     }
@@ -104,236 +107,250 @@ fun ChatTopBar(
         isSearchActive = false
     }
 
-    if (selectedMessages.isEmpty()) {
-        // Animation zur Anzeige des Suchfeldes
-        CrossSlide(
-            modifier = Modifier
-                .height(Dimensions.Size.TopBar),
-            targetState = isSearchActive,
-            animationSpec = tween(200),
-            alternateDirection = true
-        ) { targetState ->
-            if (targetState) {
-                // Suchfeld
-                BasicTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester)
-                        .background(
-                            color = JAEMThemeProvider.current.secondary,
-                            shape = CircleShape
+    AnimatedContent(
+        targetState = selectedMessages.isEmpty(),
+    ) { selectedMessagedTargetState ->
+        if (selectedMessagedTargetState) {
+            // Animation zur Anzeige des Suchfeldes
+            CrossSlide(
+                modifier = Modifier
+                    .height(Dimensions.Size.TopBar),
+                targetState = isSearchActive,
+                animationSpec = tween(200),
+                alternateDirection = true
+            ) { crossSlideTargetState ->
+                if (crossSlideTargetState) {
+                    // Suchfeld
+                    BasicTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester)
+                            .background(
+                                color = JAEMThemeProvider.current.secondary,
+                                shape = CircleShape
+                            ),
+                        value = searchText,
+                        onValueChange = { newText: String ->
+                            chatViewModel.changeSearchValue(newText)
+                        },
+                        singleLine = true,
+                        textStyle = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
+                            fontSize = Dimensions.FontSize.Medium
                         ),
-                    value = searchText,
-                    onValueChange = { newText: String ->
-                        chatViewModel.changeSearchValue(newText)
-                    },
-                    singleLine = true,
-                    textStyle = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
-                        fontSize = Dimensions.FontSize.Medium
-                    ),
-                    cursorBrush = SolidColor(JAEMThemeProvider.current.accent),
-                    decorationBox = { innerTextField ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            IconButton(onClick = { isSearchActive = false }) {
+                        cursorBrush = SolidColor(JAEMThemeProvider.current.accent),
+                        decorationBox = { innerTextField ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                IconButton(onClick = { isSearchActive = false }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = stringResource(R.string.back_bt),
+                                        tint = JAEMThemeProvider.current.textPrimary
+                                    )
+                                }
+                                Box(modifier = Modifier.weight(1f)) {
+                                    if (searchText.isEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.search_for_message),
+                                            style = JAEMTextStyle(
+                                                MaterialTheme.typography.titleMedium,
+                                                color = JAEMThemeProvider.current.textSecondary
+                                            ).copy(
+                                                fontSize = Dimensions.FontSize.Medium
+                                            )
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                                IconButton(
+                                    modifier = Modifier
+                                        .alpha(if (canGoLast) 1f else 0.5f),
+                                    onClick = {
+                                        onLastFoundElement()
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowUp,
+                                        contentDescription = stringResource(R.string.last_found_element_bt),
+                                        tint = JAEMThemeProvider.current.textPrimary
+                                    )
+                                }
+                                IconButton(
+                                    modifier = Modifier
+                                        .alpha(if (canGoNext) 1f else 0.5f),
+                                    onClick = {
+                                        onNextFoundElement()
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowDown,
+                                        contentDescription = stringResource(R.string.next_found_element_bt),
+                                        tint = JAEMThemeProvider.current.textPrimary
+                                    )
+                                }
+                            }
+                        },
+                    )
+                } else {
+                    // TopBar mit Bild, Name und Actionen
+                    TopAppBar(
+                        title = {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clickable(
+                                        interactionSource = null,
+                                        indication = ripple(
+                                            bounded = true
+                                        )
+                                    ) {
+                                        // Disable search enable in case its enabled
+                                        navigationViewModel.updateScreenArguments<NavRoute.ChatMessages> {
+                                            copy(searchEnabled = false)
+                                        }
+
+                                        // Navigate to the profile screen
+                                        navigationViewModel.changeScreen(
+                                            NavRoute.Profile
+                                        )
+                                    },
+                                horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                //TODO Crash on rotate
+                                with(sharedTransitionScope) {
+                                    // Bild
+                                    ProfilePicture(
+                                        modifier = Modifier
+                                            .size(Dimensions.Size.Small)
+                                            .then(
+                                                if (!isSearchActive) {
+                                                    Modifier.sharedElement(
+                                                        rememberSharedContentState(key = PROFILE_PICTURE_TRANSITION),
+                                                        animatedVisibilityScope = animatedVisibilityScope
+                                                    )
+                                                } else {
+                                                    Modifier
+                                                }
+                                            ),
+                                        profilePicture = chat?.profilePicture
+                                    )
+                                }
+
+                                // Name
+                                Text(
+                                    text = chat?.name ?: "",
+                                    style = JAEMTextStyle(MaterialTheme.typography.titleLarge),
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            // Zurück-Action
+                            IconButton(onClick = onGoBack) {
                                 Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = stringResource(R.string.back_bt),
                                     tint = JAEMThemeProvider.current.textPrimary
                                 )
                             }
-                            Box(modifier = Modifier.weight(1f)) {
-                                if (searchText.isEmpty()) {
-                                    Text(
-                                        text = stringResource(R.string.search_for_message),
-                                        style = JAEMTextStyle(
-                                            MaterialTheme.typography.titleMedium,
-                                            color = JAEMThemeProvider.current.textSecondary
-                                        ).copy(
-                                            fontSize = Dimensions.FontSize.Medium
-                                        )
-                                    )
-                                }
-                                innerTextField()
-                            }
-                            IconButton(
-                                modifier = Modifier
-                                    .alpha(if (canGoLast) 1f else 0.5f),
-                                onClick = {
-                                    onLastFoundElement()
-                                }
-                            ) {
+                        },
+                        actions = {
+                            // Such-Action
+                            IconButton(onClick = {
+                                isSearchActive = true
+                            }) {
                                 Icon(
-                                    Icons.Default.KeyboardArrowUp,
-                                    contentDescription = stringResource(R.string.last_found_element_bt),
+                                    Icons.Default.Search,
+                                    contentDescription = stringResource(R.string.search_for_element_bt),
                                     tint = JAEMThemeProvider.current.textPrimary
                                 )
                             }
-                            IconButton(
-                                modifier = Modifier
-                                    .alpha(if (canGoNext) 1f else 0.5f),
-                                onClick = {
-                                    onNextFoundElement()
-                                }
-                            ) {
+
+                            // Mehr-Action
+                            IconButton(onClick = {
+
+                            }) {
                                 Icon(
-                                    Icons.Default.KeyboardArrowDown,
-                                    contentDescription = stringResource(R.string.next_found_element_bt),
+                                    Icons.Default.MoreVert,
+                                    contentDescription = stringResource(R.string.more_actions_bt),
                                     tint = JAEMThemeProvider.current.textPrimary
                                 )
                             }
-                        }
-                    },
-                )
-            } else {
-                // TopBar mit Bild, Name und Actionen
-                TopAppBar(
-                    title = {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable(
-                                    interactionSource = null,
-                                    indication = ripple(
-                                        bounded = true
-                                    )
-                                ) {
-                                    navigationViewModel.changeScreen(
-                                        NavRoute.ProfileInfo(
-                                            chat?.chat?.chatPartnerId ?: -1
-                                        )
-                                    )
-                                },
-                            horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            //TODO Crash on rotate
-                            with(sharedTransitionScope) {
-                                // Bild
-                                ProfilePicture(
-                                    modifier = Modifier
-                                        .size(Dimensions.Size.Small)
-                                        .then(
-                                            if (!isSearchActive) {
-                                                Modifier.sharedElement(
-                                                    rememberSharedContentState(key = PROFILE_PICTURE_TRANSITION),
-                                                    animatedVisibilityScope = animatedVisibilityScope
-                                                )
-                                            } else {
-                                                Modifier
-                                            }
-                                        ),
-                                    profilePicture = chat?.profilePicture
-                                )
-                            }
-
-                            // Name
-                            Text(
-                                text = chat?.name ?: "",
-                                style = JAEMTextStyle(MaterialTheme.typography.titleLarge),
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        // Zurück-Action
-                        IconButton(onClick = onGoBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.back_bt),
-                                tint = JAEMThemeProvider.current.textPrimary
-                            )
-                        }
-                    },
-                    actions = {
-                        // Such-Action
-                        IconButton(onClick = {
-                            isSearchActive = true
-                        }) {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = stringResource(R.string.search_for_element_bt),
-                                tint = JAEMThemeProvider.current.textPrimary
-                            )
-                        }
-
-                        // Mehr-Action
-                        IconButton(onClick = {
-
-                        }) {
-                            Icon(
-                                Icons.Default.MoreVert,
-                                contentDescription = stringResource(R.string.more_actions_bt),
-                                tint = JAEMThemeProvider.current.textPrimary
-                            )
-                        }
-                    },
-                    windowInsets = WindowInsets(0),
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = JAEMThemeProvider.current.background),
-                )
+                        },
+                        windowInsets = WindowInsets(0),
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = JAEMThemeProvider.current.background),
+                    )
+                }
             }
         }
-    } else {
-        // Aktionen für ausgewählte Nachrichten
-        TopAppBar(
-            modifier = Modifier
-                .height(Dimensions.Size.TopBar)
-                .padding(Dimensions.Padding.TopBar),
-            title = {
-                Text(
-                    modifier = Modifier.fillMaxSize(),
-                    text = "${selectedMessages.size}",
-                    style = JAEMTextStyle(MaterialTheme.typography.titleLarge),
-                )
-            },
-            navigationIcon = {
-                // Zurück-Action
-                IconButton(onClick = {
-                    chatViewModel.changeSelectedMessages(emptyList())
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back_bt),
-                        tint = JAEMThemeProvider.current.textPrimary
-                    )
-                }
-            },
-            actions = {
-                // Antworten-Action
-                IconButton(onClick = {
+        else {
+            // Aktionen für ausgewählte Nachrichten
+            TopAppBar(
+                modifier = Modifier
+                    .height(Dimensions.Size.TopBar)
+                    .padding(Dimensions.Padding.TopBar),
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterStart),
+                            text = "${selectedMessages.size}",
+                            style = JAEMTextStyle(MaterialTheme.typography.titleLarge),
+                        )
+                    }
+                },
+                navigationIcon = {
+                    // Zurück-Action
+                    IconButton(onClick = {
+                        chatViewModel.changeSelectedMessages(emptyList())
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back_bt),
+                            tint = JAEMThemeProvider.current.textPrimary
+                        )
+                    }
+                },
+                actions = {
+                    // Antworten-Action
+                    IconButton(onClick = {
 
-                }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Reply,
-                        contentDescription = stringResource(R.string.reply_bt),
-                        tint = JAEMThemeProvider.current.textPrimary
-                    )
-                }
-                // Antworten-Action
-                IconButton(onClick = {
+                    }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Reply,
+                            contentDescription = stringResource(R.string.reply_bt),
+                            tint = JAEMThemeProvider.current.textPrimary
+                        )
+                    }
+                    // Lösch-Action
+                    IconButton(onClick = {
+                        onDelete()
+                    }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = JAEMThemeProvider.current.textPrimary
+                        )
+                    }
+                    // Weiterleiten-Action
+                    IconButton(onClick = {
 
-                }) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = JAEMThemeProvider.current.textPrimary
-                    )
-                }
-                // Weiterleiten-Action
-                IconButton(onClick = {
-
-                }) {
-                    Icon(
-                        modifier = Modifier.mirror(),
-                        imageVector = Icons.AutoMirrored.Filled.ReplyAll,
-                        contentDescription = stringResource(R.string.more_actions_bt),
-                        tint = JAEMThemeProvider.current.textPrimary
-                    )
-                }
-            },
-            windowInsets = WindowInsets(0),
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = JAEMThemeProvider.current.background),
-        )
+                    }) {
+                        Icon(
+                            modifier = Modifier.mirror(),
+                            imageVector = Icons.AutoMirrored.Filled.ReplyAll,
+                            contentDescription = stringResource(R.string.more_actions_bt),
+                            tint = JAEMThemeProvider.current.textPrimary
+                        )
+                    }
+                },
+                windowInsets = WindowInsets(0),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = JAEMThemeProvider.current.background),
+            )
+        }
     }
 }
