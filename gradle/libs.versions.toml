@@ -3,6 +3,7 @@ accompanistSystemuicontroller = "0.31.4-beta"
 activityKtx = "1.10.1"
 agp = "8.7.0-rc01"
 androidImageCropper = "4.5.0"
+bcprovJdk15on = "1.70"
 coilCompose = "3.1.0"
 composefilepicker = "1.0.6"
 core = "3.5.1"
@@ -40,6 +41,8 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+bcpkix-jdk15on = { module = "org.bouncycastle:bcpkix-jdk15on", version.ref = "bcprovJdk15on" }
+bcprov-jdk15on = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bcprovJdk15on" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 composefilepicker = { module = "io.github.mahdiasd:ComposeFilePicker", version.ref = "composefilepicker" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }

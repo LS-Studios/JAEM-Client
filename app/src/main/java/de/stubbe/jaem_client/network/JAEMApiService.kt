@@ -1,11 +1,17 @@
 package de.stubbe.jaem_client.network
 
-import de.stubbe.jaem_client.model.ShareProfileModel
+import GetUserResponse
+import GetUsersResponse
+import PublicKey
+import UserData
+import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.model.network.AddProfileResponse
 import de.stubbe.jaem_client.model.network.ShareProfileResponse
-import retrofit2.Call
+import jdk.vm.ci.code.site.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import java.time.Instant
 
 interface JAEMApiService {
     /**
@@ -25,4 +31,19 @@ interface JAEMApiService {
      */
     @GET("share/{id}")
     suspend fun getSharedProfile(profileId: String): Call<ShareProfileResponse>
+
+    @POST("send_message")
+    suspend fun sendMessage(encryption: SymmetricEncryption, recipientPublicKey: ByteArray, message: ByteArray): Call<ResponseMessage>
+
+    @POST("get_messages")
+    suspend fun getMessages(encryption: SymmetricEncryption, signature: ByteArray, publicKey: ByteArray, timeStamp: Instant): Call<ResponseMessage>
+
+    @POST("delete_messages")
+    suspend fun deleteMessage(encryption: SymmetricEncryption, signature: ByteArray, publicKey: ByteArray, timeStamp: Instant): Call<ResponseMessage>
+
 }
+
+data class ResponseMessage (
+    @SerializedName("message")
+    val message: String,
+)

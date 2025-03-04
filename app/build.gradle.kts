@@ -107,6 +107,10 @@ dependencies {
 
     // Image cropping
     implementation(libs.android.image.cropper)
+
+    // Cryptography
+    implementation(libs.bcprov.jdk15on)
+    implementation(libs.bcpkix.jdk15on)
 }
 
 protobuf {
