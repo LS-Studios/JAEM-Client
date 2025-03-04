@@ -34,7 +34,6 @@ enum class SymmetricEncryption(
             val publicKey = privateKey.generatePublicKey()
 
             Pair(publicKey, privateKey)
-
         },
         { publicKey, privateKey ->
             val agreement = X25519Agreement()

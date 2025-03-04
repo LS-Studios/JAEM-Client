@@ -13,7 +13,7 @@ class ED25519Client {
 
     var encryption:SymmetricEncryption = SymmetricEncryption.ED25519
 
-    init {
+    constructor() {
         val ed25519Keys = encryption.generateSignatureKeys()
         ed25519PublicKey = ed25519Keys.first
         ed25519PrivateKey = ed25519Keys.second
@@ -21,5 +21,10 @@ class ED25519Client {
         val x25519Keys = encryption.generateX25519Keys(ed25519PrivateKey!!)
         x25519PublicKey = x25519Keys.first
         x25519PrivateKey = x25519Keys.second
+    }
+
+    constructor(edPublicKey: Ed25519PublicKeyParameters, xPublicKey: X25519PublicKeyParameters) {
+        ed25519PublicKey = edPublicKey
+        x25519PublicKey = xPublicKey
     }
 }
