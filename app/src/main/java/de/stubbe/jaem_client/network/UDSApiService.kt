@@ -1,6 +1,11 @@
+
 import de.stubbe.jaem_client.model.network.AddProfileResponse
-import de.stubbe.jaem_client.network.ResponseMessage
-import jdk.vm.ci.code.site.Call
+import de.stubbe.jaem_client.model.network.ResponseMessage
+import retrofit2.Call
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.POST
 
 interface UDSApiService {
     /**
@@ -28,14 +33,9 @@ interface UDSApiService {
     @DELETE("user/{uid}")
     suspend fun deleteUser(uid: String): Call<ResponseMessage>
 
-    @Post("add_pub_key")
+    @POST("add_pub_key")
     suspend fun addPublicKey(@Body user: UserData): Call<AddProfileResponse>
 
     @DELETE("user/{uid}/{public_key}")
     suspend fun deletePublicKey(uid:String,publicKey: ByteArray): Call<ResponseMessage>
 }
-
-data class ResponseMessage (
-    @SerializedName("message")
-    val message: String,
-)

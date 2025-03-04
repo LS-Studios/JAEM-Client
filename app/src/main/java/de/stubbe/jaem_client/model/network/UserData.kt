@@ -1,6 +1,4 @@
-import de.stubbe.jaem_client.model.network.AddProfileResponse
-import de.stubbe.jaem_client.model.network.PublicKey
-import jdk.incubator.vector.Vector
+import com.google.gson.annotations.SerializedName
 
 data class UserData (
     @SerializedName("uid")
@@ -8,7 +6,7 @@ data class UserData (
     @SerializedName("username")
     val username: String,
     @SerializedName("public_keys")
-    val createdAt: Vector<PublicKey>,
+    val createdAt: List<PublicKey>,
 )
 
 data class PublicKey(

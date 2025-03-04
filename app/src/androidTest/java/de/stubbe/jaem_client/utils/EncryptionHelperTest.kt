@@ -1,7 +1,9 @@
+
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.utils.EncryptionHelper
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
 
 class EncryptionHelperTest{
     @Test

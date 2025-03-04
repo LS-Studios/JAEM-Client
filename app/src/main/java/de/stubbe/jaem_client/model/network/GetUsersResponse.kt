@@ -1,8 +1,8 @@
-import jdk.incubator.vector.Vector
+import com.google.gson.annotations.SerializedName
 
 data class GetUsersResponse(
     @SerializedName("users")
-    val users: Vector<UserData>
+    val users: List<UserData>
 )
 
 data class GetUserResponse(

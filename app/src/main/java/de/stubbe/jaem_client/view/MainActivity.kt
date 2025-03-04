@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 viewModel.updateTheme(UserPreferences.Theme.DARK)
 
-                //viewModel.deleteExampleData(this@MainActivity)
+                viewModel.deleteExampleData(this@MainActivity)
                 //viewModel.addExampleData()
 //                viewModel.printData()
             }

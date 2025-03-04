@@ -1,13 +1,10 @@
 package de.stubbe.jaem_client.network
 
-import GetUserResponse
-import GetUsersResponse
-import PublicKey
-import UserData
+import de.stubbe.jaem_client.model.ShareProfileModel
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
-import de.stubbe.jaem_client.model.network.AddProfileResponse
+import de.stubbe.jaem_client.model.network.ResponseMessage
 import de.stubbe.jaem_client.model.network.ShareProfileResponse
-import jdk.vm.ci.code.site.Call
+import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -42,8 +39,3 @@ interface JAEMApiService {
     suspend fun deleteMessage(encryption: SymmetricEncryption, signature: ByteArray, publicKey: ByteArray, timeStamp: Instant): Call<ResponseMessage>
 
 }
-
-data class ResponseMessage (
-    @SerializedName("message")
-    val message: String,
-)

@@ -1,64 +1,63 @@
 package de.stubbe.jaem_client.utils
 
-import ED25519Client
-import de.stubbe.jaem_client.model.enums.SymmetricEncryption
-import org.bouncycastle.util.encoders.Hex
-import java.security.AsymmetricKey
-import java.security.Security
-import java.security.SignatureException
-import java.util.Base64
-
 
 /**
  * Hilfsklasse für die Verschlüsselung und Entschlüsselung von Daten.
  */
-class EncryptionHelper() {
-    var client: ED25519Client? = null
+import ED25519Client
+import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import java.security.Security
+import java.security.SignatureException
+
+class EncryptionHelper(
+    val encryption: SymmetricEncryption,
+    val otherClient: ED25519Client? = null
+) {
+    val client: ED25519Client? = if (encryption == SymmetricEncryption.ED25519) ED25519Client() else null
     var aesKey: ByteArray? = null
-    var otherClient: ED25519Client? = null
+        private set
 
     init {
-        Security.addProvider(org.bouncycastle.jce.provider.BouncyCastleProvider())
-        if(encryption == SymmetricEncryption.ED25519){
-            this.client = ED25519Client("Bob")
-        }
+        Security.addProvider(BouncyCastleProvider())
+        otherClient?.let { setCommunicationPartner(it) }
     }
 
-    constructor(encryption: SymmetricEncryption, otherClient: ED25519Client) : this(encryption) {
-        this.otherClient = otherClient
-        this.aesKey = encryption.generateSymmetricKey(otherClient.x25519PublicKey!! , client!!.x25519PrivateKey!!)
-    }
-
-    fun setCommunicationPartner(otherClient: ED25519Client){
-        this.otherClient = otherClient
-        this.aesKey = encryption.generateSymmetricKey(otherClient.x25519PublicKey!! , client!!.x25519PrivateKey!!)
+    fun setCommunicationPartner(otherClient: ED25519Client) {
+        this.aesKey = requireNotNull(client) {
+            "Client must be initialized before setting a communication partner."
+        }.let { encryption.generateSymmetricKey(otherClient.x25519PublicKey!!, it.x25519PrivateKey!!) }
     }
 
     /**
-     * Verschlüsselt die übergebene Daten.
+     * Verschlüsselt die übergebenen Daten.
      *
-     * @param data: Zu verschlüsselnde Daten
+     * @param data Zu verschlüsselnde Daten
      * @return Verschlüsselte Daten
      */
     fun encrypt(data: ByteArray): ByteArray {
-        val signature = encryption.sign(data, client!!.ed25519PrivateKey!!)
-        val encryptedMessage = encryption.encrypt(data, signature, this.aesKey!!)
-        println(Base64.getEncoder().encodeToString(encryptedMessage))
-        return encryptedMessage
+        val client = requireNotNull(client) { "Client must be initialized before encrypting." }
+        val aesKey = requireNotNull(aesKey) { "AES Key must be set before encrypting." }
+
+        val signature = encryption.sign(data, client.ed25519PrivateKey!!)
+        return encryption.encrypt(data, signature, aesKey)
     }
 
     /**
-     * Entschlüsselt die übergebene Daten.
+     * Entschlüsselt die übergebenen Daten.
      *
-     * @param data: Zu entschlüsselnde Daten
+     * @param data Zu entschlüsselnde Daten
      * @return Entschlüsselte Daten
+     * @throws SignatureException wenn die Signaturprüfung fehlschlägt
      */
     fun decrypt(data: ByteArray): ByteArray {
-        val clearBytes = encryption.decrypt(data, this.aesKey!!)
-        val signature = clearBytes.copyOfRange(0,64)
-        val clearText = clearBytes.copyOfRange(64, clearBytes.size)
-        val isValidSignature = encryption.checkSign(clearText, signature, otherClient!!.ed25519PublicKey!!)
-        if(!isValidSignature) {
+        val aesKey = requireNotNull(aesKey) { "AES Key must be set before decrypting." }
+        val otherClient = requireNotNull(otherClient) { "Communication partner must be set before decrypting." }
+
+        val clearBytes = encryption.decrypt(data, aesKey)
+        val (signature, clearText) = clearBytes.sliceArray(0 until 64) to clearBytes.sliceArray(64 until clearBytes.size)
+
+        if (!encryption.checkSign(clearText, signature, otherClient.ed25519PublicKey!!)) {
             throw SignatureException("Signature verification failed.")
         }
 

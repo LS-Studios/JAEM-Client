@@ -22,6 +22,7 @@ import de.stubbe.jaem_client.repositories.database.ChatRequestRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
 import de.stubbe.jaem_client.repositories.database.SymmetricKeyRepository
+import de.stubbe.jaem_client.utils.EncryptionHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
@@ -97,16 +98,7 @@ class MainActivityViewModel @Inject constructor(
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val chatRequest1 = ChatRequestModel(
-                id = 0,
-                publicKey = "1234567890123456",
-                profileId = 10,
-                chatPartnerId = 20
-            )
-
-            chatRequestRepository.insertChatRequest(chatRequest1)
-
-            val profile1 = ProfileModel(
+            val profile = ProfileModel(
                 id = 0,
                 uid = "123",
                 name = "Max Mustermann",
@@ -114,11 +106,11 @@ class MainActivityViewModel @Inject constructor(
                 description = "Ich bin ein Beispielprofil",
             )
 
-            val newProfile1Id = profileRepository.insertProfile(profile1).toInt()
+            val profileId = profileRepository.insertProfile(profile).toInt()
 
-            userPreferencesRepository.updateUserProfileId(newProfile1Id)
+            userPreferencesRepository.updateUserProfileId(profileId)
 
-            val profile2 = ProfileModel(
+            val chatPartner = ProfileModel(
                 id = 0,
                 uid = "456",
                 name = "Lisa Mustermann",
@@ -126,72 +118,19 @@ class MainActivityViewModel @Inject constructor(
                 description = "Ich bin ein anderes Beispielprofil",
             )
 
-            val newProfile2Id = profileRepository.insertProfile(profile2).toInt()
-
-            val profile3 = ProfileModel(
-                id = 0,
-                uid = "789",
-                name = "Ulrich Mustermann",
-                profilePicture = fetchPicture(),
-                description = "Ich bin ein noch anderes Beispielprofil",
-            )
-
-            val newProfile3Id = profileRepository.insertProfile(profile3).toInt()
+            val chatPartnerId = profileRepository.insertProfile(chatPartner).toInt()
 
             val chat1 = ChatModel(
                 id = 0,
-                profileId = newProfile1Id,
-                chatPartnerId = newProfile2Id
+                profileId = profileId,
+                chatPartnerId = chatPartnerId
             )
 
-            val newChat1Id = chatRepository.insertChat(chat1).toInt()
+            chatRepository.insertChat(chat1).toInt()
 
-            val message1 = MessageModel(
-                id = 0,
-                senderId = newProfile2Id,
-                receiverId = newProfile1Id,
-                chatId = newChat1Id,
-                stringContent = "Hallo!",
-                attachments = null,
-                sendTime = System.currentTimeMillis(),
-                deliveryTime = null
-            )
+            val profileEncryption = EncryptionHelper(SymmetricEncryption.ED25519)
 
-            val newMessage1Id = messageRepository.insertMessage(message1).toInt()
-
-            val chat2 = ChatModel(
-                id = 0,
-                profileId = newProfile1Id,
-                chatPartnerId = newProfile3Id
-            )
-
-            val newChat2Id = chatRepository.insertChat(chat2).toInt()
-
-            val message2 = MessageModel(
-                id = 0,
-                senderId = newProfile3Id,
-                receiverId = newProfile1Id,
-                chatId = newChat2Id,
-                stringContent = "Ne oder?",
-                attachments = null,
-                sendTime = System.currentTimeMillis(),
-                deliveryTime = null
-            )
-
-            val newMessage2Id = messageRepository.insertMessage(message2).toInt()
-
-            val message3 = MessageModel(
-                id = 0,
-                senderId = newProfile3Id,
-                receiverId = newProfile1Id,
-                chatId = newChat2Id,
-                stringContent = "Du bist echt durch Junge \uD83D\uDE02!",
-                attachments = null,
-                sendTime = System.currentTimeMillis(),
-                deliveryTime = null
-            )
-
-            val newMessage3Id = messageRepository.insertMessage(message3).toInt()
+            val chatPartnerEncryption = EncryptionHelper(SymmetricEncryption.ED25519, profileEncryption.client!!)
 
             val symmetricKey = SymmetricKeyModel(
                 id = 0,
