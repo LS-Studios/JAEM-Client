@@ -32,9 +32,11 @@ class MainActivity : ComponentActivity() {
             val userPreferences by viewModel.userPreferences.collectAsState()
 
             LaunchedEffect(Unit) {
+               // viewModel.getKeys()
+
                 viewModel.updateTheme(UserPreferences.Theme.DARK)
 
-                viewModel.deleteExampleData(this@MainActivity)
+               // viewModel.deleteExampleData(this@MainActivity)
                 //viewModel.addExampleData()
 //                viewModel.printData()
             }

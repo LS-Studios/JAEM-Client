@@ -1,18 +1,20 @@
 package de.stubbe.jaem_client.model.enums
 import org.bouncycastle.crypto.agreement.X25519Agreement
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator
-import org.bouncycastle.crypto.params.*
+import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+import org.bouncycastle.crypto.params.HKDFParameters
+import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
+import org.bouncycastle.crypto.params.X25519PublicKeyParameters
 import org.bouncycastle.crypto.signers.Ed25519Signer
-import org.bouncycastle.util.encoders.Hex
 import java.security.SecureRandom
-import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 enum class SymmetricEncryption(
     val algorithm: String,
-    val code: Int,
+    val code: Byte,
     val generateX25519Keys: (Ed25519PrivateKeyParameters) -> Pair<X25519PublicKeyParameters, X25519PrivateKeyParameters>,
     val generateSignatureKeys: () -> Pair<Ed25519PublicKeyParameters,Ed25519PrivateKeyParameters>,
     val generateSymmetricKey: (X25519PublicKeyParameters, X25519PrivateKeyParameters)-> ByteArray,

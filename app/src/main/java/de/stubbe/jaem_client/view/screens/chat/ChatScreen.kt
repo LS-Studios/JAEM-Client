@@ -81,6 +81,10 @@ fun ChatScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.getMessages()
+    }
+
     // Bei neuen Nachrichten scrollen
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {

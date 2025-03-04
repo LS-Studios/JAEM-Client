@@ -14,7 +14,7 @@ abstract class SymmetricKeyDao: BaseDao<SymmetricKeyModel> {
     @Query("SELECT * FROM symmetric_keys WHERE id = :id")
     abstract fun getSymmetricKeyPairsById(id: Int): Flow<List<SymmetricKeyModel>>
 
-    @Query("SELECT * FROM symmetric_keys WHERE profile_id = :profileId")
+    @Query("SELECT * FROM symmetric_keys WHERE device_id = :profileId")
     abstract fun getSymmetricKeyPairsByProfileId(profileId: Int): Flow<List<SymmetricKeyModel>>
 
 }

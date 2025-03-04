@@ -5,16 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
-import de.stubbe.jaem_client.database.entries.AsymmetricKeyPairModel
 import de.stubbe.jaem_client.database.entries.ChatModel
-import de.stubbe.jaem_client.database.entries.ChatRequestModel
-import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.database.entries.ProfileModel
-import de.stubbe.jaem_client.database.entries.SymmetricKeyModel
 import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.datastore.UserPreferences.Theme
-import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
-import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.network.JAEMApiService
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.AsymmetricKeyPairRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
@@ -22,7 +17,6 @@ import de.stubbe.jaem_client.repositories.database.ChatRequestRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
 import de.stubbe.jaem_client.repositories.database.SymmetricKeyRepository
-import de.stubbe.jaem_client.utils.EncryptionHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
@@ -41,7 +35,8 @@ class MainActivityViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
     private val asymmetricKeyPairRepository: AsymmetricKeyPairRepository,
     private val symmetricKeyRepository: SymmetricKeyRepository,
-    private val chatRequestRepository: ChatRequestRepository
+    private val chatRequestRepository: ChatRequestRepository,
+    private val jaemApiService: JAEMApiService
 ): ViewModel() {
 
     val userPreferences = userPreferencesRepository.userPreferencesFlow
@@ -50,6 +45,10 @@ class MainActivityViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
             initialValue = UserPreferences.getDefaultInstance()
         )
+
+    //fun getKeys(): DeviceKeyPair {
+    //    symmetricKeyRepository.getSymmetricKeyPairsByProfileId(1)
+   // }
 
     fun updateTheme(theme: Theme) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -126,53 +125,7 @@ class MainActivityViewModel @Inject constructor(
                 chatPartnerId = chatPartnerId
             )
 
-            chatRepository.insertChat(chat1).toInt()
-
-            val profileEncryption = EncryptionHelper(SymmetricEncryption.ED25519)
-
-            val chatPartnerEncryption = EncryptionHelper(SymmetricEncryption.ED25519, profileEncryption.client!!)
-
-            val symmetricKey = SymmetricKeyModel(
-                id = 0,
-                key = "1234567890123456",
-                profileId = newProfile2Id,
-                encryption = SymmetricEncryption.AES
-            )
-
-            symmetricKeyRepository.insertSymmetricKeyPair(symmetricKey)
-
-            val asymmetricKeyPair1 = AsymmetricKeyPairModel(
-                id = 0,
-                name = "Schlüssel 1",
-                publicKey = "1234567890123456",
-                privateKey = "1234567890123456",
-                profileId = newProfile2Id,
-                encryption = AsymmetricEncryption.ED25519
-            )
-
-            asymmetricKeyPairRepository.insertAsymmetricKeyPair(asymmetricKeyPair1)
-
-            val asymmetricKeyPair2 = AsymmetricKeyPairModel(
-                id = 0,
-                name = "Schlüssel 2",
-                publicKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
-                privateKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
-                profileId = newProfile2Id,
-                encryption = AsymmetricEncryption.ED25519
-            )
-
-            asymmetricKeyPairRepository.insertAsymmetricKeyPair(asymmetricKeyPair2)
-
-            val asymmetricKeyPair3 = AsymmetricKeyPairModel(
-                id = 0,
-                name = "Schlüssel 3",
-                publicKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
-                privateKey = "fdhjsfijfhksdjhfjkdshfkjdsf",
-                profileId = newProfile2Id,
-                encryption = AsymmetricEncryption.ED25519
-            )
-
-            asymmetricKeyPairRepository.insertAsymmetricKeyPair(asymmetricKeyPair3)
+            chatRepository.insertChat(chat1)
         }
     }
 }

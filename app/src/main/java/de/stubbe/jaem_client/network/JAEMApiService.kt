@@ -1,14 +1,14 @@
 package de.stubbe.jaem_client.network
 
-import de.stubbe.jaem_client.model.ShareProfileModel
-import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.model.network.ResponseMessage
 import de.stubbe.jaem_client.model.network.ShareProfileResponse
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import java.time.Instant
 
 interface JAEMApiService {
     /**
@@ -18,7 +18,7 @@ interface JAEMApiService {
      * @return Die uid zum geteilten Profil
      */
     @POST("share")
-    suspend fun createShareProfile(@Body profileModel: ShareProfileModel): Call<ShareProfileResponse>
+    suspend fun createShareProfile(@Body profileModel: RequestBody): Call<ShareProfileResponse>
 
     /**
      * Gibt ein geteiltes Profil zurück
@@ -29,13 +29,16 @@ interface JAEMApiService {
     @GET("share/{id}")
     suspend fun getSharedProfile(profileId: String): Call<ShareProfileResponse>
 
+    @GET("hello")
+    suspend fun hello(): Call<String>
+
     @POST("send_message")
-    suspend fun sendMessage(encryption: SymmetricEncryption, recipientPublicKey: ByteArray, message: ByteArray): Call<ResponseMessage>
+    suspend fun sendMessage(@Body requestBody: RequestBody): Call<Response<Void>>
 
     @POST("get_messages")
-    suspend fun getMessages(encryption: SymmetricEncryption, signature: ByteArray, publicKey: ByteArray, timeStamp: Instant): Call<ResponseMessage>
+    fun getMessages(@Body requestBody: RequestBody): Call<ResponseBody>
 
     @POST("delete_messages")
-    suspend fun deleteMessage(encryption: SymmetricEncryption, signature: ByteArray, publicKey: ByteArray, timeStamp: Instant): Call<ResponseMessage>
+    suspend fun deleteMessage(@Body requestBody: RequestBody): Call<ResponseMessage>
 
 }

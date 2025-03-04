@@ -44,8 +44,6 @@ class SharedChatViewModel @Inject constructor(
     ) { chats, messages, profiles ->
         val chat = chats.find { it.id == chatScreenArguments.chatId } ?: return@combine null
 
-        println(chat)
-
         val chatPartner = profiles.find { it.id == chat.chatPartnerId } ?: return@combine null
 
         val lastMessages = messages
