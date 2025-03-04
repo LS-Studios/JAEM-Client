@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec
 
 enum class SymmetricEncryption(
     val algorithm: String,
+    val code: Int,
     val generateX25519Keys: (Ed25519PrivateKeyParameters) -> Pair<X25519PublicKeyParameters, X25519PrivateKeyParameters>,
     val generateSignatureKeys: () -> Pair<Ed25519PublicKeyParameters,Ed25519PrivateKeyParameters>,
     val generateSymmetricKey: (X25519PublicKeyParameters, X25519PrivateKeyParameters)-> ByteArray,
@@ -22,6 +23,7 @@ enum class SymmetricEncryption(
 ) {
     ED25519(
         "ED25519",
+        0,
         {edPrivateKey ->
             val xPrivateKey = X25519PrivateKeyParameters(edPrivateKey.encoded)
             val xPublicKey = xPrivateKey.generatePublicKey()
