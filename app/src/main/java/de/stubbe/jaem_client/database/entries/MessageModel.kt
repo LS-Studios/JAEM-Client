@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import de.stubbe.jaem_client.model.Attachments
+import kotlinx.serialization.Serializable
 
 /**
  * Model zur Speicherung von Nachrichteninformationen
@@ -17,6 +18,7 @@ import de.stubbe.jaem_client.model.Attachments
  * @param sendTime: Zeitstempel des Sendens
  * @param deliveryTime: Zeitstempel der Zustellung (nullable)
  */
+@Serializable
 @Entity(tableName = "messages")
 data class MessageModel(
     @PrimaryKey(autoGenerate = true)

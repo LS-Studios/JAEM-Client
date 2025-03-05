@@ -43,7 +43,7 @@ AES -> Immer bei erstllung des Chats (NICK)
 Bei Nachicht Senden:
 1. Byte für Algorithmus (0 -> ED)
 2. + 32 Byte ED PUB von Empfänger
-3. (Message + ED PUB) -> Signatur mit ED PRIVATE
+3. (ED PUB + Message) -> Signatur mit ED PRIVATE
 4. (Signatur + Message) -> AES verschlüsseln
 5. ED PUB + AES Verschlüsselt -> RSA verschlüsseln
 6. 1 + 2 + RSA Verschlüsselt
@@ -54,3 +54,9 @@ Bei Nachicht Empfangen:
 2. Zeitstempel Signieren mit ED PRIVATE
 3. POST an get messages -> Algorithmus + signatur + ED PUB + Zeitstemel
 4. Selbser Splitten (Jede nachicht 8 Byte wie lange die Nachicht)
+5. RSA Entschlüsseln
+6. 32 Bytes ED PUB getten
+7. Rest AES entschlüsseln
+8. Timestamp von 0 bis 8
+7. Signatur von 8 bis 72 byte lesen
+8. Rest message lesen

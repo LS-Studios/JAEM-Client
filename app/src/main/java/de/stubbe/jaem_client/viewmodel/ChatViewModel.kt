@@ -14,7 +14,7 @@ import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.network.JAEMApiService
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
-import de.stubbe.jaem_client.utils.EncryptionHelper
+import de.stubbe.jaem_client.utils.ChatEncryptionData
 import de.stubbe.jaem_client.utils.MessageDeliveryHelper
 import de.stubbe.jaem_client.utils.executeSafely
 import kotlinx.coroutines.Dispatchers
@@ -117,8 +117,8 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    val deviceEncryption = EncryptionHelper(SymmetricEncryption.ED25519)
-    val chatPartnerEncryption = EncryptionHelper(SymmetricEncryption.ED25519)
+    val deviceEncryption = ChatEncryptionData(SymmetricEncryption.ED25519)
+    val chatPartnerEncryption = ChatEncryptionData(SymmetricEncryption.ED25519)
 
     init {
         deviceEncryption.setCommunicationPartner(chatPartnerEncryption.client!!)

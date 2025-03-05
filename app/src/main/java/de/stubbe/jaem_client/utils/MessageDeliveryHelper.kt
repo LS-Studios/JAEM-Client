@@ -7,18 +7,20 @@ import okhttp3.RequestBody
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-object MessageDeliveryHelper {
-
+ class MessageDeliveryHelper(
+     var client: ED25519Client,
+     var otherClient: ED25519Client)
+  {
     fun constructMessage(
-        client: ED25519Client,
-        otherClient: ED25519Client,
         algorithm: SymmetricEncryption,
         message: ByteArray,
+        messageType: UShort,
     ): ByteArray {
-        val messageWithPublicKey = message + client.ed25519PublicKey!!.encoded
+        val messageWithPublicKey =  client.ed25519PublicKey!!.encoded + message
         val signature = algorithm.sign(messageWithPublicKey, client.ed25519PrivateKey!!)
         val aesKey = algorithm.generateSymmetricKey(otherClient.x25519PublicKey!!, client.x25519PrivateKey!!)
-        val aesEncrypted = algorithm.encrypt(message, signature, aesKey)
+        val aesEncrypted = algorithm.encrypt(
+            (ByteBuffer.allocate(2).putShort(messageType.toShort()).flip() as ByteBuffer).toString().toByteArray() + message, signature, aesKey)
         val aesEncryptedWithEDPubKey = client.ed25519PublicKey!!.encoded + aesEncrypted
 
         val rsaKeysRecipient = AsymmetricEncryption.RSA.generate()
@@ -30,7 +32,6 @@ object MessageDeliveryHelper {
     }
 
     fun getMessagesBody(
-        client: ED25519Client,
         algorithm: SymmetricEncryption,
     ): RequestBody {
         val encCode = algorithm.code
@@ -40,20 +41,21 @@ object MessageDeliveryHelper {
         return RequestBody.create(null, message)
     }
 
-    fun deconstructMessage(
-        message: ByteArray,
-    ): List<ByteArray> {
-        var pointer = 0
-        var messages = MutableList(0) { byteArrayOf() }
-        while(pointer < message.size) {
-            val messageSize = message.copyOfRange(pointer, pointer + 8)
-            val sizeBuffer = ByteBuffer.wrap(messageSize).order(ByteOrder.BIG_ENDIAN).getInt() .toUInt().toInt()
-            pointer += 8
-            val messagePart = message.copyOfRange(pointer, pointer + sizeBuffer)
-            messages.add(messagePart)
-            pointer += sizeBuffer
-        }
-        return messages
+
+
+
+    fun deconstructMessage(encryption: SymmetricEncryption, message: ByteArray, client: ED25519Client, otherClient: ED25519Client){
+
+
+        val rsaDecryptedMessage = AsymmetricEncryption.RSA.decrypt(message, client.rsaPrivateKey!!)
+        val recipientSignatureKey = rsaDecryptedMessage.copyOfRange(0, 32)
+        val recipientRSAKey = rsaDecryptedMessage.copyOfRange(32, 96)
+        val aesEncryptedMessage = rsaDecryptedMessage.copyOfRange(96, rsaDecryptedMessage.size)
+
+        val aesKey = encryption.generateSymmetricKey(otherClient.x25519PublicKey!!, client.x25519PrivateKey!!)
+        val aesDecryptedMessage = encryption.decrypt(aesEncryptedMessage, aesKey)
+        val signature = aesDecryptedMessage.copyOfRange(0, 64)
+        val
     }
 }
 

@@ -4,14 +4,16 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.Key
 import java.security.KeyPair
 import java.security.KeyPairGenerator
+import java.security.PrivateKey
+import java.security.PublicKey
 import java.security.Security
 import javax.crypto.Cipher
 
 enum class AsymmetricEncryption(
     val algorithm: String,
     val generate: () -> KeyPair,
-    val encrypt: (ByteArray, Key) -> ByteArray,
-    val decrypt: (ByteArray, Key) -> ByteArray
+    val encrypt: (ByteArray, PublicKey) -> ByteArray,
+    val decrypt: (ByteArray, PrivateKey) -> ByteArray
 ) {
     @SuppressLint("DeprecatedProvider")
     RSA(

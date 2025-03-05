@@ -1,15 +1,15 @@
 
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
-import de.stubbe.jaem_client.utils.EncryptionHelper
+import de.stubbe.jaem_client.utils.ChatEncryptionData
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
-class EncryptionHelperTest{
+class ChatEncryptionDataTest{
     @Test
     fun testSending(){
-        val thisDevice = EncryptionHelper(SymmetricEncryption.ED25519)
-        val otherDevice = EncryptionHelper(SymmetricEncryption.ED25519, thisDevice.client!!)
+        val thisDevice = ChatEncryptionData(SymmetricEncryption.ED25519)
+        val otherDevice = ChatEncryptionData(SymmetricEncryption.ED25519, thisDevice.client!!)
         thisDevice.setCommunicationPartner(otherDevice.client!!)
 
         var message = "Hello World!"
