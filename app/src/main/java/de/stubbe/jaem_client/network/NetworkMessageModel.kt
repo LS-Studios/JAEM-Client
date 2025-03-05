@@ -5,7 +5,9 @@ import java.nio.ByteBuffer
 
 data class NetworkMessageModel(
     val signatureKey: ByteArray,
-    val aesEncryptedMessage: ByteArray,
+    val signature: ByteArray,
+    val timeSend: ULong,
+    val messages: List<Message>,
 )
 
 data class SendNetworkMessageModel(
@@ -25,5 +27,9 @@ data class Message(
 )
 
 fun Message.toByteArray(): ByteArray{
-    return ByteBuffer.allocate(2).putShort(messageType.toShort()).flip().toString().toByteArray() + messageLength.toString().toByteArray() + message
+    return ByteBuffer.allocate(2 + 4 + message.size)
+        .putShort(messageType.toShort())
+        .putInt(message.size)
+        .put(message)
+        .array()
 }

@@ -2,6 +2,7 @@ package de.stubbe.jaem_client.utils
 
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
 import de.stubbe.jaem_client.model.network.ReceiveBody
+import de.stubbe.jaem_client.network.Message
 import de.stubbe.jaem_client.network.NetworkMessageModel
 import retrofit2.Call
 import retrofit2.HttpException
@@ -39,27 +40,33 @@ fun ByteArray.toNetworkMessageModel(encryptionData: ChatEncryptionData): Network
     val signatureKey = rsaDecryptedMessage.copyOfRange(0, 32)
     val aesEncryptedMessage = rsaDecryptedMessage.copyOfRange(32, rsaDecryptedMessage.size)
 
-    val aesKey = algorithm.generateSymmetricKey(otherClient.x25519PublicKey!!, client.x25519PrivateKey!!)
+    val aesKey =
+        algorithm.generateSymmetricKey(otherClient.x25519PublicKey!!, client.x25519PrivateKey!!)
     val aesDecryptedMessage = algorithm.decrypt(aesEncryptedMessage, aesKey)
 
-    val signature = aesDecryptedMessage.copyOfRange(0,64)
-    val messageType = aesDecryptedMessage.copyOfRange(64, 66)
-    val message = aesEncryptedMessage.copyOfRange(66, aesDecryptedMessage.size)
+    val signature = aesDecryptedMessage.copyOfRange(0, 64)
+    val timeSend =
+        ByteBuffer.wrap(aesDecryptedMessage.copyOfRange(64, 72)).order(ByteOrder.BIG_ENDIAN)
+            .getLong()
 
+    val messageData = aesDecryptedMessage.copyOfRange(72, aesDecryptedMessage.size)
+    val messageModels = mutableListOf<Message>()
+    var pointer = 0
+    while (pointer < messageData.size) {
+        val messageType = ByteBuffer.wrap(messageData.copyOfRange(pointer, pointer + 2))
+            .order(ByteOrder.BIG_ENDIAN).getShort().toUShort()
+        pointer += 2
+        val messageSize = ByteBuffer.wrap(messageData.copyOfRange(pointer, pointer + 4))
+            .order(ByteOrder.BIG_ENDIAN).getInt().toUInt().toInt()
+        pointer += 4
+        val message = messageData.copyOfRange(pointer, pointer + messageSize)
+        pointer += messageSize
+        messageModels.add(Message(messageType, message.size.toUInt(), message))
+    }
+
+    return NetworkMessageModel(signature, signatureKey, timeSend.toULong(), messageModels)
 }
 
-fun splitResponseIntoMessages(
-    message: ByteArray,
-): List<ByteArray> {
-    var pointer = 0
-    val messages = MutableList(0) { byteArrayOf() }
-    while (pointer < message.size) {
-        val messageSize = message.copyOfRange(pointer, pointer + 8)
-        val sizeBuffer = ByteBuffer.wrap(messageSize).order(ByteOrder.BIG_ENDIAN).getInt().toUInt().toInt()
-        pointer += 8
-        val messagePart = message.copyOfRange(pointer, pointer + sizeBuffer)
-        messages.add(messagePart)
-        pointer += sizeBuffer
-    }
-    return messages
+fun ByteArray.toUShort(): UShort {
+    return ByteBuffer.wrap(this).order(ByteOrder.BIG_ENDIAN).short.toUShort()
 }
