@@ -35,6 +35,6 @@ interface JAEMApiService {
     suspend fun getMessages(@Body requestBody: RequestBody): Response<ResponseBody>
 
     @POST("delete_messages")
-    suspend fun deleteMessage(@Body requestBody: RequestBody): Call<ResponseBody>
+    suspend fun deleteMessage(@Body requestBody: RequestBody): Response<ResponseBody>
 
 }
