@@ -34,16 +34,25 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.database.entries.MessageModel
+import de.stubbe.jaem_client.model.Attachments
+import de.stubbe.jaem_client.model.enums.AttachmentType
 import de.stubbe.jaem_client.utils.formatTime
 import de.stubbe.jaem_client.utils.toLocalDateTime
+import de.stubbe.jaem_client.utils.toSizeString
+import de.stubbe.jaem_client.view.components.ExtensionPresentation
 import de.stubbe.jaem_client.view.components.HighlightText
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
+import java.io.File
+import kotlin.io.path.fileSize
+
+const val timeWidth = 80
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -58,7 +67,6 @@ fun ChatMessageBubble(
 ) {
     val localDensity = LocalDensity.current
     val bubbleColor = JAEMThemeProvider.current.secondary
-    val timeWidth = 80 // Breite für die Zeitstempelanzeige
     val maxBubbleWidth = (LocalConfiguration.current.screenWidthDp.dp * 3 / 4) + timeWidth.dp
 
     // Zustände für das Layout-Verhalten
@@ -136,69 +144,29 @@ fun ChatMessageBubble(
                         }
                     }
             ) {
-//                // Bild oder Datei anzeigen
-//                when {
-//                    file != null && bitmap != null -> Image(
-//                        bitmap = bitmap.asImageBitmap(),
-//                        contentDescription = "Image",
-//                        contentScale = ContentScale.Crop,
-//                        modifier = Modifier
-//                            .width(200.dp)
-//                            .height(200.dp)
-//                            .clip(Dimensions.Shape.Rounded.Small)
-//                    )
-//
-//                    file != null -> Text(
-//                        modifier = Modifier.padding(bottom = Dimensions.Padding.Tiny),
-//                        text = file.name,
-//                        style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
-//                    )
-//                }
 
-                // Nachrichteninhalt mit Zeitstempel in einer Zeile
                 if (isTimeTextInline) {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        HighlightText(
-                            modifier = Modifier.widthIn(max = maxBubbleWidth - timeWidth.dp),
-                            text = message.stringContent ?: "",
-                            highlight = searchValue,
-                            style = JAEMTextStyle(MaterialTheme.typography.titleMedium),
-                            onTextLayout = { textLayoutResult ->
-                                lineCount = textLayoutResult.lineCount
-                            }
-                        )
-                        Text(
-                            modifier = Modifier
-                                .padding(start = Dimensions.Padding.Small)
-                                .offset(y = Dimensions.Spacing.Small),
-                            text = message.sendTime.toLocalDateTime().formatTime(),
-                            fontSize = 12.sp,
-                            color = Color.Gray,
-                            textAlign = TextAlign.End
+                        MessageContent(
+                            isTimeTextInline,
+                            message,
+                            searchValue,
+                            maxBubbleWidth,
+                            setLineCount = { lineCount = it },
+                            setSpaceLeft = { spaceLeft = it }
                         )
                     }
                 }
                 // Zeitstempel unter dem Nachrichtentext anzeigen
                 else {
                     Column(horizontalAlignment = Alignment.End) {
-                        HighlightText(
-                            modifier = Modifier.padding(bottom = Dimensions.Padding.Tiny),
-                            text = message.stringContent ?: "",
-                            highlight = searchValue,
-                            style = JAEMTextStyle(MaterialTheme.typography.titleMedium),
-                            onTextLayout = { textLayoutResult ->
-                                val lastLineIndex = textLayoutResult.lineCount - 1
-                                val lastLineEnd = textLayoutResult.getLineRight(lastLineIndex)
-                                val totalWidth = textLayoutResult.size.width
-                                val leftSpace = totalWidth - lastLineEnd
-                                spaceLeft = leftSpace > 200
-                            }
-                        )
-                        Text(
-                            text = message.sendTime.toLocalDateTime().formatTime(),
-                            fontSize = 12.sp,
-                            color = Color.Gray,
-                            textAlign = TextAlign.End
+                        MessageContent(
+                            isTimeTextInline,
+                            message,
+                            searchValue,
+                            maxBubbleWidth,
+                            setLineCount = { lineCount = it },
+                            setSpaceLeft = { spaceLeft = it }
                         )
                     }
                 }
@@ -226,6 +194,113 @@ fun ChatMessageBubble(
                     .zIndex(2f)
                     .background(JAEMThemeProvider.current.accent.copy(alpha = 0.2f))
             )
+        }
+    }
+}
+
+@Composable
+private fun MessageContent(
+    itTimeTextInline: Boolean,
+    message: MessageModel,
+    searchValue: String,
+    maxBubbleWidth: Dp,
+    setLineCount: (Int) -> Unit,
+    setSpaceLeft: (Boolean) -> Unit,
+) {
+    if (message.attachments != null) {
+
+    } else {
+
+    }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Tiny)
+    ) {
+        if (message.attachments != null) {
+            AttachmentsPresentation(
+                attachments = message.attachments
+            )
+        }
+        if (message.stringContent?.isNotEmpty() == true) {
+            HighlightText(
+                modifier = Modifier.widthIn(max = maxBubbleWidth - timeWidth.dp),
+                text = message.stringContent ?: "",
+                highlight = searchValue,
+                style = JAEMTextStyle(MaterialTheme.typography.titleMedium),
+                onTextLayout = { textLayoutResult ->
+                    if (itTimeTextInline) {
+                        setLineCount(textLayoutResult.lineCount)
+                    } else {
+                        val lastLineIndex = textLayoutResult.lineCount - 1
+                        val lastLineEnd =
+                            textLayoutResult.getLineRight(lastLineIndex)
+                        val totalWidth = textLayoutResult.size.width
+                        val leftSpace = totalWidth - lastLineEnd
+                        setSpaceLeft(leftSpace > 200)
+                    }
+                }
+            )
+        }
+    }
+    Text(
+        modifier = Modifier
+            .then(
+                if (itTimeTextInline) {
+                    Modifier
+                        .padding(start = Dimensions.Padding.Small)
+                        .offset(y = Dimensions.Spacing.Small)
+                } else {
+                    Modifier.padding(bottom = Dimensions.Padding.Tiny)
+                }
+            ),
+        text = message.sendTime.toLocalDateTime().formatTime(),
+        fontSize = 12.sp,
+        color = Color.Gray,
+        textAlign = TextAlign.End
+    )
+}
+
+@Composable
+private fun AttachmentsPresentation(
+    attachments: Attachments
+) {
+    Box(
+        modifier = Modifier
+            .background(
+                color = JAEMThemeProvider.current.primary,
+                shape = Dimensions.Shape.Rounded.Small
+            )
+            .padding(Dimensions.Padding.Small)
+    ) {
+        when (attachments.type) {
+            AttachmentType.FILE -> {
+                val file = attachments.attachmentPaths.firstOrNull()
+                    ?.let { File(it) }
+
+                if (file != null) {
+                    Column {
+                        Row {
+                            ExtensionPresentation(
+                                extension = file.extension
+                            )
+                            Text(
+                                text = file.name,
+                                style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
+                            )
+                        }
+                        Text(
+                            text = file.toPath().fileSize().toSizeString(),
+                            style = JAEMTextStyle(MaterialTheme.typography.labelSmall)
+                        )
+                    }
+                }
+            }
+
+            AttachmentType.IMAGE_AND_VIDEO -> {
+                Text(
+                    text = "Bild",
+                    style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
+                )
+            }
         }
     }
 }

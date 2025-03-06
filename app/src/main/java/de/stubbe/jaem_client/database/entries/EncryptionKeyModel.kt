@@ -7,28 +7,26 @@ import de.stubbe.jaem_client.model.enums.KeyType
 import kotlinx.serialization.Serializable
 
 @Serializable
-@Entity(tableName = "symmetric_keys")
-data class SymmetricKeyModel(
+@Entity(tableName = "encryption_keys")
+data class EncryptionKeyModel(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
+    val id: Int = 0,
     val key: ByteArray,
-    @ColumnInfo(name = "device_id")
-    val deviceId: Int,
-    @ColumnInfo(name = "chat_partner_id")
-    val chatPartnerId: Int,
+    @ColumnInfo(name = "key_type")
     val type: KeyType,
+    @ColumnInfo(name = "profile_id")
+    val profileId: Int = 0,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as SymmetricKeyModel
+        other as EncryptionKeyModel
 
         if (id != other.id) return false
         if (!key.contentEquals(other.key)) return false
-        if (deviceId != other.deviceId) return false
-        if (chatPartnerId != other.chatPartnerId) return false
         if (type != other.type) return false
+        if (profileId != other.profileId) return false
 
         return true
     }
@@ -36,9 +34,8 @@ data class SymmetricKeyModel(
     override fun hashCode(): Int {
         var result = id
         result = 31 * result + key.contentHashCode()
-        result = 31 * result + deviceId
-        result = 31 * result + chatPartnerId
         result = 31 * result + type.hashCode()
+        result = 31 * result + profileId
         return result
     }
 }

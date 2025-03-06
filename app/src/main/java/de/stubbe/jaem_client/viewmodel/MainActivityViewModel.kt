@@ -1,5 +1,6 @@
 package de.stubbe.jaem_client.viewmodel
 
+import ED25519Client
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,12 +12,11 @@ import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.datastore.UserPreferences.Theme
 import de.stubbe.jaem_client.network.JAEMApiService
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
-import de.stubbe.jaem_client.repositories.database.AsymmetricKeyPairRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.ChatRequestRepository
+import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
-import de.stubbe.jaem_client.repositories.database.SymmetricKeyRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
@@ -33,8 +33,7 @@ class MainActivityViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val profileRepository: ProfileRepository,
     private val messageRepository: MessageRepository,
-    private val asymmetricKeyPairRepository: AsymmetricKeyPairRepository,
-    private val symmetricKeyRepository: SymmetricKeyRepository,
+    private val encryptionKeyRepository: EncryptionKeyRepository,
     private val chatRequestRepository: ChatRequestRepository,
     private val jaemApiService: JAEMApiService
 ): ViewModel() {
@@ -45,10 +44,6 @@ class MainActivityViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
             initialValue = UserPreferences.getDefaultInstance()
         )
-
-    //fun getKeys(): DeviceKeyPair {
-    //    symmetricKeyRepository.getSymmetricKeyPairsByProfileId(1)
-   // }
 
     fun updateTheme(theme: Theme) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -126,6 +121,10 @@ class MainActivityViewModel @Inject constructor(
             )
 
             chatRepository.insertChat(chat1)
+
+            val chatPartnerClient = ED25519Client()
+
+            encryptionKeyRepository.insertNewClient(chatPartnerClient, chatPartnerId)
         }
     }
 }

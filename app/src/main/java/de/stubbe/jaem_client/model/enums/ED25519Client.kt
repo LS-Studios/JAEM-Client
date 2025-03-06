@@ -32,28 +32,39 @@ class ED25519Client {
     }
 
     constructor(
-        edPublicKey: Ed25519PublicKeyParameters,
-        xPublicKey: X25519PublicKeyParameters,
+        ed25519PublicKey: Ed25519PublicKeyParameters,
+        x25519PublicKey: X25519PublicKeyParameters,
         rsaPublicKey: PublicKey
     ) {
-        ed25519PublicKey = edPublicKey
-        x25519PublicKey = xPublicKey
+        this.ed25519PublicKey = ed25519PublicKey
+        this.x25519PublicKey = x25519PublicKey
         this.rsaPublicKey = rsaPublicKey
     }
 
     constructor(
-        edPublicKey: Ed25519PublicKeyParameters,
-        edPrivateKey: Ed25519PrivateKeyParameters,
-        xPublicKey: X25519PublicKeyParameters,
-        xPrivateKey: X25519PrivateKeyParameters,
+        ed25519PublicKey: Ed25519PublicKeyParameters,
+        ed25519PrivateKey: Ed25519PrivateKeyParameters,
+        x25519PublicKey: X25519PublicKeyParameters,
+        x25519PrivateKey: X25519PrivateKeyParameters,
         rsaPublicKey: PublicKey,
         rsaPrivateKey: PrivateKey
     ) {
-        ed25519PublicKey = edPublicKey
-        ed25519PrivateKey = edPrivateKey
-        x25519PublicKey = xPublicKey
-        x25519PrivateKey = xPrivateKey
+        this.ed25519PublicKey = ed25519PublicKey
+        this.ed25519PrivateKey = ed25519PrivateKey
+        this.x25519PublicKey = x25519PublicKey
+        this.x25519PrivateKey = x25519PrivateKey
         this.rsaPublicKey = rsaPublicKey
         this.rsaPrivateKey = rsaPrivateKey
+    }
+
+    fun updateKeys(
+        client: ED25519Client
+    ) {
+        this.ed25519PublicKey = client.ed25519PublicKey
+        this.ed25519PrivateKey = client.ed25519PrivateKey
+        this.x25519PublicKey = client.x25519PublicKey
+        this.x25519PrivateKey = client.x25519PrivateKey
+        this.rsaPublicKey = client.rsaPublicKey
+        this.rsaPrivateKey = client.rsaPrivateKey
     }
 }

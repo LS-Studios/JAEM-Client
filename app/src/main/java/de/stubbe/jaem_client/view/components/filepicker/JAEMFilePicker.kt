@@ -31,13 +31,11 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -64,8 +62,6 @@ fun JAEMFilePicker(
     var dismissWhenOnResume by remember { mutableStateOf(false) }
     var isPermissionGrant by remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-
-    var dialogAlpha by remember { mutableFloatStateOf(0f) }
 
     val isPhotoPickerAvailable by remember { mutableStateOf(isPhotoPickerAvailable(context)) }
 
@@ -105,28 +101,65 @@ fun JAEMFilePicker(
         }
     }
 
+    fun openFilePicker(type: JAEMFileType) {
+        when (type) {
+            JAEMFileType.IMAGE_AND_VIDEO -> {
+                if (isPhotoPickerAvailable) {
+                    if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                        Log.d("TAG", "PickerDialog: ImageAndVideo")
+                        pickMultipleMedia.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                            )
+                        )
+                        dismissWhenOnResume = true
+                    }
+                } else {
+                    permissionLauncher.launch(
+                        type.getPermissions().toTypedArray()
+                    )
+                }
+            }
+
+            JAEMFileType.IMAGE -> {
+                if (isPhotoPickerAvailable) {
+                    if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                        pickMultipleMedia.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                        dismissWhenOnResume = true
+                    }
+                } else {
+                    permissionLauncher.launch(
+                        type.getPermissions().toTypedArray()
+                    )
+                }
+            }
+
+            JAEMFileType.STORAGE -> {
+                if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                    pickFile.launch(arrayOf("*/*"))
+                    dismissWhenOnResume = true
+                }
+            }
+
+            else -> {}
+        }
+    }
+
     OnResume {
         if (dismissWhenOnResume) onDismiss()
     }
 
-    LaunchedEffect(types, showPickerDialog) {
-        if (selectedType == null && !showPickerDialog) {
-            selectedType = types.firstOrNull()
-        }
-    }
-
-    LaunchedEffect(selectedType) {
-        dialogAlpha = when (selectedType) {
-            JAEMFileType.CAMERA -> 0f
-            JAEMFileType.IMAGE_AND_VIDEO -> if (isPhotoPickerAvailable) 0f else 1f
-            JAEMFileType.IMAGE -> if (isPhotoPickerAvailable) 0f else 1f
-            JAEMFileType.STORAGE -> 0f
-            null -> if (showPickerDialog && selectedType == null) 1f else 0f
+    LaunchedEffect(Unit) {
+        if (types.size == 1) {
+            openFilePicker(types.first())
         }
     }
 
     ModalBottomSheet(
-        modifier = Modifier.alpha(dialogAlpha),
         onDismissRequest = { onDismiss() },
         containerColor = JAEMThemeProvider.current.background,
         dragHandle = {
@@ -139,61 +172,11 @@ fun JAEMFilePicker(
         if (showPickerDialog && selectedType == null) {
             PickFileTypeContent(
                 types = types,
-                onSelected = { selectedType = it }
+                onSelected = { newSelectedType ->
+                    selectedType = newSelectedType
+                    openFilePicker(newSelectedType)
+                }
             )
-        } else {
-            when (selectedType) {
-                JAEMFileType.CAMERA -> {
-//                    if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-//                        pickMultipleMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.Camera))
-//                        dismissWhenOnResume = true
-//                    }
-                }
-
-                JAEMFileType.IMAGE_AND_VIDEO -> {
-                    if (isPhotoPickerAvailable) {
-                        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                            Log.d("TAG", "PickerDialog: ImageAndVideo")
-                            pickMultipleMedia.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                                )
-                            )
-                            dismissWhenOnResume = true
-                        }
-                    } else {
-                        permissionLauncher.launch(
-                            selectedType!!.getPermissions().toTypedArray()
-                        )
-                    }
-                }
-
-                JAEMFileType.IMAGE -> {
-                    if (isPhotoPickerAvailable) {
-                        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                            pickMultipleMedia.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                )
-                            )
-                            dismissWhenOnResume = true
-                        }
-                    } else {
-                        permissionLauncher.launch(
-                            selectedType!!.getPermissions().toTypedArray()
-                        )
-                    }
-                }
-
-                JAEMFileType.STORAGE -> {
-                    if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                        pickFile.launch(arrayOf("*/*"))
-                        dismissWhenOnResume = true
-                    }
-                }
-
-                else -> {}
-            }
         }
     }
 }

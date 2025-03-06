@@ -1,6 +1,5 @@
 package de.stubbe.jaem_client.network
 
-import de.stubbe.jaem_client.model.network.ResponseMessage
 import de.stubbe.jaem_client.model.network.ShareProfileResponse
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -39,6 +38,6 @@ interface JAEMApiService {
     fun getMessages(@Body requestBody: RequestBody): Call<ResponseBody>
 
     @POST("delete_messages")
-    suspend fun deleteMessage(@Body requestBody: RequestBody): Call<ResponseMessage>
+    suspend fun deleteMessage(@Body requestBody: RequestBody): Call<ResponseBody>
 
 }

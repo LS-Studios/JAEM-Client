@@ -9,11 +9,10 @@ import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ChatPresentationModel
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
-import de.stubbe.jaem_client.repositories.database.AsymmetricKeyPairRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
+import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
-import de.stubbe.jaem_client.repositories.database.SymmetricKeyRepository
 import de.stubbe.jaem_client.utils.toBitmap
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -26,8 +25,7 @@ class SharedChatViewModel @Inject constructor(
     chatRepository: ChatRepository,
     profileRepository: ProfileRepository,
     messageRepository: MessageRepository,
-    asymmetricKeyPairRepository: AsymmetricKeyPairRepository,
-    symmetricKeyRepository: SymmetricKeyRepository
+    encryptionKeyRepository: EncryptionKeyRepository
 ) : ViewModel() {
 
     private val chatScreenArguments = savedStateHandle.toRoute<NavRoute.ChatMessages>()
@@ -36,8 +34,7 @@ class SharedChatViewModel @Inject constructor(
     private val messageFlow = messageRepository.getAllMessages()
     private val profilesFlow = profileRepository.getAllProfiles()
     private val profileFlow = profileRepository.getProfileByIdWithChange(chatScreenArguments.profileId)
-    private val asymmetricKeyPairsFlow = asymmetricKeyPairRepository.getAsymmetricKeyPairsByProfileId(chatScreenArguments.profileId)
-    private val symmetricKeyPairsFlow = symmetricKeyRepository.getSymmetricKeyPairsByProfileId(chatScreenArguments.profileId)
+    private val clientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileId)
 
     val chat = combine(
         chatFlow, messageFlow, profilesFlow
@@ -68,14 +65,15 @@ class SharedChatViewModel @Inject constructor(
     )
 
     val profile = combine(
-        profileFlow, asymmetricKeyPairsFlow, symmetricKeyPairsFlow
-    ) { profile, asymmetricKeyPairs, symmetricKeyPairs ->
+        profileFlow, clientFlow
+    ) { profile, client ->
+        if (client == null) return@combine null
+
         ProfilePresentationModel(
             name = profile.name,
             profilePicture = profile.profilePicture?.toBitmap(),
             description = profile.description,
-            asymmetricKeyPairs = asymmetricKeyPairs,
-            symmetricKeys = symmetricKeyPairs,
+            client = client,
             profile = profile
         )
     }.stateIn(

@@ -59,3 +59,17 @@ fun File.toBitmap(): Bitmap? {
     val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     return BitmapFactory.decodeFile(this.absolutePath, options).takeIf { options.outWidth != -1 && options.outHeight != -1 }
 }
+
+/**
+ * Darstellung der Dateigröße als String.
+ */
+fun Long.toSizeString(): String {
+    val kb = this / 1024
+    val mb = kb / 1024
+    val gb = mb / 1024
+    return when {
+        gb > 0 -> "${gb}GB"
+        mb > 0 -> "${mb}MB"
+        else -> "${kb}KB"
+    }
+}

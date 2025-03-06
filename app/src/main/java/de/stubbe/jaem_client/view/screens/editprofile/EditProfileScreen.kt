@@ -200,23 +200,25 @@ fun EditProfileScreen(
         }
     }
 
-    JAEMPickFileAndCrop(
-        onDismiss = {
-            viewModel.closeImagePicker()
-        },
-        selected = { uri ->
-            coroutineScope.launch(Dispatchers.IO) {
-                loadImage = true
-
-                val image = uri.toBitmap(context)
-
-                if (image != null) {
-                    viewModel.changeProfilePicture(image.toByteArray())
-                }
-
+    if (imagePickerIsOpen) {
+        JAEMPickFileAndCrop(
+            onDismiss = {
                 viewModel.closeImagePicker()
-                loadImage = false
+            },
+            selected = { uri ->
+                coroutineScope.launch(Dispatchers.IO) {
+                    loadImage = true
+
+                    val image = uri.toBitmap(context)
+
+                    if (image != null) {
+                        viewModel.changeProfilePicture(image.toByteArray())
+                    }
+
+                    viewModel.closeImagePicker()
+                    loadImage = false
+                }
             }
-        }
-    )
+        )
+    }
 }

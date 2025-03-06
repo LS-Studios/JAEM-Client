@@ -1,9 +1,8 @@
 package de.stubbe.jaem_client.model.entries
 
+import ED25519Client
 import android.graphics.Bitmap
-import de.stubbe.jaem_client.database.entries.AsymmetricKeyPairModel
 import de.stubbe.jaem_client.database.entries.ProfileModel
-import de.stubbe.jaem_client.database.entries.SymmetricKeyModel
 
 /**
  * Model zur Darstellung von Profilinformationen
@@ -11,14 +10,13 @@ import de.stubbe.jaem_client.database.entries.SymmetricKeyModel
  * @param name: Name des Benutzers
  * @param profilePicture: Profilbild des Benutzers
  * @param description: Beschreibung oder Status des Benutzers
- * @param asymmetricKeyPairs: Liste der asymmetrischen Schlüsselpaare des Benutzers
- * @param symmetricKeys: Liste der symmetrischen Schlüssel des Benutzers
+ * @param client: ED25519Client zur Verschlüsselung
+ * @param profile: Profilinformationen
  */
 data class ProfilePresentationModel(
     val name: String,
     val profilePicture: Bitmap?,
     val description: String,
-    val asymmetricKeyPairs: List<AsymmetricKeyPairModel>,
-    val symmetricKeys: List<SymmetricKeyModel>,
+    val client: ED25519Client,
     val profile: ProfileModel
 )

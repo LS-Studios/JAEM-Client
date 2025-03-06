@@ -15,7 +15,6 @@ import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
-import de.stubbe.jaem_client.utils.OnResume
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 
 @Composable
@@ -59,13 +58,7 @@ fun JAEMPickFileAndCrop(
         }
     }
 
-    OnResume {
-        if (dismissWhenOnResume) onDismiss()
-    }
-
     LaunchedEffect(Unit) {
         pickMultipleMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        dismissWhenOnResume = true
     }
-
 }
