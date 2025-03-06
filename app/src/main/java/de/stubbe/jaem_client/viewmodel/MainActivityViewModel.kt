@@ -28,7 +28,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
@@ -94,7 +93,6 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     fun addExampleData() {
         fun fetchPicture(): ByteArray {
             val url = URL("https://picsum.photos/200")

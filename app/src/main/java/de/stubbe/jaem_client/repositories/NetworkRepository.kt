@@ -25,8 +25,6 @@ class NetworkRepository @Inject constructor(
             return emptyList()
         }
 
-        println("Received messages: ${response}")
-
         val byteMessages = ReceivedMessagesModel.messageFromByteArray(response!!.bytes())
 
         val messages = byteMessages.map { message ->
@@ -40,6 +38,10 @@ class NetworkRepository @Inject constructor(
                 )}
             )
             messageModel
+        }
+
+        messages.forEach { message ->
+
         }
 
         return messages

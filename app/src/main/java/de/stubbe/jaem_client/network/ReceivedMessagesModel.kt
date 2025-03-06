@@ -3,6 +3,7 @@ package de.stubbe.jaem_client.network
 import ED25519Client
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.utils.toByteArray
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.SignatureException
@@ -148,6 +149,7 @@ data class SendMessageModel(
 
             val messageWithUID =
                 client.profileUid!!.toByteArray() + messages.reduce(ByteArray::plus)
+
             val signature = algorithm.sign(messageWithUID, client.ed25519PrivateKey!!)
             val aesKey = algorithm.generateSymmetricKey(
                 otherClient.x25519PublicKey!!,
@@ -160,7 +162,7 @@ data class SendMessageModel(
                 byteArrayOf()
             )
 
-            val unixTimestamp = Instant.now().epochSecond.toULong().toString().toByteArray()
+            val unixTimestamp = Instant.now().epochSecond.toULong().toByteArray()
 
             val message = unixTimestamp + messages.reduce(ByteArray::plus)
             val aesEncryptedMessage = algorithm.encrypt(message, signature, aesKey)
@@ -198,10 +200,7 @@ data class ReceiveBody(
             deviceClient: ED25519Client
         ): ReceiveBody {
             val unixTimeStamp = Instant.now().epochSecond.toULong()
-            val timestamp = ByteBuffer.allocate(Long.SIZE_BYTES)
-                .order(ByteOrder.BIG_ENDIAN)
-                .putLong(unixTimeStamp.toLong())
-                .array()
+            val timestamp = unixTimeStamp.toByteArray()
 
             val signature = deviceClient.encryption.sign(
 
