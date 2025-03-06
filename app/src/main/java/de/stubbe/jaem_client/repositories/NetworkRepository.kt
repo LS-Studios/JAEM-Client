@@ -45,6 +45,16 @@ class NetworkRepository @Inject constructor(
         return messages
     }
 
+    suspend fun deleteMessage(message: SendMessageModel){
+        val (response, error ) = jaemApiService.deleteMessage(RequestBody.create(null, message.toByteArray())).splitResponse()
+        if (error == null) {
+            println("Message deleted successfully: $response")
+        } else {
+            val errorBody = error.string().orEmpty()
+            println("Error deleting message: $errorBody")
+        }
+    }
+
     suspend fun sendMessage(message: SendMessageModel) {
         val (response, error) = jaemApiService.sendMessage(RequestBody.create(null, message.toByteArray())).splitResponse()
         if (error == null) {
