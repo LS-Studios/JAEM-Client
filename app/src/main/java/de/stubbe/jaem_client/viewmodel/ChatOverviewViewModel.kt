@@ -46,7 +46,7 @@ class ChatOverviewViewModel @Inject constructor(
         chatFlow, messageFlow, profileFlow
     ) { chats, messages, profiles ->
         chats.mapNotNull { chat ->
-            val chatPartner = profiles.find { it.id == chat.chatPartnerId } ?: return@mapNotNull null
+            val chatPartner = profiles.find { it.uid == chat.chatPartnerUid } ?: return@mapNotNull null
 
             val lastMessages = messages
                 .filter { it.chatId == chat.id }
@@ -73,7 +73,7 @@ class ChatOverviewViewModel @Inject constructor(
     val userProfile = combine(
         userPreferencesFlow, deviceClientFlow
     ) { userPreferences, deviceClient ->
-        val profile = profileRepository.getProfileById(userPreferences.userProfileId) ?: return@combine null
+        val profile = profileRepository.getProfileByUid(userPreferences.userProfileUid) ?: return@combine null
 
         if (deviceClient == null) return@combine null
 
@@ -90,8 +90,8 @@ class ChatOverviewViewModel @Inject constructor(
         initialValue = null
     )
 
-    val userProfileId = userPreferencesRepository.userPreferencesFlow
-        .map { it.userProfileId }
+    val userProfileUid = userPreferencesRepository.userPreferencesFlow
+        .map { it.userProfileUid }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),

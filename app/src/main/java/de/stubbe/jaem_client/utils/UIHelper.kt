@@ -121,8 +121,6 @@ fun rememberQrBitmapPainter(
                     this[EncodeHintType.MARGIN] = paddingPx
                 }
 
-            println(content)
-
             val bitmapMatrix = try {
                 qrCodeWriter.encode(
                     content, BarcodeFormat.QR_CODE,

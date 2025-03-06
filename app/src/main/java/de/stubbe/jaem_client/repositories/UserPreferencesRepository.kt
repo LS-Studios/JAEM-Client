@@ -38,9 +38,9 @@ class UserPreferencesRepository(
         }
     }
 
-    suspend fun updateUserProfileId(newProfileId: Int) {
+    suspend fun updateUserProfileUid(newProfileUid: String) {
         userPreferencesStore.updateData { currentPreferences ->
-            currentPreferences.toBuilder().setUserProfileId(newProfileId).build()
+            currentPreferences.toBuilder().setUserProfileUid(newProfileUid).build()
         }
     }
 

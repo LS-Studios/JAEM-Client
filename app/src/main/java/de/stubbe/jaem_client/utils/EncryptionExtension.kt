@@ -9,6 +9,8 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 fun ByteArray.toRSAPublicKey(): PublicKey {
@@ -37,4 +39,10 @@ fun ByteArray.toX25519PublicKey(): X25519PublicKeyParameters {
 
 fun ByteArray.toX25519PrivateKey(): X25519PrivateKeyParameters {
     return X25519PrivateKeyParameters(this, 0)
+}
+
+@OptIn(ExperimentalUuidApi::class)
+fun ByteArray.toUid(): String {
+    val uuid = Uuid.fromByteArray(this)
+    return uuid.toString()
 }

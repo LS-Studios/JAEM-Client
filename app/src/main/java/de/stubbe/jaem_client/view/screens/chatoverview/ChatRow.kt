@@ -58,7 +58,7 @@ fun ChatRow(
     chatOverviewViewModel: ChatOverviewViewModel,
     chatPresentationModel: ChatPresentationModel
 ) {
-    val userProfileId by chatOverviewViewModel.userProfileId.collectAsState()
+    val userProfileUid by chatOverviewViewModel.userProfileUid.collectAsState()
 
     val context = LocalContext.current
 
@@ -72,7 +72,7 @@ fun ChatRow(
             ) {
                 navigationViewModel.changeScreen(
                     NavRoute.ChatMessages(
-                        chatPresentationModel.chat.chatPartnerId,
+                        chatPresentationModel.chat.chatPartnerUid,
                         chatPresentationModel.chat.id,
                         false
                     )
@@ -114,7 +114,7 @@ fun ChatRow(
                     val lastMessage = chatPresentationModel.lastMessages.last()
 
                     // Checkmark if message was delivered
-                    if (lastMessage.deliveryTime != null && lastMessage.senderId == userProfileId) {
+                    if (lastMessage.deliveryTime != null && lastMessage.senderUid == userProfileUid) {
                         Icon(
                             modifier = Modifier
                                 .size(Dimensions.Size.Tiny),
@@ -157,7 +157,7 @@ fun ChatRow(
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.End
         ) {
-            val unreadMessages = chatPresentationModel.lastMessages.filter { it.deliveryTime == null && it.senderId != userProfileId }.size
+            val unreadMessages = chatPresentationModel.lastMessages.filter { it.deliveryTime == null && it.senderUid != userProfileUid }.size
 
             // Send time of last message
             Text(

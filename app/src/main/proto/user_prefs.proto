@@ -18,5 +18,5 @@ message UserPreferences {
   Language language = 1;
   Theme theme = 2;
 
-  uint32 userProfileId = 3;
+  string userProfileUid = 3;
 }

@@ -1,7 +1,6 @@
 package de.stubbe.jaem_client.model.enums
 import android.annotation.SuppressLint
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.security.Key
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
@@ -25,13 +24,15 @@ enum class AsymmetricEncryption(
             keyPairGen.generateKeyPair()
         },
         { message, recipientPublicKey ->
-            val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC")
+            Security.addProvider(BouncyCastleProvider())
+            val cipher = Cipher.getInstance("RSA", "BC")
             cipher.init(Cipher.ENCRYPT_MODE, recipientPublicKey)
             val cipherText = cipher.doFinal(message)
             cipherText
         },
         { message, privateKey ->
-            val cipher = Cipher.getInstance("RSA/ECB/RKCS1Padding", "BC")
+            Security.addProvider(BouncyCastleProvider())
+            val cipher = Cipher.getInstance("RSA", "BC")
             cipher.init(Cipher.DECRYPT_MODE, privateKey)
             val decryptedText = cipher.doFinal(message)
             decryptedText

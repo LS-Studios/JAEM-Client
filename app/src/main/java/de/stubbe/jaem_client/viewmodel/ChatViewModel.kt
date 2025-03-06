@@ -10,12 +10,17 @@ import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.NavRoute
+import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.network.ChatEncryptionData
+import de.stubbe.jaem_client.network.SendMessageModel
+import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -25,6 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val networkRepository: NetworkRepository,
     private val messageRepository: MessageRepository,
     private val encryptionKeyRepository: EncryptionKeyRepository,
     userPreferencesRepository: UserPreferencesRepository,
@@ -34,7 +40,7 @@ class ChatViewModel @Inject constructor(
 
     private val messageFlow = messageRepository.getAllMessages()
     private val deviceClientFlow = encryptionKeyRepository.getClientFlow()
-    private val chatPartnerClientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileId)
+    private val chatPartnerClientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileUid)
 
     val messages = messageFlow
         .map{ messages ->
@@ -46,7 +52,7 @@ class ChatViewModel @Inject constructor(
         )
 
     val userProfileId = userPreferencesRepository.userPreferencesFlow
-        .map { it.userProfileId }
+        .map { it.userProfileUid }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
@@ -126,7 +132,7 @@ class ChatViewModel @Inject constructor(
      */
     fun sendMessage(chat: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            messageRepository.insertMessage(
+            /*messageRepository.insertMessage(
                 MessageModel(
                     id = 0,
                     senderId = userProfileId.value ?: -1,
@@ -137,6 +143,17 @@ class ChatViewModel @Inject constructor(
                     sendTime = System.currentTimeMillis(),
                     deliveryTime = null
                 )
+            )*/
+
+            networkRepository.sendMessage(
+               SendMessageModel.buildSendMessageModel(
+                   ChatEncryptionData(
+                       client = deviceClientFlow.first(),
+                       otherClient = deviceClientFlow.first(),
+                       encryption = SymmetricEncryption.ED25519
+                   ),
+                   listOf(newMessageString.value.toByteArray())
+               )
             )
 
             newMessageString.value = ""

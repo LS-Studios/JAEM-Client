@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import de.stubbe.jaem_client.R
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.database.entries.ChatRequestModel
 import de.stubbe.jaem_client.model.ButtonActionModel
 import de.stubbe.jaem_client.model.NavRoute
@@ -44,7 +45,6 @@ import de.stubbe.jaem_client.view.components.ButtonActions
 import de.stubbe.jaem_client.view.components.ShareProfileBottomSheet
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.viewmodel.ChatOverviewViewModel
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
@@ -128,7 +128,7 @@ fun ChatOverviewScreen(
                                 if (userProfile != null) {
                                     navigationViewModel.changeScreen(
                                         NavRoute.EditProfile(
-                                            userProfile!!.profile.id
+                                            userProfile!!.profile.uid
                                         )
                                     )
                                 }

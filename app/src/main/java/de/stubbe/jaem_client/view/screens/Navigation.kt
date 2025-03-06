@@ -25,6 +25,7 @@ import de.stubbe.jaem_client.utils.sharedViewModel
 import de.stubbe.jaem_client.view.screens.chat.ChatScreen
 import de.stubbe.jaem_client.view.screens.chatinfo.ChatInfoScreen
 import de.stubbe.jaem_client.view.screens.chatoverview.ChatOverviewScreen
+import de.stubbe.jaem_client.view.screens.deviceclientsetup.DeviceClientSetupScreen
 import de.stubbe.jaem_client.view.screens.editprofile.EditProfileScreen
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 import de.stubbe.jaem_client.viewmodel.SharedChatViewModel
@@ -52,6 +53,9 @@ fun Navigation(
             startDestination = NavRoute.ChatOverview,
             popExitTransition = { jaemPopExitHorizontally }
         ) {
+            composable<NavRoute.DeviceClientSetup> {
+                DeviceClientSetupScreen()
+            }
             composable<NavRoute.ChatOverview>(
                 enterTransition = { jaemEnterHorizontally },
                 exitTransition = {
@@ -73,7 +77,7 @@ fun Navigation(
                 ChatOverviewScreen(viewModel)
             }
 
-            navigation<NavRoute.Chat>(startDestination = NavRoute.ChatMessages(-1, -1, false)) {
+            navigation<NavRoute.Chat>(startDestination = NavRoute.ChatMessages("", -1, false)) {
                 composable<NavRoute.ChatMessages>(
                     enterTransition = { jaemEnterHorizontally },
                     exitTransition = {

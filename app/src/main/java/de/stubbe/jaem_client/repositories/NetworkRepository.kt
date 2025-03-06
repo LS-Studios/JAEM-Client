@@ -1,41 +1,57 @@
 package de.stubbe.jaem_client.repositories
 
-import de.stubbe.jaem_client.model.network.ReceiveBody
+import ED25519Client
+import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.network.ChatEncryptionData
 import de.stubbe.jaem_client.network.JAEMApiService
-import de.stubbe.jaem_client.network.NetworkMessageModel
-import de.stubbe.jaem_client.network.SendNetworkMessageModel
-import de.stubbe.jaem_client.network.toByteArray
-import de.stubbe.jaem_client.utils.ChatEncryptionData
-import de.stubbe.jaem_client.utils.executeSafely
-import de.stubbe.jaem_client.utils.toByteArray
-import de.stubbe.jaem_client.utils.toNetworkMessageModel
+import de.stubbe.jaem_client.network.ReceiveBody
+import de.stubbe.jaem_client.network.ReceivedMessagesModel
+import de.stubbe.jaem_client.network.SendMessageModel
+import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
+import de.stubbe.jaem_client.utils.splitResponse
+import kotlinx.coroutines.flow.first
 import okhttp3.RequestBody
-
 import javax.inject.Inject
 
 class NetworkRepository @Inject constructor(
-    val retrofitInstance: JAEMApiService,
-    val encryptionData: ChatEncryptionData
+    val encryptionKeyRepository: EncryptionKeyRepository,
+    val jaemApiService: JAEMApiService
 ) {
-    suspend fun receiveMessages(body: ReceiveBody): NetworkMessageModel {
-        val (response, error) = retrofitInstance.getMessages(RequestBody.create(null, body.toByteArray())).executeSafely()
+    suspend fun receiveMessages(body: ReceiveBody, deviceClient: ED25519Client): List<ReceivedMessagesModel> {
+        val (response, error) = jaemApiService.getMessages(RequestBody.create(null, body.toByteArray())).splitResponse()
+
         if (error != null) {
-            throw error
+            println("Error receiving messages: ${error.string()}")
+            return emptyList()
         }
 
-        val messages = response!!.bytes().toNetworkMessageModel(encryptionData)
+        println("Received messages: ${response}")
+
+        val byteMessages = ReceivedMessagesModel.messageFromByteArray(response!!.bytes())
+
+        val messages = byteMessages.map { message ->
+            val messageModel = ReceivedMessagesModel.fromByteArray(
+                message,
+                deviceClient,
+                { profileUid -> ChatEncryptionData(
+                    deviceClient,
+                    encryptionKeyRepository.getClientFlow(profileUid).first()!!,
+                    SymmetricEncryption.ED25519
+                )}
+            )
+            messageModel
+        }
 
         return messages
     }
 
-    suspend fun sendMessage(message: SendNetworkMessageModel): Throwable {
-        val (response, error) = retrofitInstance.sendMessage(RequestBody.create(null, message.toByteArray())).executeSafely()
-        if (error != null) {
-            return error
+    suspend fun sendMessage(message: SendMessageModel) {
+        val (response, error) = jaemApiService.sendMessage(RequestBody.create(null, message.toByteArray())).splitResponse()
+        if (error == null) {
+            println("Message sent successfully: $response")
+        } else {
+            val errorBody = error.string().orEmpty()
+            println("Error sending message: $errorBody")
         }
-
-        return Throwable()
     }
 }
-
-

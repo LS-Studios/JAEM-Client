@@ -34,8 +34,10 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 viewModel.updateTheme(UserPreferences.Theme.DARK)
 
+                viewModel.getNewMessages()
+
                 //viewModel.deleteExampleData(this@MainActivity)
-                //viewModel.addExampleData()
+                 //viewModel.addExampleData()
 //                viewModel.printData()
             }
 

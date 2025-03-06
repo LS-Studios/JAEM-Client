@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 abstract class ProfileDao: BaseDao<ProfileModel> {
 
-    @Query("SELECT * FROM profiles WHERE id = :id")
-    abstract suspend fun getProfileById(id: Int): ProfileModel?
+    @Query("SELECT * FROM profiles WHERE uid = :uid")
+    abstract suspend fun getProfileByUid(uid: String): ProfileModel?
 
-    @Query("SELECT * FROM profiles WHERE id = :id")
-    abstract fun getProfileByIdWithChange(id: Int): Flow<ProfileModel>
+    @Query("SELECT * FROM profiles WHERE uid = :uid")
+    abstract fun getProfileByUidWithChange(uid: String): Flow<ProfileModel>
 
     @Query("SELECT * FROM profiles")
     abstract fun getAllProfiles(): Flow<List<ProfileModel>>

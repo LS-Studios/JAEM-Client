@@ -33,15 +33,15 @@ class SharedChatViewModel @Inject constructor(
     private val chatFlow = chatRepository.getAllChats()
     private val messageFlow = messageRepository.getAllMessages()
     private val profilesFlow = profileRepository.getAllProfiles()
-    private val profileFlow = profileRepository.getProfileByIdWithChange(chatScreenArguments.profileId)
-    private val clientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileId)
+    private val profileFlow = profileRepository.getProfileByUidWithChange(chatScreenArguments.profileUid)
+    private val clientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileUid)
 
     val chat = combine(
         chatFlow, messageFlow, profilesFlow
     ) { chats, messages, profiles ->
         val chat = chats.find { it.id == chatScreenArguments.chatId } ?: return@combine null
 
-        val chatPartner = profiles.find { it.id == chat.chatPartnerId } ?: return@combine null
+        val chatPartner = profiles.find { it.uid == chat.chatPartnerUid } ?: return@combine null
 
         val lastMessages = messages
             .filter { it.chatId == chat.id }

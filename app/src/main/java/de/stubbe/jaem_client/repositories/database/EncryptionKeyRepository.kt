@@ -28,11 +28,11 @@ class EncryptionKeyRepository @Inject constructor(
      * @param profileId Profil id, wenn Null wird die des DeviceClients verwendet
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getClientFlow(profileId: Int? = null): Flow<ED25519Client?> {
+    fun getClientFlow(profileUid: String? = null, canCreateUserClient: Boolean = false): Flow<ED25519Client?> {
         return userPreferencesRepository.userPreferencesFlow.flatMapLatest { userPreferences ->
-            val actualProfileId = profileId ?: userPreferences.userProfileId
+            val actualProfileUid = profileUid ?: userPreferences.userProfileUid
 
-            encryptionKeyDao.getKeysFromProfileFlow(actualProfileId).map { encryptionKeys ->
+            encryptionKeyDao.getKeysFromProfileFlow(actualProfileUid).map { encryptionKeys ->
                 val keysMap = encryptionKeys.associateBy { it.type }
 
                 val ed25519PublicKey = keysMap[KeyType.PUBLIC_ED25519]?.key?.toEd25519PublicKey()
@@ -42,21 +42,29 @@ class EncryptionKeyRepository @Inject constructor(
                 val rsaPublicKey = keysMap[KeyType.PUBLIC_RSA]?.key?.toRSAPublicKey()
                 val rsaPrivateKey = keysMap[KeyType.PRIVATE_RSA]?.key?.toRSAPrivateKey()
 
-                if (profileId == null) {
-                    if (listOf(ed25519PublicKey, ed25519PrivateKey, x25519PublicKey, x25519PrivateKey, rsaPublicKey, rsaPrivateKey).any { it == null }) {
-                        val client = ED25519Client()
-                        insertNewClient(client, actualProfileId)
-                        client
-                    } else {
+                if (profileUid == null) {
+                    if (listOf(ed25519PublicKey, ed25519PrivateKey, x25519PublicKey, x25519PrivateKey, rsaPublicKey, rsaPrivateKey).any { it != null }) {
                         ED25519Client(
+                            actualProfileUid,
                             ed25519PublicKey!!, ed25519PrivateKey!!,
                             x25519PublicKey!!, x25519PrivateKey!!,
                             rsaPublicKey!!, rsaPrivateKey!!
                         )
+                    } else if (canCreateUserClient) {
+                        val client = ED25519Client(actualProfileUid)
+                        insertNewClient(client, actualProfileUid)
+                        client
+                    } else {
+                        null
                     }
                 } else {
                     if (listOf(ed25519PublicKey, x25519PublicKey, rsaPublicKey).all { it != null }) {
-                        ED25519Client(ed25519PublicKey!!, x25519PublicKey!!, rsaPublicKey!!)
+                        ED25519Client(
+                            profileUid = actualProfileUid,
+                            ed25519PublicKey = ed25519PublicKey!!,
+                            x25519PublicKey = x25519PublicKey!!,
+                            rsaPublicKey = rsaPublicKey!!
+                        )
                     } else {
                         null
                     }
@@ -65,7 +73,7 @@ class EncryptionKeyRepository @Inject constructor(
         }
     }
 
-    suspend fun insertNewClient(newClient: ED25519Client, profileId: Int) {
+    suspend fun insertNewClient(newClient: ED25519Client, profileUid: String) {
         val keyPairs = listOfNotNull(
             newClient.ed25519PublicKey?.let { KeyType.PUBLIC_ED25519 to it.encoded },
             newClient.ed25519PrivateKey?.let { KeyType.PRIVATE_ED25519 to it.encoded },
@@ -75,10 +83,9 @@ class EncryptionKeyRepository @Inject constructor(
             newClient.rsaPrivateKey?.let { KeyType.PRIVATE_RSA to it.encoded }
         ).map { (type, keyBytes) ->
             EncryptionKeyModel(
-                id = 0,
                 key = keyBytes,
                 type = type,
-                profileId = profileId
+                profileUid = profileUid
             )
         }
 

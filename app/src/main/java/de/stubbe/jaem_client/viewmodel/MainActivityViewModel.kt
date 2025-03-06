@@ -10,7 +10,8 @@ import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.ProfileModel
 import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.datastore.UserPreferences.Theme
-import de.stubbe.jaem_client.network.JAEMApiService
+import de.stubbe.jaem_client.network.ReceiveBody
+import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.ChatRequestRepository
@@ -25,7 +26,9 @@ import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.UUID
 import javax.inject.Inject
+import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
@@ -35,7 +38,7 @@ class MainActivityViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
     private val encryptionKeyRepository: EncryptionKeyRepository,
     private val chatRequestRepository: ChatRequestRepository,
-    private val jaemApiService: JAEMApiService
+    private val networkRepository: NetworkRepository
 ): ViewModel() {
 
     val userPreferences = userPreferencesRepository.userPreferencesFlow
@@ -48,6 +51,21 @@ class MainActivityViewModel @Inject constructor(
     fun updateTheme(theme: Theme) {
         viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.updateTheme(theme)
+        }
+    }
+
+    private val deviceClient = encryptionKeyRepository.getClientFlow(canCreateUserClient = true)
+
+    fun getNewMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val deviceClient = deviceClient.first()!!
+
+            val messages = networkRepository.receiveMessages(
+                ReceiveBody.buildReceiveBody(deviceClient),
+                deviceClient,
+            )
+
+            println("Received messages: $messages")
         }
     }
 
@@ -76,6 +94,7 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     fun addExampleData() {
         fun fetchPicture(): ByteArray {
             val url = URL("https://picsum.photos/200")
@@ -94,37 +113,37 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val profile = ProfileModel(
                 id = 0,
-                uid = "123",
+                uid = UUID.randomUUID().toString(),
                 name = "Max Mustermann",
                 profilePicture = fetchPicture(),
                 description = "Ich bin ein Beispielprofil",
             )
 
-            val profileId = profileRepository.insertProfile(profile).toInt()
+            profileRepository.insertProfile(profile)
 
-            userPreferencesRepository.updateUserProfileId(profileId)
+            userPreferencesRepository.updateUserProfileUid(profile.uid)
 
             val chatPartner = ProfileModel(
                 id = 0,
-                uid = "456",
+                uid = UUID.randomUUID().toString(),
                 name = "Lisa Mustermann",
                 profilePicture = fetchPicture(),
                 description = "Ich bin ein anderes Beispielprofil",
             )
 
-            val chatPartnerId = profileRepository.insertProfile(chatPartner).toInt()
+            profileRepository.insertProfile(chatPartner)
 
             val chat1 = ChatModel(
                 id = 0,
-                profileId = profileId,
-                chatPartnerId = chatPartnerId
+                profileUid = profile.uid,
+                chatPartnerUid = chatPartner.uid
             )
 
             chatRepository.insertChat(chat1)
 
-            val chatPartnerClient = ED25519Client()
+            val chatPartnerClient = ED25519Client(chatPartner.uid)
 
-            encryptionKeyRepository.insertNewClient(chatPartnerClient, chatPartnerId)
+            encryptionKeyRepository.insertNewClient(chatPartnerClient, chatPartner.uid)
         }
     }
 }

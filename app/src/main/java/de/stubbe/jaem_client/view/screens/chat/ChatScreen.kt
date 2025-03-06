@@ -54,8 +54,8 @@ fun ChatScreen(
 
     val chat by sharedChatViewModel.chat.collectAsState()
     val messages by viewModel.messages.collectAsState()
-    val oldMessages = remember(messages) { messages.filter { it.deliveryTime != null || it.senderId == userProfileId } }
-    val newMessages = remember(messages, userProfileId) { messages.filter { it.deliveryTime == null && it.senderId != userProfileId } }
+    val oldMessages = remember(messages) { messages.filter { it.deliveryTime != null || it.senderUid == userProfileId } }
+    val newMessages = remember(messages, userProfileId) { messages.filter { it.deliveryTime == null && it.senderUid != userProfileId } }
 
     val newMessageString by viewModel.newMessageString.collectAsState()
     val newAttachment by viewModel.newAttachments.collectAsState()
@@ -164,14 +164,14 @@ fun ChatScreen(
                 itemsIndexed(oldMessages) { index, message ->
                     val firstMessageOfBlock = when {
                         index == 0 -> true
-                        messages[index - 1].senderId != message.senderId -> true
+                        messages[index - 1].senderUid != message.senderUid -> true
                         else -> false
                     }
 
                     ChatMessageBubble(
                         message = message,
                         firstMessageOfBlock = firstMessageOfBlock,
-                        isSentByUser = message.senderId == userProfileId,
+                        isSentByUser = message.senderUid == userProfileId,
                         searchValue = searchValue,
                         selectionEnabled = selectedMessages.isNotEmpty(),
                         isSelected = selectedMessages.contains(message),
@@ -194,14 +194,14 @@ fun ChatScreen(
                 itemsIndexed(newMessages) { index, message ->
                     val firstMessageOfBlock = when {
                         index == 0 -> true
-                        messages[index - 1].senderId != message.senderId -> true
+                        messages[index - 1].senderUid != message.senderUid -> true
                         else -> false
                     }
 
                     ChatMessageBubble(
                         message = message,
                         firstMessageOfBlock = firstMessageOfBlock,
-                        isSentByUser = message.senderId == userProfileId,
+                        isSentByUser = message.senderUid == userProfileId,
                         searchValue = searchValue,
                         selectionEnabled = selectedMessages.isNotEmpty(),
                         isSelected = selectedMessages.contains(message),

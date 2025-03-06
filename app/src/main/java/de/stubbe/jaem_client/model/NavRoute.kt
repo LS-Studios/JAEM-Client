@@ -8,6 +8,9 @@ import kotlinx.serialization.Serializable
 sealed class NavRoute {
 
     @Serializable
+    data object DeviceClientSetup : NavRoute()
+
+    @Serializable
     data object ChatOverview : NavRoute()
 
     @Serializable
@@ -15,11 +18,11 @@ sealed class NavRoute {
 
     @Serializable
     data class ChatMessages(
-        val profileId: Int,
+        val profileUid: String,
         val chatId: Int,
         var searchEnabled: Boolean
     ) : NavRoute() {
-        constructor() : this(-1, -1, false)
+        constructor() : this("", -1, false)
     }
 
     @Serializable
@@ -27,9 +30,9 @@ sealed class NavRoute {
 
     @Serializable
     data class EditProfile(
-        val profileId: Int
+        val profileUid: String
     ) : NavRoute() {
-        constructor() : this(-1)
+        constructor() : this("")
     }
 
 }

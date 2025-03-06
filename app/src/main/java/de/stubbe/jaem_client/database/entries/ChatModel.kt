@@ -14,8 +14,8 @@ import androidx.room.PrimaryKey
 data class ChatModel(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
-    @ColumnInfo(name = "profile_id")
-    val profileId: Int,
-    @ColumnInfo(name = "chat_partner_id")
-    val chatPartnerId: Int
+    @ColumnInfo(name = "profile_uid")
+    val profileUid: String,
+    @ColumnInfo(name = "chat_partner_uid")
+    val chatPartnerUid: String
 )

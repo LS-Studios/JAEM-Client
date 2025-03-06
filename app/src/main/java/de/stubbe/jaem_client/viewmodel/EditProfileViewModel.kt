@@ -22,7 +22,7 @@ class EditProfileViewModel @Inject constructor(
 
     private val editProfileArguments = savedStateHandle.toRoute<NavRoute.EditProfile>()
 
-    private val profileFlow = profileRepository.getProfileByIdWithChange(editProfileArguments.profileId)
+    private val profileFlow = profileRepository.getProfileByUidWithChange(editProfileArguments.profileUid)
 
     val profilePicture: MutableStateFlow<ByteArray?> = MutableStateFlow(null)
     val profileName: MutableStateFlow<String> = MutableStateFlow("")

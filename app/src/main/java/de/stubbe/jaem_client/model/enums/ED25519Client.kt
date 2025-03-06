@@ -8,6 +8,7 @@ import java.security.PrivateKey
 import java.security.PublicKey
 
 class ED25519Client {
+    var profileUid: String? = null
     var ed25519PublicKey: Ed25519PublicKeyParameters? = null
     var ed25519PrivateKey: Ed25519PrivateKeyParameters? = null
     var x25519PublicKey: X25519PublicKeyParameters? = null
@@ -17,7 +18,9 @@ class ED25519Client {
 
     var encryption: SymmetricEncryption = SymmetricEncryption.ED25519
 
-    constructor() {
+    constructor(profileUid: String) {
+        this.profileUid = profileUid
+
         val ed25519Keys = encryption.generateSignatureKeys()
         ed25519PublicKey = ed25519Keys.first
         ed25519PrivateKey = ed25519Keys.second
@@ -32,16 +35,19 @@ class ED25519Client {
     }
 
     constructor(
+        profileUid: String,
         ed25519PublicKey: Ed25519PublicKeyParameters,
         x25519PublicKey: X25519PublicKeyParameters,
         rsaPublicKey: PublicKey
     ) {
+        this.profileUid = profileUid
         this.ed25519PublicKey = ed25519PublicKey
         this.x25519PublicKey = x25519PublicKey
         this.rsaPublicKey = rsaPublicKey
     }
 
     constructor(
+        profileUid: String,
         ed25519PublicKey: Ed25519PublicKeyParameters,
         ed25519PrivateKey: Ed25519PrivateKeyParameters,
         x25519PublicKey: X25519PublicKeyParameters,
@@ -49,6 +55,7 @@ class ED25519Client {
         rsaPublicKey: PublicKey,
         rsaPrivateKey: PrivateKey
     ) {
+        this.profileUid = profileUid
         this.ed25519PublicKey = ed25519PublicKey
         this.ed25519PrivateKey = ed25519PrivateKey
         this.x25519PublicKey = x25519PublicKey
@@ -57,14 +64,4 @@ class ED25519Client {
         this.rsaPrivateKey = rsaPrivateKey
     }
 
-    fun updateKeys(
-        client: ED25519Client
-    ) {
-        this.ed25519PublicKey = client.ed25519PublicKey
-        this.ed25519PrivateKey = client.ed25519PrivateKey
-        this.x25519PublicKey = client.x25519PublicKey
-        this.x25519PrivateKey = client.x25519PrivateKey
-        this.rsaPublicKey = client.rsaPublicKey
-        this.rsaPrivateKey = client.rsaPrivateKey
-    }
 }

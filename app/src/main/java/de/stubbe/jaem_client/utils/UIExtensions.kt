@@ -94,8 +94,6 @@ suspend fun File.loadPreviewFromFile(context: Context, size: Size = Size(Dimensi
         Files.probeContentType(this@loadPreviewFromFile.toPath())
     }
 
-    println(mimeType)
-
     return if (mimeType?.startsWith("video") == true) {
         this.let {
             ThumbnailUtils.createVideoThumbnail(it, size, CancellationSignal())

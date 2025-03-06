@@ -28,14 +28,11 @@ interface JAEMApiService {
     @GET("share/{id}")
     suspend fun getSharedProfile(profileId: String): Call<ShareProfileResponse>
 
-    @GET("hello")
-    suspend fun hello(): Call<String>
-
     @POST("send_message")
-    suspend fun sendMessage(@Body requestBody: RequestBody): Call<Response<Void>>
+    suspend fun sendMessage(@Body requestBody: RequestBody): Response<ResponseBody>
 
     @POST("get_messages")
-    fun getMessages(@Body requestBody: RequestBody): Call<ResponseBody>
+    suspend fun getMessages(@Body requestBody: RequestBody): Response<ResponseBody>
 
     @POST("delete_messages")
     suspend fun deleteMessage(@Body requestBody: RequestBody): Call<ResponseBody>

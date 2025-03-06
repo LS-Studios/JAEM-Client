@@ -14,8 +14,8 @@ data class EncryptionKeyModel(
     val key: ByteArray,
     @ColumnInfo(name = "key_type")
     val type: KeyType,
-    @ColumnInfo(name = "profile_id")
-    val profileId: Int = 0,
+    @ColumnInfo(name = "profile_uid")
+    val profileUid: String = "",
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -26,7 +26,7 @@ data class EncryptionKeyModel(
         if (id != other.id) return false
         if (!key.contentEquals(other.key)) return false
         if (type != other.type) return false
-        if (profileId != other.profileId) return false
+        if (profileUid != other.profileUid) return false
 
         return true
     }
@@ -35,7 +35,7 @@ data class EncryptionKeyModel(
         var result = id
         result = 31 * result + key.contentHashCode()
         result = 31 * result + type.hashCode()
-        result = 31 * result + profileId
+        result = 31 * result + profileUid.hashCode()
         return result
     }
 }
