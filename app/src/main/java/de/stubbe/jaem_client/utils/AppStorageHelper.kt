@@ -6,115 +6,107 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.OpenableColumns
-import kotlinx.coroutines.Dispatchers
+import de.stubbe.jaem_client.data.SEPARATOR_BYTE
+import org.apache.tika.Tika
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
 object AppStorageHelper {
 
-    suspend fun saveUriToSharedStorage(uri: Uri, context: Context): File? {
-        with(Dispatchers.IO) {
-            val contentResolver = context.contentResolver
+    suspend fun createFileFromBytesInSharedStorage(nameAndContentBytes: ByteArray, context: Context): File? {
+        val tika = Tika()
 
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            val fileName = cursor?.use {
-                if (it.moveToFirst()) {
-                    val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (nameIndex != -1) it.getString(nameIndex) else null
-                } else null
-            } ?: return null
+        val separatorIndex = nameAndContentBytes.indexOf(SEPARATOR_BYTE)
+        val fileName = String(nameAndContentBytes.copyOfRange(0, separatorIndex)).trim()
 
-            val mimeType = contentResolver.getType(uri) ?: return null
+        val mimeType = tika.detect(nameAndContentBytes)
 
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+        }
+
+        val collection = when {
+            mimeType.startsWith("image/") -> {
+                contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Jaem Images")
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             }
 
-            val collection = when {
-                mimeType.startsWith("image/") -> {
-                    contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Jaem Images")
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                }
-
-                mimeType.startsWith("video/") -> {
-                    contentValues.put(MediaStore.Video.Media.RELATIVE_PATH, "Jaem Videos")
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                }
-
-                mimeType.startsWith("audio/") -> {
-                    contentValues.put(MediaStore.Audio.Media.RELATIVE_PATH, "Jaem Audio")
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                }
-
-                else -> {
-                    contentValues.put(MediaStore.Downloads.RELATIVE_PATH, "Jaem Downloads")
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI
-                }
+            mimeType.startsWith("video/") -> {
+                contentValues.put(MediaStore.Video.Media.RELATIVE_PATH, "Jaem Videos")
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
             }
 
-            return try {
-                val newUri = contentResolver.insert(collection, contentValues) ?: return null
-                contentResolver.openOutputStream(newUri)?.use { outputStream ->
-                    contentResolver.openInputStream(uri)?.use { inputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                }
-                newUri.path?.let { File(it) }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
+            mimeType.startsWith("audio/") -> {
+                contentValues.put(MediaStore.Audio.Media.RELATIVE_PATH, "Jaem Audio")
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             }
+
+            else -> {
+                contentValues.put(MediaStore.Downloads.RELATIVE_PATH, "Jaem Downloads")
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            }
+        }
+
+        val contentBytes = nameAndContentBytes.copyOfRange(36, nameAndContentBytes.size)
+
+        return try {
+            val uri = context.contentResolver.insert(collection, contentValues) ?: return null
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.write(contentBytes)
+            }
+            File(uri.path!!)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
     suspend fun copyUriToAppStorage(uri: Uri, context: Context): File? {
-        with(Dispatchers.IO) {
-            val contentResolver = context.contentResolver
+        val contentResolver = context.contentResolver
 
-            // Datei-Details abrufen (Name und Erweiterung)
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            var fileName: String? = null
+        // Datei-Details abrufen (Name und Erweiterung)
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        var fileName: String? = null
 
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (nameIndex != -1) {
-                        fileName = it.getString(nameIndex)
-                    }
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    fileName = it.getString(nameIndex)
                 }
             }
+        }
 
-            val mimeType = contentResolver.getType(uri) ?: return null
+        val mimeType = contentResolver.getType(uri) ?: return null
 
-            val fileDir = when {
-                mimeType.startsWith("image/") -> "${context.getExternalFilesDir(null)}${File.separator}Images"
-                mimeType.startsWith("video/") -> "${context.getExternalFilesDir(null)}${File.separator}Videos"
-                mimeType.startsWith("audio/") -> "${context.getExternalFilesDir(null)}${File.separator}Audio"
-                else -> "${context.getExternalFilesDir(null)}${File.separator}Downloads"
-            }
+        val fileDir = when {
+            mimeType.startsWith("image/") -> "${context.getExternalFilesDir(null)}${File.separator}Images"
+            mimeType.startsWith("video/") -> "${context.getExternalFilesDir(null)}${File.separator}Videos"
+            mimeType.startsWith("audio/") -> "${context.getExternalFilesDir(null)}${File.separator}Audio"
+            else -> "${context.getExternalFilesDir(null)}${File.separator}Downloads"
+        }
 
-            val dir = File(fileDir)
-            if (!dir.exists()) {
-                dir.mkdirs()
-            }
+        val dir = File(fileDir)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
 
-            if (fileName == null) return null
+        if (fileName == null) return null
 
-            return try {
-                val inputStream: InputStream? = contentResolver.openInputStream(uri)
-                inputStream?.use { stream ->
-                    val outputFile = File(fileDir, fileName!!)
-                    FileOutputStream(outputFile).use { output ->
-                        stream.copyTo(output)
-                    }
-                    outputFile
+        return try {
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+            inputStream?.use { stream ->
+                val outputFile = File(fileDir, fileName!!)
+                FileOutputStream(outputFile).use { output ->
+                    stream.copyTo(output)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
+                outputFile
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 

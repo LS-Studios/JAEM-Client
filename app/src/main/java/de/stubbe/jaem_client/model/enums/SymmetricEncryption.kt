@@ -24,20 +24,20 @@ enum class SymmetricEncryption(
     val decrypt: (ByteArray, ByteArray) -> ByteArray
 ) {
     ED25519(
-        "ED25519",
-        0,
-        {edPrivateKey ->
+        algorithm = "ED25519",
+        code = 0,
+        generateX25519Keys = {edPrivateKey ->
             val xPrivateKey = X25519PrivateKeyParameters(edPrivateKey.encoded)
             val xPublicKey = xPrivateKey.generatePublicKey()
             Pair(xPublicKey,xPrivateKey)
         },
-        {
+        generateSignatureKeys = {
             val privateKey = Ed25519PrivateKeyParameters(SecureRandom())
             val publicKey = privateKey.generatePublicKey()
 
             Pair(publicKey, privateKey)
         },
-        { publicKey, privateKey ->
+        generateSymmetricKey = { publicKey, privateKey ->
             val agreement = X25519Agreement()
             val sharedSecret = ByteArray(32)
             agreement.init(privateKey)
@@ -51,20 +51,20 @@ enum class SymmetricEncryption(
             hkdf.generateBytes(aesKey, 0, aesKey.size)
             aesKey
         },
-        { message, privateKey ->
+        sign = { message, privateKey ->
             val signer = Ed25519Signer()
             signer.init(true, privateKey)
             signer.update(message, 0 , message.size)
             val signature = signer.generateSignature()
             signature
         },
-        { message, signature,  publicKey ->
+        checkSign = { message, signature,  publicKey ->
             val verifier = Ed25519Signer()
             verifier.init(false, publicKey)
             verifier.update(message, 0, message.size)
             verifier.verifySignature(signature)
         },
-        { message, signature, aesKey ->
+        encrypt = { message, signature, aesKey ->
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             val iv = ByteArray(12)
             SecureRandom().nextBytes(iv) // Generate random IV
@@ -79,7 +79,7 @@ enum class SymmetricEncryption(
 
             iv + ciphertext
         },
-        { message, aesKey ->
+        decrypt = { message, aesKey ->
             val iv = message.copyOfRange(0, 12) // Extract IV
             val ciphertext = message.copyOfRange(12 , message.size) // Extract actual ciphertext
 

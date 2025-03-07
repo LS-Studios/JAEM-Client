@@ -1,6 +1,6 @@
 package de.stubbe.jaem_client.repositories.database
 
-import ED25519Client
+import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.database.daos.EncryptionKeyDao
 import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
 import de.stubbe.jaem_client.model.enums.KeyType

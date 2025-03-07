@@ -5,3 +5,4 @@ const val PROFILE_PICTURE_TRANSITION = "profile_picture_transition"
 const val DEEP_LINK_URL = "https://jaem.de"
 const val SHARING_STARTED_DEFAULT = 5000L
 const val APP_FOLDER = "Jaem"
+const val SEPARATOR_BYTE = 0xFF.toByte()

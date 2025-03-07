@@ -1,6 +1,5 @@
 package de.stubbe.jaem_client.viewmodel
 
-import ED25519Client
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +9,7 @@ import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.ProfileModel
 import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.datastore.UserPreferences.Theme
+import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.network.ReceiveBody
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
@@ -55,13 +55,14 @@ class MainActivityViewModel @Inject constructor(
 
     private val deviceClient = encryptionKeyRepository.getClientFlow(canCreateUserClient = true)
 
-    fun getNewMessages() {
+    fun getNewMessages(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val deviceClient = deviceClient.first()!!
 
             val messages = networkRepository.receiveMessages(
                 ReceiveBody.buildReceiveBody(deviceClient),
                 deviceClient,
+                context
             )
 
             println("Received messages: $messages")

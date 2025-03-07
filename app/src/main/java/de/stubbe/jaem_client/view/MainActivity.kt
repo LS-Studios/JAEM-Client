@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import de.stubbe.jaem_client.datastore.UserPreferences
@@ -30,11 +31,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: MainActivityViewModel = hiltViewModel()
             val userPreferences by viewModel.userPreferences.collectAsState()
+            val context = LocalContext.current
 
             LaunchedEffect(Unit) {
                 viewModel.updateTheme(UserPreferences.Theme.DARK)
 
-                viewModel.getNewMessages()
+                viewModel.getNewMessages(context)
 
                 //viewModel.deleteExampleData(this@MainActivity)
                  //viewModel.addExampleData()

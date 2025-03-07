@@ -3,8 +3,8 @@
 // ED pub und private keys
 // x pub und private keys
 // ed pub und x pub für chat vom empfänger
-val userClient = ED25519Client(otherPubEd, otherPubX, otherPrivateEd, otherPrivateX)
-val otherClient = ED25519Client(otherPubEd, otherPubX)
+val userClient = de.stubbe.jaem_client.model.ED25519Client(otherPubEd, otherPubX, otherPrivateEd, otherPrivateX)
+val otherClient = de.stubbe.jaem_client.model.ED25519Client(otherPubEd, otherPubX)
 val userEncryption = EncryptionHelper(SymmetricEncryption.ED25519, userClient)
 
 //IM Chat

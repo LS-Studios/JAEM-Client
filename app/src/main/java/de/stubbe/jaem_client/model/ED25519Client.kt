@@ -1,3 +1,5 @@
+package de.stubbe.jaem_client.model
+
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters

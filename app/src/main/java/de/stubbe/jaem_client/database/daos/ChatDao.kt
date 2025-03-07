@@ -12,7 +12,13 @@ import kotlinx.coroutines.flow.Flow
 abstract class ChatDao: BaseDao<ChatModel> {
 
     @Query("SELECT * FROM chats WHERE id = :id")
-    abstract suspend fun getChatById(id: Int): ChatModel
+    abstract suspend fun getChatById(id: Int): ChatModel?
+
+    @Query("SELECT * FROM chats WHERE profile_uid = :profileUid")
+    abstract suspend fun getChatByProfileUid(profileUid: String): ChatModel?
+
+    @Query("SELECT * FROM chats WHERE chat_partner_uid = :chatPartnerUid")
+    abstract suspend fun getChatByChatPartnerUid(chatPartnerUid: String): ChatModel?
 
     @Query("SELECT * FROM chats WHERE id = :id")
     abstract fun getChatByIdWithChange(id: Int): Flow<ChatModel>

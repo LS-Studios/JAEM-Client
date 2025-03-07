@@ -112,6 +112,9 @@ dependencies {
     // Cryptography
     implementation(libs.bcprov.jdk15on)
     implementation(libs.bcpkix.jdk15on)
+
+    // ByteArray Parsing
+    implementation(libs.tika.core)
 }
 
 protobuf {

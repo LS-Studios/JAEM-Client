@@ -12,6 +12,7 @@ import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.network.ChatEncryptionData
+import de.stubbe.jaem_client.network.NetworkMessagePartModel
 import de.stubbe.jaem_client.network.SendMessageModel
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
@@ -152,7 +153,10 @@ class ChatViewModel @Inject constructor(
                        otherClient = deviceClientFlow.first(),
                        encryption = SymmetricEncryption.ED25519
                    ),
-                   listOf(newMessageString.value.toByteArray())
+                   NetworkMessagePartModel.buildMessageParts(
+                       newMessageString.value,
+                       newAttachments.value
+                   )
                )
             )
 

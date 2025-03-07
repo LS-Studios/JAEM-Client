@@ -1,12 +1,20 @@
 package de.stubbe.jaem_client.network
 
-import ED25519Client
+import de.stubbe.jaem_client.data.SEPARATOR_BYTE
+import de.stubbe.jaem_client.model.Attachments
+import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
+import de.stubbe.jaem_client.model.enums.AttachmentType
+import de.stubbe.jaem_client.model.enums.MessageType
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.utils.toByteArray
+import de.stubbe.jaem_client.utils.toInt
+import de.stubbe.jaem_client.utils.toLong
+import de.stubbe.jaem_client.utils.toShort
+import java.io.File
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.security.SignatureException
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.time.Instant
 
 /**
@@ -22,9 +30,9 @@ data class ChatEncryptionData(
  * Klasse zur darstellung einer Empfangenen Nachricht
  */
 data class ReceivedMessagesModel(
-    val uid: String,
-    val timeSend: ULong,
-    val messages: MutableList<NetworkMessageModel>,
+    val senderUid: String,
+    val timeSend: Long,
+    val messages: MutableList<NetworkMessagePartModel>,
 ) {
     companion object {
         fun messageFromByteArray(byteArray: ByteArray): List<ByteArray> {
@@ -71,33 +79,29 @@ data class ReceivedMessagesModel(
             val aesDecryptedMessage = algorithm.decrypt(aesEncryptedMessage, aesKey)
 
             val signature = aesDecryptedMessage.copyOfRange(0, 64)
-            val timeSend =
-                ByteBuffer.wrap(aesDecryptedMessage.copyOfRange(64, 72)).order(ByteOrder.BIG_ENDIAN)
-                    .getLong()
+            val timeSend = aesDecryptedMessage.copyOfRange(64, 72).toLong()
             val messageData = aesDecryptedMessage.copyOfRange(72, aesDecryptedMessage.size)
 
             val messageUnchanged =
                 algorithm.checkSign(messageData, signature, otherClient.ed25519PublicKey!!)
 
             if (!messageUnchanged) {
-                throw SignatureException("Signature is not valid")
+                throw Exception("Message has been changed")
             }
 
-            val messageModel = ReceivedMessagesModel(uid, timeSend.toULong(), mutableListOf())
-            var pointer = 0
+            val messageModel = ReceivedMessagesModel(uid, timeSend, mutableListOf())
+            var pointer = 36
             while (pointer < messageData.size) {
-                val messageType = ByteBuffer.wrap(messageData.copyOfRange(pointer, pointer + 2))
-                    .order(ByteOrder.BIG_ENDIAN).getShort().toUShort()
+                val messageType = messageData.copyOfRange(pointer, pointer + 2).toShort()
                 pointer += 2
-                val messageSize = ByteBuffer.wrap(messageData.copyOfRange(pointer, pointer + 4))
-                    .order(ByteOrder.BIG_ENDIAN).getInt().toUInt().toInt()
+                val messageSize = messageData.copyOfRange(pointer, pointer + 4).toInt()
                 pointer += 4
                 val message = messageData.copyOfRange(pointer, pointer + messageSize)
                 pointer += messageSize
                 messageModel.messages.add(
-                    NetworkMessageModel(
-                        messageType,
-                        message.size.toUInt(),
+                    NetworkMessagePartModel(
+                        MessageType.entries[messageType.toInt()],
+                        messageSize,
                         message
                     )
                 )
@@ -111,17 +115,49 @@ data class ReceivedMessagesModel(
 /**
  * Klasse zur darstellung einer Empfangenen Nachricht
  */
-data class NetworkMessageModel(
-    val messageType: UShort,
-    val messageLength: UInt,
+data class NetworkMessagePartModel(
+    val messageType: MessageType,
+    val messageLength: Int,
     val message: ByteArray,
 ) {
     fun toByteArray(): ByteArray {
-        return ByteBuffer.allocate(2 + 4 + message.size)
-            .putShort(messageType.toShort())
-            .putInt(message.size)
-            .put(message)
-            .array()
+        return messageType.ordinal.toShort().toByteArray() + message.size.toByteArray() + message
+    }
+
+    companion object {
+
+        fun buildMessageParts(
+            message: String,
+            attachments: Attachments?
+        ): List<NetworkMessagePartModel> {
+            val messagePart = NetworkMessagePartModel(
+                MessageType.MESSAGE,
+                message.length,
+                message.toByteArray()
+            )
+
+            if (attachments == null) {
+                return listOf(messagePart)
+            }
+
+            val messageType = when (attachments.type) {
+                AttachmentType.FILE -> MessageType.FILE
+                AttachmentType.IMAGE_AND_VIDEO -> MessageType.IMAGE_AND_VIDEO
+            }
+
+            val attachmentParts = attachments.attachmentPaths.map { filePath ->
+                val file = File(filePath)
+                val fileAsByteArray = Files.readAllBytes(Paths.get(filePath))
+                NetworkMessagePartModel(
+                    messageType,
+                    fileAsByteArray.size,
+                    file.name.toByteArray() + SEPARATOR_BYTE + fileAsByteArray,
+                )
+            }
+
+            return listOf(messagePart) + attachmentParts
+        }
+
     }
 }
 
@@ -141,14 +177,14 @@ data class SendMessageModel(
 
         fun buildSendMessageModel(
             chatEncryptionData: ChatEncryptionData,
-            messages: List<ByteArray>
+            messageParts: List<NetworkMessagePartModel>
         ): SendMessageModel {
             val client = chatEncryptionData.client!!
             val otherClient = chatEncryptionData.otherClient!!
             val algorithm = chatEncryptionData.encryption
 
             val messageWithUID =
-                client.profileUid!!.toByteArray() + messages.reduce(ByteArray::plus)
+                client.profileUid!!.toByteArray() + messageParts.map { it.toByteArray() }.reduce { acc, byteArray -> acc + byteArray }
 
             val signature = algorithm.sign(messageWithUID, client.ed25519PrivateKey!!)
             val aesKey = algorithm.generateSymmetricKey(
@@ -162,9 +198,9 @@ data class SendMessageModel(
                 byteArrayOf()
             )
 
-            val unixTimestamp = Instant.now().epochSecond.toULong().toByteArray()
+            val unixTimestamp = Instant.now().epochSecond.toByteArray()
 
-            val message = unixTimestamp + messages.reduce(ByteArray::plus)
+            val message = unixTimestamp + messageWithUID
             val aesEncryptedMessage = algorithm.encrypt(message, signature, aesKey)
 
             val rsaEncryptedData = AsymmetricEncryption.RSA.encrypt(
@@ -183,14 +219,14 @@ data class ReceiveBody(
     val algorithm: Byte,
     val signature: ByteArray,
     val publicKey: ByteArray,
-    val unixTime: ULong
+    val unixTime: Long
 ) {
     fun toByteArray(): ByteArray {
         val buffer = ByteBuffer.allocate(1 + signature.size + publicKey.size + 8)
         buffer.put(0u.toByte())
         buffer.put(signature)
         buffer.put(publicKey)
-        buffer.putLong(unixTime.toLong())
+        buffer.putLong(unixTime)
         return buffer.array()
     }
 
@@ -199,11 +235,10 @@ data class ReceiveBody(
         fun buildReceiveBody(
             deviceClient: ED25519Client
         ): ReceiveBody {
-            val unixTimeStamp = Instant.now().epochSecond.toULong()
+            val unixTimeStamp = Instant.now().epochSecond
             val timestamp = unixTimeStamp.toByteArray()
 
             val signature = deviceClient.encryption.sign(
-
                 deviceClient.ed25519PublicKey!!.encoded + timestamp,
                 deviceClient.ed25519PrivateKey!!
             )

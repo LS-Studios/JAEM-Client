@@ -41,9 +41,35 @@ fun ByteArray.toX25519PrivateKey(): X25519PrivateKeyParameters {
     return X25519PrivateKeyParameters(this, 0)
 }
 
-fun ULong.toByteArray(): ByteArray {
+fun Short.toByteArray(): ByteArray {
+    return ByteBuffer.allocate(Short.SIZE_BYTES)
+        .order(ByteOrder.BIG_ENDIAN)
+        .putShort(this)
+        .array()
+}
+
+fun Long.toByteArray(): ByteArray {
     return ByteBuffer.allocate(ULong.SIZE_BYTES)
         .order(ByteOrder.BIG_ENDIAN)
         .putLong(this.toLong())
         .array()
+}
+
+fun Int.toByteArray(): ByteArray {
+    return ByteBuffer.allocate(Int.SIZE_BYTES)
+        .order(ByteOrder.BIG_ENDIAN)
+        .putInt(this)
+        .array()
+}
+
+fun ByteArray.toShort(): Short {
+    return ByteBuffer.wrap(this).order(ByteOrder.BIG_ENDIAN).getShort()
+}
+
+fun ByteArray.toInt(): Int {
+    return ByteBuffer.wrap(this).order(ByteOrder.BIG_ENDIAN).getInt()
+}
+
+fun ByteArray.toLong(): Long {
+    return ByteBuffer.wrap(this).order(ByteOrder.BIG_ENDIAN).getLong()
 }

@@ -12,6 +12,10 @@ class ChatRepository @Inject constructor(
 
     fun getChatByIdWithChange(id: Int) = chatDao.getChatByIdWithChange(id)
 
+    suspend fun getChatByProfileUid(profileUid: String) = chatDao.getChatByProfileUid(profileUid)
+
+    suspend fun getChatByChatPartnerUid(chatPartnerUid: String) = chatDao.getChatByChatPartnerUid(chatPartnerUid)
+
     fun getAllChats() = chatDao.getAllChats()
 
     suspend fun insertChat(chat: ChatModel) = chatDao.insert(chat)
