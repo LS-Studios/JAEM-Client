@@ -2,6 +2,7 @@ package de.stubbe.jaem_client.repositories
 
 import ED25519Client
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.model.network.AddPubKeyBody
 import de.stubbe.jaem_client.model.network.PubKey
 import de.stubbe.jaem_client.model.network.UDSModel
 import de.stubbe.jaem_client.network.ChatEncryptionData
@@ -13,6 +14,7 @@ import de.stubbe.jaem_client.network.UDSApiService
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.utils.splitResponse
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.RequestBody
 import javax.inject.Inject
@@ -123,5 +125,17 @@ class NetworkRepository @Inject constructor(
             println("Error leaving service: ${error.string()}")
             return ""
         }
+    }
+
+    suspend fun addPublicKey(uid: String, pubKey: PubKey): String {
+        val addPubKeyBody = AddPubKeyBody(uid, pubKey)
+        val (response, error) = udsApiService.addPubKey(Json.encodeToString(AddPubKeyBody.serializer(), addPubKeyBody)).splitResponse()
+        if (error == null) {
+            return response!!.string()
+        } else {
+            println("Error adding public key: ${error.string()}")
+            return ""
+        }
+
     }
 }

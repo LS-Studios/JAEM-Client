@@ -20,6 +20,9 @@ interface UDSApiService {
     @POST("create_user")
     suspend fun joinService(@Body joinUDSRequestBody: String): Response<ResponseBody>
 
+    @POST("add_pub_key")
+    suspend fun addPubKey(@Body addPubKeyBody: String): Response<ResponseBody>
+
     @DELETE("user/{id}")
     suspend fun leaveService(uid: String): Response<ResponseBody>
 }
