@@ -30,9 +30,10 @@ sealed class NavRoute {
 
     @Serializable
     data class EditProfile(
-        val profileUid: String
+        val profileUid: String?,
+        val sharedCode: String?
     ) : NavRoute() {
-        constructor() : this("")
+        constructor() : this(null, null)
     }
 
 }

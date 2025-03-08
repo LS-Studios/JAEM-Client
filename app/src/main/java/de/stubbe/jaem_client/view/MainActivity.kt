@@ -22,12 +22,17 @@ import de.stubbe.jaem_client.view.screens.Navigation
 import de.stubbe.jaem_client.view.variables.JAEMTheme
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.viewmodel.MainActivityViewModel
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
+
         setContent {
             val viewModel: MainActivityViewModel = hiltViewModel()
             val userPreferences by viewModel.userPreferences.collectAsState()
@@ -36,11 +41,14 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 viewModel.updateTheme(UserPreferences.Theme.DARK)
 
-                viewModel.getNewMessages(context)
+                val scheduler = Executors.newScheduledThreadPool(1)
+                val task = Runnable {
+                    viewModel.getNewMessages(context)
+                }
+                scheduler.scheduleWithFixedDelay(task, 0, 5, TimeUnit.SECONDS)
 
                 //viewModel.deleteExampleData(this@MainActivity)
                  //viewModel.addExampleData()
-//                viewModel.printData()
             }
 
             JAEMTheme(
@@ -52,7 +60,10 @@ class MainActivity : ComponentActivity() {
                     contentWindowInsets = WindowInsets(0)
                 ) { innerPadding ->
                     Navigation(
-                        Modifier.padding(innerPadding).consumeWindowInsets(innerPadding).systemBarsPadding()
+                        Modifier
+                            .padding(innerPadding)
+                            .consumeWindowInsets(innerPadding)
+                            .systemBarsPadding()
                     )
                 }
             }

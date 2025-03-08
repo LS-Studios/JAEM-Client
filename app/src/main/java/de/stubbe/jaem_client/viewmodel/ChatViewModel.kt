@@ -11,9 +11,9 @@ import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.enums.SymmetricEncryption
-import de.stubbe.jaem_client.network.ChatEncryptionData
-import de.stubbe.jaem_client.network.NetworkMessagePartModel
-import de.stubbe.jaem_client.network.SendMessageModel
+import de.stubbe.jaem_client.model.network.EncryptionContext
+import de.stubbe.jaem_client.model.network.MessagePart
+import de.stubbe.jaem_client.model.network.OutgoingMessage
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
@@ -147,13 +147,13 @@ class ChatViewModel @Inject constructor(
             )*/
 
             networkRepository.sendMessage(
-               SendMessageModel.buildSendMessageModel(
-                   ChatEncryptionData(
-                       client = deviceClientFlow.first(),
-                       otherClient = deviceClientFlow.first(),
-                       encryption = SymmetricEncryption.ED25519
+               OutgoingMessage.create(
+                   EncryptionContext(
+                       localClient = deviceClientFlow.first(),
+                       remoteClient = deviceClientFlow.first(),
+                       encryptionAlgorithm = SymmetricEncryption.ED25519
                    ),
-                   NetworkMessagePartModel.buildMessageParts(
+                   MessagePart.createMessageParts(
                        newMessageString.value,
                        newAttachments.value
                    )

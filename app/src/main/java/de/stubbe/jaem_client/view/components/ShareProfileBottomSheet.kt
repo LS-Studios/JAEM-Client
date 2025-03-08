@@ -42,7 +42,6 @@ import de.stubbe.jaem_client.viewmodel.ShareProfileViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShareProfileBottomSheet(
-    isVisible: Boolean,
     onClose: () -> Unit,
     shareProfileViewModel: ShareProfileViewModel
 ) {
@@ -50,14 +49,15 @@ fun ShareProfileBottomSheet(
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
 
-    val shareProfileResponse by shareProfileViewModel.shareProfileResponse.collectAsState()
+    val sharedProfile by shareProfileViewModel.sharedProfile.collectAsState()
     val profileToShare by shareProfileViewModel.profileToShare.collectAsState()
+    val isVisible by shareProfileViewModel.isShareProfileBottomSheetVisible.collectAsState()
 
-    val shareLink = remember(shareProfileResponse) {
-        if (shareProfileResponse == null) {
+    val shareLinkUrl = remember(sharedProfile) {
+        if (sharedProfile == null) {
             null
         } else {
-            "$DEEP_LINK_URL/share/${shareProfileResponse!!.profileUid}"
+            "$DEEP_LINK_URL/share/${sharedProfile?.sharedCode}"
         }
     }
 
@@ -74,7 +74,13 @@ fun ShareProfileBottomSheet(
                 )
             },
         ) {
-            LoadingIfNull(profileToShare, shareProfileResponse) {
+            LoadingIfNull(
+                profileToShare,
+                sharedProfile,
+                modifier = Modifier.fillMaxWidth().padding(Dimensions.Padding.Medium),
+                size = Dimensions.Size.SuperHuge,
+                strokeWidth = Dimensions.Border.ThickBorder
+            ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -83,7 +89,7 @@ fun ShareProfileBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = Dimensions.Padding.Medium),
-                        text = profileToShare?.name ?: "",
+                        text = sharedProfile?.sharedCode ?: "",
                         style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold
@@ -92,8 +98,8 @@ fun ShareProfileBottomSheet(
 
                     Divider()
 
-                    if (shareLink != null) {
-                        ShareProfileQRCode(shareLink)
+                    if (shareLinkUrl != null) {
+                        ShareProfileQRCode(shareLinkUrl)
 
                         Text(
                             modifier = Modifier
@@ -102,7 +108,7 @@ fun ShareProfileBottomSheet(
                             text = stringResource(
                                 R.string.link_available_for_n_minutes,
                                 calculateMinutesUntilExpiration(
-                                    shareProfileResponse!!.createdAt,
+                                    sharedProfile!!.timestamp,
                                     10
                                 )
                             ),
@@ -116,11 +122,11 @@ fun ShareProfileBottomSheet(
 
                     ShareProfileActions(
                         onShare = {
-                            if (shareLink != null) {
+                            if (sharedProfile != null) {
                                 val sendIntent = Intent(Intent.ACTION_SEND).apply {
                                     putExtra(
                                         Intent.EXTRA_TEXT,
-                                        shareLink
+                                        shareLinkUrl
                                     )
                                     type = "text/plain"
                                 }
@@ -130,10 +136,10 @@ fun ShareProfileBottomSheet(
                             }
                         },
                         onCopy = {
-                            if (shareLink != null) {
+                            if (sharedProfile != null) {
                                 clipboardManager.setText(
                                     AnnotatedString(
-                                        shareLink
+                                        shareLinkUrl ?: ""
                                     )
                                 )
                             }

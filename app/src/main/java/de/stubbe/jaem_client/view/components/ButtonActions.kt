@@ -33,9 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.semantics.Role
-import de.stubbe.jaem_client.model.ButtonActionModel
-import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.data.JAEMTextStyle
+import de.stubbe.jaem_client.model.ButtonActionModel
+import de.stubbe.jaem_client.utils.horizontal
+import de.stubbe.jaem_client.utils.vertical
+import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import kotlinx.coroutines.delay
 
@@ -73,6 +75,7 @@ fun ButtonActions(
             @Composable
             fun getSubActionButtons(
                 isBottomAligned: Boolean,
+                alignment: Alignment.Horizontal
             ) {
                 val visibleStates = remember { mutableStateListOf<Boolean>() }
 
@@ -98,7 +101,8 @@ fun ButtonActions(
                 Column(
                     modifier = Modifier
                         .animateContentSize(),
-                    verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small)
+                    verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small),
+                    horizontalAlignment = alignment
                 ) {
                     action.subActions.forEachIndexed { index, subAction ->
                         // Animation der Subaktionen
@@ -114,6 +118,7 @@ fun ButtonActions(
                             ActionButton(
                                 modifier = Modifier.padding(Dimensions.Padding.Small),
                                 text = subAction.text,
+                                alignment = action.alignment.horizontal(),
                                 icon = subAction.icon,
                                 contentDescription = subAction.contentDescription,
                                 onClick = {
@@ -126,14 +131,15 @@ fun ButtonActions(
                 }
             }
 
-            when (action.alignment) {
-                Alignment.BottomStart, Alignment.BottomCenter, Alignment.BottomEnd -> {
+            when (action.alignment.vertical()) {
+                Alignment.Bottom -> {
                     Column(
                         modifier = Modifier
                             .align(action.alignment),
-                        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small)
+                        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small),
+                        horizontalAlignment = action.alignment.horizontal()
                     ) {
-                        getSubActionButtons(true)
+                        getSubActionButtons(true, action.alignment.horizontal())
                         ActionButton(
                             modifier = Modifier.padding(Dimensions.Padding.Medium),
                             icon = action.icon,
@@ -150,12 +156,13 @@ fun ButtonActions(
                     }
                 }
 
-                Alignment.TopStart, Alignment.TopCenter, Alignment.TopEnd -> {
+                Alignment.Top -> {
                     Column(
                         modifier = Modifier
                             .align(action.alignment)
                             .animateContentSize(),
-                        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small)
+                        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small),
+                        horizontalAlignment = action.alignment.horizontal()
                     ) {
                         ActionButton(
                             modifier = Modifier.padding(Dimensions.Padding.Medium),
@@ -170,7 +177,7 @@ fun ButtonActions(
                                 }
                             },
                         )
-                        getSubActionButtons(false)
+                        getSubActionButtons(false, action.alignment.horizontal())
                     }
                 }
             }
@@ -190,6 +197,7 @@ fun ButtonActions(
 private fun ActionButton(
     modifier: Modifier = Modifier,
     text: String? = null,
+    alignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     icon: ImageVector,
     contentDescription: String,
     onClick: () -> Unit
@@ -218,16 +226,33 @@ private fun ActionButton(
         horizontalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = JAEMThemeProvider.current.textPrimary
-        )
-        if (text != null) {
-            Text(
-                text = text,
-                style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
-            )
+        when (alignment) {
+            Alignment.Start -> {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    tint = JAEMThemeProvider.current.textPrimary
+                )
+                if (text != null) {
+                    Text(
+                        text = text,
+                        style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
+                    )
+                }
+            }
+            else -> {
+                if (text != null) {
+                    Text(
+                        text = text,
+                        style = JAEMTextStyle(MaterialTheme.typography.titleMedium)
+                    )
+                }
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    tint = JAEMThemeProvider.current.textPrimary
+                )
+            }
         }
     }
 }

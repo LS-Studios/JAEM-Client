@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import de.stubbe.jaem_client.R
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.view.components.Divider
@@ -38,7 +39,6 @@ import de.stubbe.jaem_client.view.components.LoadingIfNull
 import de.stubbe.jaem_client.view.components.ShareProfileBottomSheet
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 import de.stubbe.jaem_client.viewmodel.ShareProfileViewModel
@@ -56,7 +56,6 @@ fun ChatInfoScreen(
 
     val chat by sharedChatViewModel.chat.collectAsState()
     val profile by sharedChatViewModel.profile.collectAsState()
-    val isShareProfileBottomSheetVisible by shareProfileViewModel.isShareProfileBottomSheetVisible.collectAsState()
 
     ScreenBase(
         topBar = {
@@ -125,7 +124,6 @@ fun ChatInfoScreen(
         }
 
         ShareProfileBottomSheet(
-            isVisible = isShareProfileBottomSheetVisible,
             onClose = {
                 shareProfileViewModel.closeShareProfileBottomSheet()
             },

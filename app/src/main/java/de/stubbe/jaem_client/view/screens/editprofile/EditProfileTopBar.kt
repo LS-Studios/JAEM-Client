@@ -19,12 +19,13 @@ import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateChatTopBar(
+    createProfile: Boolean,
     oClose: () -> Unit,
 ) {
     TopAppBar(
         title = {
             Text(
-                text = stringResource(R.string.edit_profile),
+                text = stringResource(if (createProfile) R.string.create_profile else R.string.edit_profile),
                 style = JAEMTextStyle(MaterialTheme.typography.titleLarge),
             )
         },

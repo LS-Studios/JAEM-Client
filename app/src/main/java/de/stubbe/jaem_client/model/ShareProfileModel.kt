@@ -2,42 +2,29 @@ package de.stubbe.jaem_client.model
 
 import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
+import de.stubbe.jaem_client.model.enums.KeyType
 import de.stubbe.jaem_client.utils.toByteArray
-import kotlinx.serialization.Serializable
+import de.stubbe.jaem_client.utils.toEpochSeconds
+import de.stubbe.jaem_client.utils.toInt
+import de.stubbe.jaem_client.utils.toLong
+import java.time.LocalDateTime
 
-@Serializable
 data class ShareProfileModel(
     val uid: String,
     val name: String,
     val profilePicture: ByteArray?,
     val description: String,
     val keys: List<EncryptionKeyModel>,
+    val timestamp: Long
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
 
-        other as ShareProfileModel
-
-        if (uid != other.uid) return false
-        if (name != other.name) return false
-        if (profilePicture != null) {
-            if (other.profilePicture == null) return false
-            if (!profilePicture.contentEquals(other.profilePicture)) return false
-        } else if (other.profilePicture != null) return false
-        if (description != other.description) return false
-        if (keys != other.keys) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = uid.hashCode()
-        result = 31 * result + name.hashCode()
-        result = 31 * result + (profilePicture?.contentHashCode() ?: 0)
-        result = 31 * result + description.hashCode()
-        result = 31 * result + keys.hashCode()
-        return result
+    fun toByteArray(): ByteArray {
+        val nameBytes = name.length.toByteArray() + name.toByteArray()
+        val profilePictureBytes = profilePicture?.let { it.size.toByteArray() + profilePicture } ?: byteArrayOf(0)
+        val descriptionBytes = description.length.toByteArray() + description.toByteArray()
+        val keyBytes = keys.fold(ByteArray(0)) { acc, key -> acc + key.key.size.toByteArray() + key.key }
+        val timestamp = timestamp.toByteArray()
+        return uid.toByteArray() + nameBytes + profilePictureBytes + descriptionBytes + keyBytes + timestamp
     }
 
     companion object {
@@ -50,8 +37,52 @@ data class ShareProfileModel(
                 name = profile.name,
                 profilePicture = profile.profilePicture?.toByteArray(),
                 description = profile.description,
-                keys = keys
+                keys = keys,
+                timestamp = LocalDateTime.now().toEpochSeconds()
             )
         }
+
+        private const val UID_LENGTH = 36
+        private const val SIZE_BYTES = 4
+        private const val TIMESTAMP_LENGTH = 8
+
+        fun fromByteArray(byteArray: ByteArray): ShareProfileModel {
+            var offset = 0
+            val uid = String(byteArray.copyOfRange(offset, UID_LENGTH))
+            offset += UID_LENGTH
+            val nameSize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
+            offset += SIZE_BYTES
+            val name = String(byteArray.copyOfRange(offset, offset + nameSize))
+            offset += nameSize
+            val profilePictureSize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
+            offset += SIZE_BYTES
+            val profilePicture = if (profilePictureSize == 0) null else byteArray.copyOfRange(offset, offset + profilePictureSize)
+            offset += profilePictureSize
+            val descriptionSize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
+            offset += SIZE_BYTES
+            val description = String(byteArray.copyOfRange(offset, offset + descriptionSize))
+            offset += descriptionSize
+            val keys = mutableListOf<EncryptionKeyModel>()
+            while (keys.size < 3 && offset < byteArray.size) {
+                val keySize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
+                offset += SIZE_BYTES
+                val key = byteArray.copyOfRange(offset, offset + keySize)
+                offset += keySize
+                val keyType = when (keys.size) {
+                    0 -> KeyType.PUBLIC_ED25519
+                    1 -> KeyType.PUBLIC_X25519
+                    2 -> KeyType.PUBLIC_RSA
+                    else -> throw Exception("Too many keys")
+                }
+                keys.add(EncryptionKeyModel(
+                    key = key,
+                    type = keyType,
+                    profileUid = uid
+                ))
+            }
+            val timestamp = byteArray.copyOfRange(offset, offset + TIMESTAMP_LENGTH).toLong()
+            return ShareProfileModel(uid, name, profilePicture, description, keys, timestamp)
+        }
     }
+
 }

@@ -5,9 +5,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
 import de.stubbe.jaem_client.model.ShareProfileModel
+import de.stubbe.jaem_client.model.SharedProfileModel
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.model.enums.KeyType
-import de.stubbe.jaem_client.model.network.ShareProfileResponse
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ class ShareProfileViewModel @Inject constructor(
     private val encryptionKeyRepository: EncryptionKeyRepository
 ): ViewModel() {
 
-    val shareProfileResponse: MutableStateFlow<ShareProfileResponse?> = MutableStateFlow(null)
+    val sharedProfile: MutableStateFlow<SharedProfileModel?> = MutableStateFlow(null)
 
     val isShareProfileBottomSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -41,7 +41,7 @@ class ShareProfileViewModel @Inject constructor(
         isShareProfileBottomSheetVisible.value = false
     }
 
-    private suspend fun fetchOrCreateShareProfileLink(profile: ProfilePresentationModel) {
+    private fun fetchOrCreateShareProfileLink(profile: ProfilePresentationModel) {
         viewModelScope.launch {
             val deviceClient = deviceClientFLow.first() ?: return@launch
 
@@ -65,17 +65,12 @@ class ShareProfileViewModel @Inject constructor(
                 )
             )
 
-         /*   val (shareProfile, shareProfileError) = networkRepository.getSharedProfile(profile.profile.uid).executeSafely()
+            val sharedCode = networkRepository.shareProfile(shareProfileModel)
 
-            if (shareProfile != null && shareProfileError == null) {
-                shareProfileResponse.value = shareProfile
-            } else {
-                val (newShareProfile, newShareProfileError) = networkRepository.createShareProfile(shareProfileModel).executeSafely()
-
-                if (newShareProfile != null && newShareProfileError == null) {
-                    shareProfileResponse.value = newShareProfile
-                }
-            }*/
+            sharedProfile.value = SharedProfileModel(
+                sharedCode = sharedCode ?: "",
+                timestamp = System.currentTimeMillis()
+            )
         }
     }
 }

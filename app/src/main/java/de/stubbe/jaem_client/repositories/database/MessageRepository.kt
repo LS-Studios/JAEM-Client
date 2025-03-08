@@ -16,6 +16,8 @@ class MessageRepository @Inject constructor(
 
     suspend fun insertMessage(message: MessageModel) = messageDao.insert(message)
 
+    suspend fun insertMessages(messages: List<MessageModel>) = messageDao.insertAll(messages)
+
     suspend fun updateMessage(message: MessageModel) = messageDao.update(message)
 
     suspend fun deleteMessage(message: MessageModel) = messageDao.delete(message)

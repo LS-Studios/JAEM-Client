@@ -32,8 +32,8 @@ fun Long.toLocalDateTime(): LocalDateTime {
 /**
  * Konvertiert ein LocalDateTime in einen Long-Wert (Millisekunden seit der Unix-Epoche).
  */
-fun LocalDateTime.toEpochMillis(): Long {
-    return this.toInstant(ZoneOffset.UTC).toEpochMilli()
+fun LocalDateTime.toEpochSeconds(): Long {
+    return this.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000
 }
 
 /**
@@ -72,4 +72,8 @@ fun Long.toSizeString(): String {
         mb > 0 -> "${mb}MB"
         else -> "${kb}KB"
     }
+}
+
+fun getUnixTime(): Long {
+    return Instant.now().epochSecond
 }

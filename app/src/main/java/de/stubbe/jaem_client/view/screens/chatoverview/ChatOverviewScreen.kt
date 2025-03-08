@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Search
@@ -43,6 +44,7 @@ import de.stubbe.jaem_client.model.ButtonActionModel
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.view.components.ButtonActions
 import de.stubbe.jaem_client.view.components.ShareProfileBottomSheet
+import de.stubbe.jaem_client.view.components.dialogs.GetSharedCodeDialog
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
@@ -67,7 +69,7 @@ fun ChatOverviewScreen(
 
     val chatRequests by viewModel.chatRequests.collectAsState()
 
-    val isShareProfileBottomSheetVisible by shareProfileViewModel.isShareProfileBottomSheetVisible.collectAsState()
+    var getSharedCodeDialogIsOpen by remember { mutableStateOf(false) }
 
     val chats by viewModel.chats.collectAsState()
 
@@ -128,7 +130,8 @@ fun ChatOverviewScreen(
                                 if (userProfile != null) {
                                     navigationViewModel.changeScreen(
                                         NavRoute.EditProfile(
-                                            userProfile!!.profile.uid
+                                            userProfile!!.profile.uid,
+                                            null
                                         )
                                     )
                                 }
@@ -149,6 +152,22 @@ fun ChatOverviewScreen(
                         icon = Icons.Default.Add,
                         contentDescription = stringResource(R.string.add_chat),
                         alignment = Alignment.BottomEnd,
+                        subActions = listOf(
+                            ButtonActionModel(
+                                text = stringResource(R.string.from_share_code),
+                                icon = Icons.Default.Link,
+                                contentDescription = stringResource(R.string.from_share_code),
+                            ) {
+                                getSharedCodeDialogIsOpen = true
+                            },
+                            ButtonActionModel(
+                                text = stringResource(R.string.from_server),
+                                icon = Icons.Default.Search,
+                                contentDescription = stringResource(R.string.from_server),
+                            ) {
+
+                            },
+                        ),
                         onClick = {
 
                         }
@@ -158,8 +177,18 @@ fun ChatOverviewScreen(
         }
     }
 
+    if (getSharedCodeDialogIsOpen) {
+        GetSharedCodeDialog(
+            onDismissRequest = {
+                getSharedCodeDialogIsOpen = false
+            },
+            onSubmit = { sharedCode ->
+                navigationViewModel.changeScreen(NavRoute.EditProfile(null, sharedCode))
+            }
+        )
+    }
+
     ShareProfileBottomSheet(
-        isVisible = isShareProfileBottomSheetVisible,
         onClose = {
             shareProfileViewModel.closeShareProfileBottomSheet()
         },

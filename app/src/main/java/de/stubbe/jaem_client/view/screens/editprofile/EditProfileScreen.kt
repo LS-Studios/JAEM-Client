@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +37,7 @@ import de.stubbe.jaem_client.utils.toBitmap
 import de.stubbe.jaem_client.utils.toByteArray
 import de.stubbe.jaem_client.view.components.LoadingOverlay
 import de.stubbe.jaem_client.view.components.ProfilePicture
+import de.stubbe.jaem_client.view.components.dialogs.InfoDialog
 import de.stubbe.jaem_client.view.components.filepicker.JAEMPickFileAndCrop
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
@@ -58,6 +61,8 @@ fun EditProfileScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val imagePickerIsOpen by viewModel.imagePickerIsOpen.collectAsState()
+    val creationError by viewModel.creationError.collectAsState()
+    val createProfile = viewModel.createProfile
 
     var loadImage by remember { mutableStateOf(false) }
 
@@ -66,6 +71,7 @@ fun EditProfileScreen(
     ScreenBase(
         topBar = {
             CreateChatTopBar(
+                createProfile = createProfile,
                 oClose = {
                     navigationViewModel.goBack()
                 }
@@ -90,7 +96,9 @@ fun EditProfileScreen(
                                     bounded = true
                                 )
                             ) {
-                                viewModel.openImagePicker()
+                                if (createProfile) {
+                                    viewModel.openImagePicker()
+                                }
                             },
                         verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -142,7 +150,9 @@ fun EditProfileScreen(
                         value = profileDescription,
                         shape = Dimensions.Shape.Rounded.Small,
                         onValueChange = {
-                            viewModel.changeProfileDescription(it)
+                            if (createProfile) {
+                                viewModel.changeProfileDescription(it)
+                            }
                         },
                         textStyle = JAEMTextStyle(
                             MaterialTheme.typography.titleMedium,
@@ -197,6 +207,16 @@ fun EditProfileScreen(
                     )
                 }
             }
+        }
+    }
+
+    if (creationError) {
+        InfoDialog(
+            icon = Icons.Default.ErrorOutline,
+            title = stringResource(R.string.shared_code_error_title),
+            message = stringResource(R.string.shared_code_error_message),
+        ) {
+            navigationViewModel.goBack()
         }
     }
 

@@ -5,12 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
-import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.ProfileModel
 import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.datastore.UserPreferences.Theme
-import de.stubbe.jaem_client.model.ED25519Client
-import de.stubbe.jaem_client.network.ReceiveBody
+import de.stubbe.jaem_client.model.network.SignatureRequestBody
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
@@ -59,39 +57,24 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val deviceClient = deviceClient.first()!!
 
-            val messages = networkRepository.receiveMessages(
-                ReceiveBody.buildReceiveBody(deviceClient),
-                deviceClient,
-                context
-            )
+            try {
+                val messages = networkRepository.receiveMessages(
+                    SignatureRequestBody(deviceClient),
+                    deviceClient,
+                    context
+                )
 
-            println("Received messages: $messages")
+                if (messages.isNotEmpty()) {
+                    messageRepository.insertMessages(messages)
+                }
+            } catch (e: Exception) {
+                println(e.printStackTrace())
+            }
         }
     }
 
     fun deleteExampleData(context: Context) {
         context.deleteDatabase("jaem_database")
-    }
-
-    fun printData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            println("-------------- Printing data --------------")
-            val profiles = profileRepository.getAllProfiles().first()
-            val chats = chatRepository.getAllChats().first()
-            val messages = messageRepository.getAllMessages().first()
-
-            profiles.forEach { profile ->
-                println("Profile: $profile")
-            }
-
-            chats.forEach { chat ->
-                println("Chat: $chat")
-            }
-
-            messages.forEach { message ->
-                println("Message: $message")
-            }
-        }
     }
 
     fun addExampleData() {
@@ -121,28 +104,6 @@ class MainActivityViewModel @Inject constructor(
             profileRepository.insertProfile(profile)
 
             userPreferencesRepository.updateUserProfileUid(profile.uid)
-
-            val chatPartner = ProfileModel(
-                id = 0,
-                uid = UUID.randomUUID().toString(),
-                name = "Lisa Mustermann",
-                profilePicture = fetchPicture(),
-                description = "Ich bin ein anderes Beispielprofil",
-            )
-
-            profileRepository.insertProfile(chatPartner)
-
-            val chat1 = ChatModel(
-                id = 0,
-                profileUid = profile.uid,
-                chatPartnerUid = chatPartner.uid
-            )
-
-            chatRepository.insertChat(chat1)
-
-            val chatPartnerClient = ED25519Client(chatPartner.uid)
-
-            encryptionKeyRepository.insertNewClient(chatPartnerClient, chatPartner.uid)
         }
     }
 }

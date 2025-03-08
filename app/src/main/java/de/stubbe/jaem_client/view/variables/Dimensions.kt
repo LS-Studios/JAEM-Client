@@ -23,6 +23,8 @@ object Dimensions {
 
     object Border {
         val ThinBorder = 1.dp
+        val MediumBorder = 4.dp
+        val ThickBorder = 8.dp
     }
 
     object Spacing {

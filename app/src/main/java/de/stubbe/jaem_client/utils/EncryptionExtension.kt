@@ -51,7 +51,7 @@ fun Short.toByteArray(): ByteArray {
 fun Long.toByteArray(): ByteArray {
     return ByteBuffer.allocate(ULong.SIZE_BYTES)
         .order(ByteOrder.BIG_ENDIAN)
-        .putLong(this.toLong())
+        .putLong(this)
         .array()
 }
 

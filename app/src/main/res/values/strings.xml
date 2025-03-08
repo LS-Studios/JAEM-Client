@@ -2,11 +2,10 @@
 <resources>
     <string name="app_name" translatable="false">JAEM</string>
     <string name="cd_profile_button">Profilaktionen öffnen</string>
-    <string name="change_profile">Profil wechseln</string>
+    <string name="edit_profile">Profil wechseln</string>
     <string name="share_profile">Profil teilen</string>
     <string name="search_for_profile">Nach Profil suchen</string>
-    <string name="edit_profile">Profil bearbeiten</string>
-    <string name="add_profile">Profil erstellen</string>
+    <string name="create_profile">Profil erstellen</string>
     <string name="add_chat">Neuen chat starten</string>
     <string name="search_for_item">Nach Element suchen</string>
     <string name="search_for_chat">Nach Chat suchen …</string>
@@ -35,6 +34,15 @@
     <string name="image_and_video">Bild &amp; Video</string>
     <string name="done">Fertig</string>>
     <string name="camera">Kamera</string>
+    <string name="from_share_code">Von geteiltem code</string>
+    <string name="from_server">Von Server</string>
+    <string name="enter_shared_code">Eingabe des geteilten codes</string>
+    <string name="shared_code">Geteilter code</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="continue_">Weiter</string>
+    <string name="close">Schließen</string>
+    <string name="shared_code_error_title">Fehler mit geteiltem code</string>
+    <string name="shared_code_error_message">Es ist ein Fehler bei der erstellung des Profiles mit dem eingegebenen geteilten code entstanden.\nǓberprufe bitte die gültigkeit des Codes.</string>
 
     <string name="reply_bt">Antworten</string>
     <string name="close_bt">Schließen</string>

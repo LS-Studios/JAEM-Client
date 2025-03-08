@@ -11,6 +11,7 @@ import android.util.Size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -102,5 +103,23 @@ suspend fun File.loadPreviewFromFile(context: Context, size: Size = Size(Dimensi
         contentResolver.openInputStream(Uri.fromFile(this))?.use { inputStream ->
             BitmapFactory.decodeStream(inputStream)
         }
+    }
+}
+
+fun Alignment.horizontal(): Alignment.Horizontal {
+    return when (this) {
+        Alignment.TopStart, Alignment.CenterStart, Alignment.BottomStart -> Alignment.Start
+        Alignment.TopCenter, Alignment.Center, Alignment.BottomCenter -> Alignment.CenterHorizontally
+        Alignment.TopEnd, Alignment.CenterEnd, Alignment.BottomEnd -> Alignment.End
+        else -> Alignment.Start
+    }
+}
+
+fun Alignment.vertical(): Alignment.Vertical {
+    return when (this) {
+        Alignment.TopStart, Alignment.TopCenter, Alignment.TopEnd -> Alignment.Top
+        Alignment.CenterStart, Alignment.Center, Alignment.CenterEnd -> Alignment.CenterVertically
+        Alignment.BottomStart, Alignment.BottomCenter, Alignment.BottomEnd -> Alignment.Bottom
+        else -> Alignment.Top
     }
 }
