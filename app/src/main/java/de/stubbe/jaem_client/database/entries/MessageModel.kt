@@ -23,6 +23,8 @@ import kotlinx.serialization.Serializable
 data class MessageModel(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
+    @ColumnInfo(name = "uid")
+    val uid: String,
     @ColumnInfo(name = "sender_uid")
     val senderUid: String,
     @ColumnInfo(name = "receiver_uid")

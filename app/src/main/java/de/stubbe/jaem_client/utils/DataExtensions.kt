@@ -26,7 +26,7 @@ val Context.userPreferencesDataStore by dataStore(
  * Konvertiert einen Long-Wert (Millisekunden seit der Unix-Epoche) in ein LocalDateTime.
  */
 fun Long.toLocalDateTime(): LocalDateTime {
-    return LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault())
+    return LocalDateTime.ofInstant(Instant.ofEpochSecond(this), ZoneId.systemDefault())
 }
 
 /**

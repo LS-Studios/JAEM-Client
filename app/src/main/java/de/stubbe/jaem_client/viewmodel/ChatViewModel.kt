@@ -10,7 +10,7 @@ import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.NavRoute
-import de.stubbe.jaem_client.model.enums.SymmetricEncryption
+import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
 import de.stubbe.jaem_client.model.network.EncryptionContext
 import de.stubbe.jaem_client.model.network.MessagePart
 import de.stubbe.jaem_client.model.network.OutgoingMessage
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,7 +42,7 @@ class ChatViewModel @Inject constructor(
 
     private val messageFlow = messageRepository.getAllMessages()
     private val deviceClientFlow = encryptionKeyRepository.getClientFlow()
-    private val chatPartnerClientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileUid)
+    private val remoteClientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileUid)
 
     val messages = messageFlow
         .map{ messages ->
@@ -52,7 +53,7 @@ class ChatViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val userProfileId = userPreferencesRepository.userPreferencesFlow
+    val userProfileUid = userPreferencesRepository.userPreferencesFlow
         .map { it.userProfileUid }
         .stateIn(
             scope = viewModelScope,
@@ -70,12 +71,6 @@ class ChatViewModel @Inject constructor(
     val selectedMessages: MutableStateFlow<List<MessageModel>> = MutableStateFlow(emptyList())
 
     val attachmentPickerIsOpen: MutableStateFlow<Boolean> = MutableStateFlow(false)
-
-    val chatPartnerClient = chatPartnerClientFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
-        initialValue = null
-    )
 
     fun changeMessageString(newMessage: String) {
         newMessageString.value = newMessage
@@ -133,29 +128,31 @@ class ChatViewModel @Inject constructor(
      */
     fun sendMessage(chat: ChatModel) {
         viewModelScope.launch(Dispatchers.IO) {
-            /*messageRepository.insertMessage(
-                MessageModel(
-                    id = 0,
-                    senderId = userProfileId.value ?: -1,
-                    receiverId = chat.chatPartnerId,
-                    chatId = chatScreenArguments.chatId,
-                    stringContent = newMessageString.value,
-                    attachments = newAttachments.value,
-                    sendTime = System.currentTimeMillis(),
-                    deliveryTime = null
-                )
-            )*/
+            val newMessage = MessageModel(
+                id = 0,
+                uid = UUID.randomUUID().toString(),
+                senderUid = userProfileUid.value!!,
+                receiverUid = chat.chatPartnerUid,
+                chatId = chatScreenArguments.chatId,
+                stringContent = newMessageString.value,
+                attachments = newAttachments.value,
+                sendTime = System.currentTimeMillis(),
+                deliveryTime = null
+            )
+
+            messageRepository.insertMessage(newMessage)
 
             networkRepository.sendMessage(
                OutgoingMessage.create(
                    EncryptionContext(
                        localClient = deviceClientFlow.first(),
-                       remoteClient = deviceClientFlow.first(),
+                       remoteClient = remoteClientFlow.first(),
                        encryptionAlgorithm = SymmetricEncryption.ED25519
                    ),
                    MessagePart.createMessageParts(
-                       newMessageString.value,
-                       newAttachments.value
+                       newMessage.uid,
+                       newMessage.stringContent!!,
+                       newMessage.attachments
                    )
                )
             )

@@ -10,6 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
+import de.stubbe.jaem_client.data.DEEP_LINK_URL
 import de.stubbe.jaem_client.data.jaemEnterHorizontally
 import de.stubbe.jaem_client.data.jaemEnterVertically
 import de.stubbe.jaem_client.data.jaemExitHorizontally
@@ -129,7 +131,12 @@ fun Navigation(
                 },
                 popExitTransition = {
                     jaemExitVertically
-                }
+                },
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "$DEEP_LINK_URL/share/{shareCode}"
+                    }
+                )
             ) {
                 EditProfileScreen(
                     navigationViewModel = viewModel

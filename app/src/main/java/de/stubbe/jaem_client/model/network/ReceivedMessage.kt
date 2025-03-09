@@ -1,7 +1,15 @@
 package de.stubbe.jaem_client.model.network
 
+import de.stubbe.jaem_client.data.INT_BYTES
+import de.stubbe.jaem_client.data.MESSAGE_SIZE_BYTES
+import de.stubbe.jaem_client.data.RSA_ENCRYPTION_LENGTH
+import de.stubbe.jaem_client.data.SHORT_BYTES
+import de.stubbe.jaem_client.data.SIGNATURE_LENGTH
+import de.stubbe.jaem_client.data.TIMESTAMP_LENGTH
+import de.stubbe.jaem_client.data.UID_LENGTH
 import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
+import de.stubbe.jaem_client.model.enums.ContentMessageType
 import de.stubbe.jaem_client.model.enums.MessageType
 import de.stubbe.jaem_client.utils.toInt
 import de.stubbe.jaem_client.utils.toLong
@@ -11,19 +19,13 @@ import de.stubbe.jaem_client.utils.toShort
  * Repräsentiert eine empfangene Nachricht
  */
 data class ReceivedMessage(
+    val messageType: MessageType,
     val senderUid: String,
     val timestamp: Long,
     val messageParts: MutableList<MessagePart>,
 ) {
     companion object {
-        private const val UID_LENGTH = 36
-        private const val SIGNATURE_LENGTH = 64
-        private const val TIMESTAMP_LENGTH = 8
-        private const val MESSAGE_SIZE_BYTES = 8
-        private const val TYPE_BYTES = 2
-        private const val SIZE_BYTES = 4
-
-        fun extractMessages(data: ByteArray): List<ByteArray> {
+        fun extractMessageBytes(data: ByteArray): List<ByteArray> {
             val messages = mutableListOf<ByteArray>()
             var offset = 0
             while (offset < data.size) {
@@ -40,36 +42,78 @@ data class ReceivedMessage(
             localClient: ED25519Client?,
             fetchEncryptionContext: suspend (String) -> EncryptionContext
         ): ReceivedMessage {
-            val decryptedData = AsymmetricEncryption.RSA.decrypt(encryptedData, localClient?.rsaPrivateKey!!)
-            val senderUid = String(decryptedData.copyOfRange(0, UID_LENGTH))
-            val encryptedMessage = decryptedData.copyOfRange(UID_LENGTH, decryptedData.size)
+            val encryptedSenderUid = encryptedData.copyOfRange(0, RSA_ENCRYPTION_LENGTH)
+            val decryptedSenderUid = AsymmetricEncryption.RSA.decrypt(encryptedSenderUid, localClient?.rsaPrivateKey!!)
+            val senderUid = String(decryptedSenderUid)
+
+            val encryptedMessageType = encryptedData.copyOfRange(RSA_ENCRYPTION_LENGTH, RSA_ENCRYPTION_LENGTH + RSA_ENCRYPTION_LENGTH)
+            val decryptedMessageType = AsymmetricEncryption.RSA.decrypt(encryptedMessageType, localClient.rsaPrivateKey!!)
+            val messageType = MessageType.entries[decryptedMessageType.toShort().toInt()]
+
+            val encryptedMessage = encryptedData.copyOfRange(RSA_ENCRYPTION_LENGTH + RSA_ENCRYPTION_LENGTH, encryptedData.size)
+
+            var timestamp: Long = 0
+            var messageContent: ByteArray = byteArrayOf()
 
             val encryptionContext = fetchEncryptionContext(senderUid)
             val (client, otherClient, algorithm) = encryptionContext
-            val aesKey = algorithm.generateSymmetricKey(otherClient!!.x25519PublicKey!!, client!!.x25519PrivateKey!!)
-            val decryptedMessage = algorithm.decrypt(encryptedMessage, aesKey)
 
-            val signature = decryptedMessage.copyOfRange(0, SIGNATURE_LENGTH)
-            val timestamp = decryptedMessage.copyOfRange(SIGNATURE_LENGTH, SIGNATURE_LENGTH + TIMESTAMP_LENGTH).toLong()
-            val messageContent = decryptedMessage.copyOfRange(SIGNATURE_LENGTH + TIMESTAMP_LENGTH, decryptedMessage.size)
+            if (messageType == MessageType.KEY_EXCHANGE) {
+                val aesKey = AsymmetricEncryption.RSA.decrypt(encryptedMessage.copyOfRange(0, RSA_ENCRYPTION_LENGTH), client!!.rsaPrivateKey!!)
+                val encryptedMessageContent = encryptedMessage.copyOfRange(RSA_ENCRYPTION_LENGTH, encryptedMessage.size)
 
-            if (!algorithm.checkSign(messageContent, signature, otherClient.ed25519PublicKey!!)) {
-                throw SecurityException("Message integrity compromised")
+                val decryptedMessage = algorithm.decrypt(encryptedMessageContent, aesKey)
+
+                timestamp = decryptedMessage.copyOfRange(0, RSA_ENCRYPTION_LENGTH + TIMESTAMP_LENGTH).toLong()
+                messageContent = decryptedMessage.copyOfRange(TIMESTAMP_LENGTH, decryptedMessage.size)
+            }
+            else if (otherClient != null) {
+                val aesKey = algorithm.generateSymmetricKey(
+                    otherClient.x25519PublicKey!!,
+                    client!!.x25519PrivateKey!!
+                )
+                val decryptedMessage = algorithm.decrypt(encryptedMessage, aesKey)
+
+                val signature = decryptedMessage.copyOfRange(0, SIGNATURE_LENGTH)
+
+                timestamp = decryptedMessage.copyOfRange(
+                    SIGNATURE_LENGTH,
+                    SIGNATURE_LENGTH + TIMESTAMP_LENGTH
+                ).toLong()
+                messageContent = decryptedMessage.copyOfRange(
+                    SIGNATURE_LENGTH + TIMESTAMP_LENGTH,
+                    decryptedMessage.size
+                )
+
+                if (!algorithm.checkSign(
+                        signature = signature,
+                        message = messageContent,
+                        publicKey = otherClient.ed25519PublicKey!!
+                    )
+                ) {
+                    throw SecurityException("Message integrity compromised")
+                }
             }
 
             val messageParts = mutableListOf<MessagePart>()
             var offset = UID_LENGTH
             while (offset < messageContent.size) {
-                val type = messageContent.copyOfRange(offset, offset + TYPE_BYTES).toShort()
-                offset += TYPE_BYTES
-                val size = messageContent.copyOfRange(offset, offset + SIZE_BYTES).toInt()
-                offset += SIZE_BYTES
+                val type = messageContent.copyOfRange(offset, offset + SHORT_BYTES).toShort()
+                offset += SHORT_BYTES
+                val size = messageContent.copyOfRange(offset, offset + INT_BYTES).toInt()
+                offset += INT_BYTES
                 val content = messageContent.copyOfRange(offset, offset + size)
                 offset += size
-                messageParts.add(MessagePart(MessageType.entries[type.toInt()], size, content))
+                messageParts.add(
+                    MessagePart(
+                        type = ContentMessageType.entries[type.toInt()],
+                        length = size,
+                        content = content
+                    )
+                )
             }
 
-            return ReceivedMessage(senderUid, timestamp, messageParts)
+            return ReceivedMessage(messageType, senderUid, timestamp, messageParts)
         }
     }
 }

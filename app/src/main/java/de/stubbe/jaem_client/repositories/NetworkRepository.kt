@@ -6,9 +6,10 @@ import de.stubbe.jaem_client.database.entries.MessageModel
 import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.model.ShareProfileModel
+import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
 import de.stubbe.jaem_client.model.enums.AttachmentType
+import de.stubbe.jaem_client.model.enums.ContentMessageType
 import de.stubbe.jaem_client.model.enums.MessageType
-import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import de.stubbe.jaem_client.model.network.EncryptionContext
 import de.stubbe.jaem_client.model.network.OutgoingMessage
 import de.stubbe.jaem_client.model.network.ReceivedMessage
@@ -16,18 +17,19 @@ import de.stubbe.jaem_client.model.network.SignatureRequestBody
 import de.stubbe.jaem_client.network.JAEMApiService
 import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
+import de.stubbe.jaem_client.repositories.database.ProfileRepository
 import de.stubbe.jaem_client.utils.AppStorageHelper.createFileFromBytesInSharedStorage
 import de.stubbe.jaem_client.utils.splitResponse
 import de.stubbe.jaem_client.utils.toEpochSeconds
 import de.stubbe.jaem_client.utils.toLocalDateTime
 import kotlinx.coroutines.flow.first
 import okhttp3.RequestBody
-import java.time.LocalDateTime
 import javax.inject.Inject
 
 class NetworkRepository @Inject constructor(
     val chatRepository: ChatRepository,
     val encryptionKeyRepository: EncryptionKeyRepository,
+    val profileRepository: ProfileRepository,
     val jaemApiService: JAEMApiService
 ) {
 
@@ -39,7 +41,7 @@ class NetworkRepository @Inject constructor(
             throw Exception("Error receiving messages: ${error.string()}")
         }
 
-        val byteMessages = ReceivedMessage.extractMessages(response!!.bytes())
+        val byteMessages = ReceivedMessage.extractMessageBytes(response!!.bytes())
 
         val receivedMessages = byteMessages.map { message ->
             val messageModel = ReceivedMessage.fromByteArray(
@@ -48,7 +50,7 @@ class NetworkRepository @Inject constructor(
             ) { profileUid ->
                 EncryptionContext(
                     deviceClient,
-                    encryptionKeyRepository.getClientFlow(profileUid).first()!!,
+                    encryptionKeyRepository.getClientFlow(profileUid).first(),
                     SymmetricEncryption.ED25519
                 )
             }
@@ -56,19 +58,39 @@ class NetworkRepository @Inject constructor(
         }
 
         val messages = receivedMessages.map { message ->
+            if (message.messageType == MessageType.KEY_EXCHANGE) {
+                    val exchangedProfile = ShareProfileModel.fromByteArray(message.messageParts.first().content)
+
+                    ShareProfileModel.addSharedProfileToDB(
+                        exchangedProfile,
+                        profileRepository,
+                        encryptionKeyRepository,
+                        chatRepository,
+                        deviceClient
+                    )
+
+                    if (receivedMessages.size == 1) {
+                        deleteMessage(body)
+                    }
+
+                    Log.d("NetworkRepository", "Successfully exchanged keys with profile: ${exchangedProfile.name}")
+            }
+
             var chat = chatRepository.getChatByChatPartnerUid(message.senderUid)
             if (chat == null) {
                 chat = chatRepository.getChatByProfileUid(deviceClient.profileUid!!)
             }
 
-            val messageContent = String(message.messageParts.find { it.type == MessageType.MESSAGE }!!.content)
+            val messageUid =  String(message.messageParts.find { it.type == ContentMessageType.UID }!!.content)
+
+            val messageContent = String(message.messageParts.find { it.type == ContentMessageType.MESSAGE }!!.content)
 
             var attachments: Attachments? = null
 
-            if (message.messageParts.size > 1) {
+            if (message.messageParts.size > 2) {
                 val attachmentPaths = mutableListOf<String>()
 
-                message.messageParts.filter { it.type == MessageType.MESSAGE }.forEach { messagePart ->
+                message.messageParts.forEach { messagePart ->
                     val newFile = createFileFromBytesInSharedStorage(messagePart.content, context)
                     if (newFile != null) {
                         attachmentPaths.add(newFile.absolutePath)
@@ -76,9 +98,9 @@ class NetworkRepository @Inject constructor(
                 }
 
                 val attachmentType = when (message.messageParts[2].type) {
-                    MessageType.FILE -> AttachmentType.FILE
-                    MessageType.IMAGE_AND_VIDEO -> AttachmentType.IMAGE_AND_VIDEO
-                    MessageType.MESSAGE -> AttachmentType.FILE
+                    ContentMessageType.FILE -> AttachmentType.FILE
+                    ContentMessageType.IMAGE_AND_VIDEO -> AttachmentType.IMAGE_AND_VIDEO
+                    else -> AttachmentType.FILE
                 }
 
                 attachments = Attachments(attachmentType, attachmentPaths)
@@ -86,13 +108,14 @@ class NetworkRepository @Inject constructor(
 
             MessageModel(
                 id = 0,
+                uid = messageUid,
                 senderUid = message.senderUid,
                 receiverUid = deviceClient.profileUid!!,
                 chatId = chat!!.id,
                 stringContent = messageContent,
                 attachments = attachments,
                 sendTime = message.timestamp.toLocalDateTime().toEpochSeconds(),
-                deliveryTime = LocalDateTime.now().toEpochSeconds()
+                deliveryTime = null
             )
         }
 

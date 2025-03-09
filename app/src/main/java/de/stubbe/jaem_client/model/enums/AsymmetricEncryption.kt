@@ -17,22 +17,22 @@ enum class AsymmetricEncryption(
     @SuppressLint("DeprecatedProvider")
     RSA(
         "RSA",
-        {
+        generate = {
             Security.addProvider(BouncyCastleProvider())
             val keyPairGen = KeyPairGenerator.getInstance("RSA", "BC")
             keyPairGen.initialize(2048)
             keyPairGen.generateKeyPair()
         },
-        { message, recipientPublicKey ->
+        encrypt = { message, recipientPublicKey ->
             Security.addProvider(BouncyCastleProvider())
-            val cipher = Cipher.getInstance("RSA", "BC")
+            val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC")
             cipher.init(Cipher.ENCRYPT_MODE, recipientPublicKey)
             val cipherText = cipher.doFinal(message)
             cipherText
         },
-        { message, privateKey ->
+        decrypt = { message, privateKey ->
             Security.addProvider(BouncyCastleProvider())
-            val cipher = Cipher.getInstance("RSA", "BC")
+            val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC")
             cipher.init(Cipher.DECRYPT_MODE, privateKey)
             val decryptedText = cipher.doFinal(message)
             decryptedText

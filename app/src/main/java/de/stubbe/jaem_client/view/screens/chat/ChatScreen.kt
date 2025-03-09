@@ -15,8 +15,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,7 +52,7 @@ fun ChatScreen(
 
     val viewModel: ChatViewModel = hiltViewModel()
 
-    val userProfileId by viewModel.userProfileId.collectAsState()
+    val userProfileId by viewModel.userProfileUid.collectAsState()
 
     val chat by sharedChatViewModel.chat.collectAsState()
     val messages by viewModel.messages.collectAsState()
@@ -73,25 +75,47 @@ fun ChatScreen(
 
     val attachmentPickerIsOpen by viewModel.attachmentPickerIsOpen.collectAsState()
 
+    var initialScrolledDown by remember { mutableStateOf(false) }
+
     // Neue Nachrichten als gelesen markieren wenn der Bildschirm verlassen wird
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.markNewMessageAsDelivered()
+            if (listState.isScrolledToEnd()) {
+                viewModel.markNewMessageAsDelivered()
+            }
+
+            // Löschen der temporären Dateien
             viewModel.changeAttachment(null)
         }
     }
 
-    // Bei neuen Nachrichten scrollen
+    // Nach unten scrollen bei neuen Nachichten
     LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.scrollToItem(messages.size)
+        if (!initialScrolledDown && messages.isNotEmpty()) {
+            launch {
+                listState.scrollToItem(messages.size)
+                initialScrolledDown = true
+            }
+        }
+
+        if (messages.lastOrNull()?.senderUid == userProfileId) {
+            launch {
+                listState.animateScrollToItem(messages.size)
+            }
+        }
+
+        if (listState.isScrolledToEnd(3)) {
+            viewModel.markNewMessageAsDelivered()
+            launch {
+                listState.animateScrollToItem(messages.size)
+            }
         }
     }
 
     // Ans ende scrollen, wenn die Tastatur geöffnet wird und man unten ist
     LaunchedEffect(isKeyboardOpen) {
         if (isKeyboardOpen && listState.isScrolledToEnd()) {
-            coroutineScope.launch {
+            launch {
                 delay(250)
                 listState.animateScrollToItem(messages.size)
             }

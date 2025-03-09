@@ -11,7 +11,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
@@ -61,10 +62,14 @@ fun EditProfileScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val imagePickerIsOpen by viewModel.imagePickerIsOpen.collectAsState()
+
     val creationError by viewModel.creationError.collectAsState()
+    val profileAlreadyExists by viewModel.profileAlreadyExists.collectAsState()
+
     val createProfile = viewModel.createProfile
 
     var loadImage by remember { mutableStateOf(false) }
+    val fetchingProfile by viewModel.fetchingProfile.collectAsState()
 
     val context = LocalContext.current
 
@@ -78,7 +83,7 @@ fun EditProfileScreen(
             )
         }
     ) {
-        LoadingOverlay(loadImage) {
+        LoadingOverlay(loadImage || fetchingProfile) {
             Box(
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -96,7 +101,7 @@ fun EditProfileScreen(
                                     bounded = true
                                 )
                             ) {
-                                if (createProfile) {
+                                if (!createProfile) {
                                     viewModel.openImagePicker()
                                 }
                             },
@@ -150,10 +155,9 @@ fun EditProfileScreen(
                         value = profileDescription,
                         shape = Dimensions.Shape.Rounded.Small,
                         onValueChange = {
-                            if (createProfile) {
-                                viewModel.changeProfileDescription(it)
-                            }
+                            viewModel.changeProfileDescription(it)
                         },
+                        enabled = !createProfile,
                         textStyle = JAEMTextStyle(
                             MaterialTheme.typography.titleMedium,
                             color = JAEMThemeProvider.current.textPrimary
@@ -212,9 +216,19 @@ fun EditProfileScreen(
 
     if (creationError) {
         InfoDialog(
-            icon = Icons.Default.ErrorOutline,
+            icon = Icons.Default.Error,
             title = stringResource(R.string.shared_code_error_title),
             message = stringResource(R.string.shared_code_error_message),
+        ) {
+            navigationViewModel.goBack()
+        }
+    }
+
+    if (profileAlreadyExists) {
+        InfoDialog(
+            icon = Icons.Default.Info,
+            title = stringResource(R.string.profile_already_exists_title),
+            message = stringResource(R.string.profile_already_exists_message),
         ) {
             navigationViewModel.goBack()
         }

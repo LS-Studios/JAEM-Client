@@ -96,7 +96,7 @@ class MainActivityViewModel @Inject constructor(
             val profile = ProfileModel(
                 id = 0,
                 uid = UUID.randomUUID().toString(),
-                name = "Max Mustermann",
+                name = "Lisa Mustermann",
                 profilePicture = fetchPicture(),
                 description = "Ich bin ein Beispielprofil",
             )

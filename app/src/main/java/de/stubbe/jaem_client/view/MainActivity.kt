@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
                 scheduler.scheduleWithFixedDelay(task, 0, 5, TimeUnit.SECONDS)
 
                 //viewModel.deleteExampleData(this@MainActivity)
-                 //viewModel.addExampleData()
+                //viewModel.addExampleData()
             }
 
             JAEMTheme(

@@ -1,7 +1,7 @@
 package de.stubbe.jaem_client.model
 
+import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
-import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
@@ -18,7 +18,7 @@ class ED25519Client {
     var rsaPublicKey: PublicKey? = null
     var rsaPrivateKey: PrivateKey? = null
 
-    var encryption: SymmetricEncryption = SymmetricEncryption.ED25519
+    var encryption: SymmetricEncryption.ED25519 = SymmetricEncryption.ED25519
 
     constructor(profileUid: String) {
         this.profileUid = profileUid

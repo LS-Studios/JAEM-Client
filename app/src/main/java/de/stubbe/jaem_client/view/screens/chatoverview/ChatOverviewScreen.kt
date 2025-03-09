@@ -67,8 +67,6 @@ fun ChatOverviewScreen(
     val userProfile by viewModel.userProfile.collectAsState()
     var searchValue by remember { mutableStateOf("") }
 
-    val chatRequests by viewModel.chatRequests.collectAsState()
-
     var getSharedCodeDialogIsOpen by remember { mutableStateOf(false) }
 
     val chats by viewModel.chats.collectAsState()
@@ -89,12 +87,6 @@ fun ChatOverviewScreen(
                 modifier = Modifier
                     .padding(top = Dimensions.Spacing.Small)
             ) {
-                item {
-                    RequestsRow(chatRequests) {
-
-                    }
-                }
-
                 items(filteredChats) { chat ->
                     ChatRow(
                         navigationViewModel,

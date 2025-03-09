@@ -1,5 +1,4 @@
 
-import de.stubbe.jaem_client.model.enums.SymmetricEncryption
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test

@@ -1,8 +1,16 @@
 package de.stubbe.jaem_client.model
 
+import de.stubbe.jaem_client.data.INT_BYTES
+import de.stubbe.jaem_client.data.TIMESTAMP_LENGTH
+import de.stubbe.jaem_client.data.UID_LENGTH
+import de.stubbe.jaem_client.database.entries.ChatModel
 import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
+import de.stubbe.jaem_client.database.entries.ProfileModel
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.model.enums.KeyType
+import de.stubbe.jaem_client.repositories.database.ChatRepository
+import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
+import de.stubbe.jaem_client.repositories.database.ProfileRepository
 import de.stubbe.jaem_client.utils.toByteArray
 import de.stubbe.jaem_client.utils.toEpochSeconds
 import de.stubbe.jaem_client.utils.toInt
@@ -28,6 +36,47 @@ data class ShareProfileModel(
     }
 
     companion object {
+        suspend fun addSharedProfileToDB(
+            sharedProfile: ShareProfileModel,
+            profileRepository: ProfileRepository,
+            encryptionKeyRepository: EncryptionKeyRepository,
+            chatRepository: ChatRepository,
+            deviceClient: ED25519Client
+        ) {
+            val newProfile = ProfileModel(
+                id = 0,
+                uid = sharedProfile.uid,
+                profilePicture = sharedProfile.profilePicture,
+                name = sharedProfile.name,
+                description = sharedProfile.description
+            )
+
+            profileRepository.insertProfile(newProfile)
+
+            encryptionKeyRepository.insertAllEncryptionKeys(
+                sharedProfile.keys
+            )
+
+            chatRepository.insertChat(
+                ChatModel(
+                    id = 0,
+                    profileUid = deviceClient.profileUid!!,
+                    chatPartnerUid = newProfile.uid,
+                )
+            )
+        }
+
+        fun fromProfileModel(profile: ProfileModel, keys: List<EncryptionKeyModel>): ShareProfileModel {
+            return ShareProfileModel(
+                uid = profile.uid,
+                name = profile.name,
+                profilePicture = profile.profilePicture,
+                description = profile.description,
+                keys = keys,
+                timestamp = LocalDateTime.now().toEpochSeconds()
+            )
+        }
+
         fun fromProfilePresentationModel(
             profile: ProfilePresentationModel,
             keys: List<EncryptionKeyModel>
@@ -42,30 +91,26 @@ data class ShareProfileModel(
             )
         }
 
-        private const val UID_LENGTH = 36
-        private const val SIZE_BYTES = 4
-        private const val TIMESTAMP_LENGTH = 8
-
         fun fromByteArray(byteArray: ByteArray): ShareProfileModel {
             var offset = 0
             val uid = String(byteArray.copyOfRange(offset, UID_LENGTH))
             offset += UID_LENGTH
-            val nameSize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
-            offset += SIZE_BYTES
+            val nameSize = byteArray.copyOfRange(offset, offset + INT_BYTES).toInt()
+            offset += INT_BYTES
             val name = String(byteArray.copyOfRange(offset, offset + nameSize))
             offset += nameSize
-            val profilePictureSize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
-            offset += SIZE_BYTES
+            val profilePictureSize = byteArray.copyOfRange(offset, offset + INT_BYTES).toInt()
+            offset += INT_BYTES
             val profilePicture = if (profilePictureSize == 0) null else byteArray.copyOfRange(offset, offset + profilePictureSize)
             offset += profilePictureSize
-            val descriptionSize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
-            offset += SIZE_BYTES
+            val descriptionSize = byteArray.copyOfRange(offset, offset + INT_BYTES).toInt()
+            offset += INT_BYTES
             val description = String(byteArray.copyOfRange(offset, offset + descriptionSize))
             offset += descriptionSize
             val keys = mutableListOf<EncryptionKeyModel>()
             while (keys.size < 3 && offset < byteArray.size) {
-                val keySize = byteArray.copyOfRange(offset, offset + SIZE_BYTES).toInt()
-                offset += SIZE_BYTES
+                val keySize = byteArray.copyOfRange(offset, offset + INT_BYTES).toInt()
+                offset += INT_BYTES
                 val key = byteArray.copyOfRange(offset, offset + keySize)
                 offset += keySize
                 val keyType = when (keys.size) {

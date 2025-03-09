@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.NavRoute
@@ -59,8 +58,6 @@ fun ChatRow(
     chatPresentationModel: ChatPresentationModel
 ) {
     val userProfileUid by chatOverviewViewModel.userProfileUid.collectAsState()
-
-    val context = LocalContext.current
 
     Row(
         Modifier
@@ -105,13 +102,13 @@ fun ChatRow(
             )
 
             // Last message
-            if (chatPresentationModel.lastMessages.isNotEmpty()) {
+            if (chatPresentationModel.lastMessage != null) {
                 Row(
                     modifier = Modifier,
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Tiny)
                 ) {
-                    val lastMessage = chatPresentationModel.lastMessages.last()
+                    val lastMessage = chatPresentationModel.lastMessage
 
                     // Checkmark if message was delivered
                     if (lastMessage.deliveryTime != null && lastMessage.senderUid == userProfileUid) {
@@ -141,7 +138,7 @@ fun ChatRow(
                         }
                     }
                     Text(
-                        text = lastMessage.stringContent ?: "",
+                        text = lastMessage.stringContent  ?: "",
                         style = JAEMTextStyle(
                             MaterialTheme.typography.titleMedium,
                             color = JAEMThemeProvider.current.textSecondary
@@ -157,14 +154,12 @@ fun ChatRow(
             verticalArrangement = Arrangement.SpaceAround,
             horizontalAlignment = Alignment.End
         ) {
-            val unreadMessages = chatPresentationModel.lastMessages.filter { it.deliveryTime == null && it.senderUid != userProfileUid }.size
-
             // Send time of last message
             Text(
-                text = chatPresentationModel.lastMessages.lastOrNull()?.sendTime?.toLocalDateTime()?.formatTime() ?: "",
+                text = chatPresentationModel.lastMessage?.sendTime?.toLocalDateTime()?.formatTime() ?: "",
                 style = JAEMTextStyle(
                     MaterialTheme.typography.titleSmall,
-                    color = if (unreadMessages > 0) JAEMThemeProvider.current.accent else JAEMThemeProvider.current.textSecondary
+                    color = if (chatPresentationModel.unreadMessages.isNotEmpty()) JAEMThemeProvider.current.accent else JAEMThemeProvider.current.textSecondary
                 )
             )
 
@@ -183,7 +178,7 @@ fun ChatRow(
                 )
 
                 // Unread messages count
-                if (unreadMessages > 0) {
+                if (chatPresentationModel.unreadMessages.isNotEmpty()) {
                     Box(
                         modifier = Modifier
                             .background(
@@ -195,7 +190,7 @@ fun ChatRow(
                         Text(
                             modifier = Modifier
                                 .align(Alignment.Center),
-                            text = unreadMessages.toString(),
+                            text = chatPresentationModel.unreadMessages.size.toString(),
                             style = JAEMTextStyle(MaterialTheme.typography.titleSmall)
                         )
                     }

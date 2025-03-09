@@ -13,7 +13,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val JAEM_BASE_URL = "https://5296-2a02-810a-301-3d00-a194-6304-952c-ff21.ngrok-free.app"
+    private const val JAEM_BASE_URL = "https://d673-2a02-810a-301-3d00-a4d3-170c-47a4-813f.ngrok-free.app"
     private const val UDS_BASE_URL = "http://192.168.55.159:3000/"
 
     @Provides

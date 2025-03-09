@@ -9,13 +9,14 @@ import de.stubbe.jaem_client.database.entries.MessageModel
  *
  * @param profilePicture: Profilbild des Chats
  * @param name: Name des Chats
- * @param lastMessages: Letzte Nachrichten im Chat
+ * @param unreadMessages: Letzte Nachrichten im Chat
  * @param streak: Anzahl der aufeinanderfolgenden Nachrichten
  */
 data class ChatPresentationModel(
     val profilePicture: Bitmap?,
     val name: String,
-    val lastMessages: List<MessageModel>,
+    val lastMessage: MessageModel?,
+    val unreadMessages: List<MessageModel>,
     val streak: Int,
     val chat: ChatModel
 )

@@ -43,18 +43,15 @@ class SharedChatViewModel @Inject constructor(
 
         val chatPartner = profiles.find { it.uid == chat.chatPartnerUid } ?: return@combine null
 
-        val lastMessages = messages
-            .filter { it.chatId == chat.id }
+        val unreadMessages = messages
+            .filter { it.chatId == chat.id && it.deliveryTime == null && it.senderUid == chatPartner.uid }
             .sortedBy { it.sendTime }
-            .takeIf { it.isNotEmpty() }?.let { msgList ->
-                msgList.filter { it.deliveryTime == null }
-                    .takeIf { it.isNotEmpty() } ?: msgList.takeLast(1)
-            }.orEmpty()
 
         ChatPresentationModel(
             profilePicture = chatPartner.profilePicture?.toBitmap(),
             name = chatPartner.name,
-            lastMessages = lastMessages,
+            lastMessage = messages.lastOrNull(),
+            unreadMessages = unreadMessages,
             streak = 1,
             chat = chat
         )

@@ -32,8 +32,8 @@ import kotlin.reflect.full.createInstance
  *
  * @return true, wenn die Liste am Ende ist
  */
-fun LazyListState.isScrolledToEnd(): Boolean {
-    return (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= layoutInfo.totalItemsCount - 2
+fun LazyListState.isScrolledToEnd(count: Int = 2): Boolean {
+    return (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) >= layoutInfo.totalItemsCount - count
 }
 
 inline fun <reified T> NavBackStackEntry.isNavRouteOfType(): Boolean {
