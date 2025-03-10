@@ -1,5 +1,6 @@
 package de.stubbe.jaem_client.model.encryption
 
+import kotlinx.serialization.Serializable
 import org.bouncycastle.crypto.agreement.X25519Agreement
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator
@@ -14,8 +15,22 @@ import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-sealed class SymmetricEncryption(val algorithm: String, val code: Byte) {
+@Serializable
+sealed class SymmetricEncryption(
+    val algorithm: String,
+    val code: Byte
+) {
 
+    companion object {
+        fun fromAlgorithm(algorithm: String): SymmetricEncryption {
+            return when (algorithm) {
+                ED25519.algorithm -> ED25519
+                else -> throw IllegalArgumentException("Unknown algorithm: $algorithm")
+            }
+        }
+    }
+
+    @Serializable
     /** ED25519 + X25519 hybrid encryption */
     data object ED25519 : SymmetricEncryption("ED25519", 0) {
 

@@ -8,7 +8,6 @@ import de.stubbe.jaem_client.model.entries.ChatPresentationModel
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
-import de.stubbe.jaem_client.repositories.database.ChatRequestRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
@@ -25,7 +24,6 @@ class ChatOverviewViewModel @Inject constructor(
     messageRepository: MessageRepository,
     profileRepository: ProfileRepository,
     userPreferencesRepository: UserPreferencesRepository,
-    chatRequestRepository: ChatRequestRepository,
     encryptionKeyRepository: EncryptionKeyRepository
 ): ViewModel() {
 
@@ -33,14 +31,7 @@ class ChatOverviewViewModel @Inject constructor(
     private val profileFlow = profileRepository.getAllProfiles()
     private val messageFlow = messageRepository.getAllMessages()
     private val userPreferencesFlow = userPreferencesRepository.userPreferencesFlow
-    private val chatRequestRepositoryFlow = chatRequestRepository.getAllChatRequests()
     private val deviceClientFlow = encryptionKeyRepository.getClientFlow()
-
-    val chatRequests = chatRequestRepositoryFlow.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(SHARING_STARTED_DEFAULT),
-        initialValue = emptyList()
-    )
 
     val chats = combine(
         chatFlow, messageFlow, profileFlow

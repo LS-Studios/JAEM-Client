@@ -1,4 +1,4 @@
-package de.stubbe.jaem_client.view.screens.editprofile
+package de.stubbe.jaem_client.view.components.topbars
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
@@ -18,14 +18,14 @@ import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateChatTopBar(
-    createProfile: Boolean,
+fun TextWithCloseTopBar(
+    title: String,
     oClose: () -> Unit,
 ) {
     TopAppBar(
         title = {
             Text(
-                text = stringResource(if (createProfile) R.string.create_profile else R.string.edit_profile),
+                text = title,
                 style = JAEMTextStyle(MaterialTheme.typography.titleLarge),
             )
         },

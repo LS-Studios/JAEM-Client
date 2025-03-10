@@ -1,7 +1,7 @@
 package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.database.daos.ChatDao
-import de.stubbe.jaem_client.database.entries.ChatModel
+import de.stubbe.jaem_client.database.entries.ChatEntity
 import javax.inject.Inject
 
 class ChatRepository @Inject constructor(
@@ -18,10 +18,10 @@ class ChatRepository @Inject constructor(
 
     fun getAllChats() = chatDao.getAllChats()
 
-    suspend fun insertChat(chat: ChatModel) = chatDao.insert(chat)
+    suspend fun insertChat(chat: ChatEntity) = chatDao.insert(chat)
 
-    suspend fun updateChat(chat: ChatModel) = chatDao.update(chat)
+    suspend fun updateChat(chat: ChatEntity) = chatDao.update(chat)
 
-    suspend fun deleteChat(chat: ChatModel) = chatDao.delete(chat)
+    suspend fun deleteChat(chat: ChatEntity) = chatDao.delete(chat)
 
 }

@@ -29,6 +29,7 @@ import de.stubbe.jaem_client.view.screens.chatinfo.ChatInfoScreen
 import de.stubbe.jaem_client.view.screens.chatoverview.ChatOverviewScreen
 import de.stubbe.jaem_client.view.screens.deviceclientsetup.DeviceClientSetupScreen
 import de.stubbe.jaem_client.view.screens.editprofile.EditProfileScreen
+import de.stubbe.jaem_client.view.screens.uds.UDSScreen
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 import de.stubbe.jaem_client.viewmodel.SharedChatViewModel
 
@@ -58,6 +59,11 @@ fun Navigation(
             composable<NavRoute.DeviceClientSetup> {
                 DeviceClientSetupScreen()
             }
+
+            composable<NavRoute.UDS> {
+                UDSScreen(viewModel)
+            }
+
             composable<NavRoute.ChatOverview>(
                 enterTransition = { jaemEnterHorizontally },
                 exitTransition = {

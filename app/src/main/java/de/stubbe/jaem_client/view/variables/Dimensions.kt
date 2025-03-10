@@ -38,6 +38,12 @@ object Dimensions {
         val Medium = 18.sp
     }
 
+    object CornerRadius {
+        val Small = 4.dp
+        val Medium = 12.dp
+        val Large = 24.dp
+    }
+
     object Shape {
         object RoundedTop {
             val Small = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)

@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 @Entity(tableName = "messages")
-data class MessageModel(
+data class MessageEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
     @ColumnInfo(name = "uid")

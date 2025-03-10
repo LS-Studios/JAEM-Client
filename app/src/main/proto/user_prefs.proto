@@ -19,4 +19,7 @@ message UserPreferences {
   Theme theme = 2;
 
   string userProfileUid = 3;
+
+  repeated string messageDeliveryUrls = 4;
+  repeated string udsUrls = 5;
 }

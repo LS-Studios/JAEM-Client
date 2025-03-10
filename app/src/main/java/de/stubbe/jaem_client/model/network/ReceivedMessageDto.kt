@@ -8,6 +8,7 @@ import de.stubbe.jaem_client.data.SIGNATURE_LENGTH
 import de.stubbe.jaem_client.data.TIMESTAMP_LENGTH
 import de.stubbe.jaem_client.data.UID_LENGTH
 import de.stubbe.jaem_client.model.ED25519Client
+import de.stubbe.jaem_client.model.encryption.EncryptionContext
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
 import de.stubbe.jaem_client.model.enums.ContentMessageType
 import de.stubbe.jaem_client.model.enums.MessageType
@@ -18,11 +19,11 @@ import de.stubbe.jaem_client.utils.toShort
 /**
  * Repräsentiert eine empfangene Nachricht
  */
-data class ReceivedMessage(
+data class ReceivedMessageDto(
     val messageType: MessageType,
     val senderUid: String,
     val timestamp: Long,
-    val messageParts: MutableList<MessagePart>,
+    val messagePartDtos: MutableList<MessagePartDto>,
 ) {
     companion object {
         fun extractMessageBytes(data: ByteArray): List<ByteArray> {
@@ -41,7 +42,7 @@ data class ReceivedMessage(
             encryptedData: ByteArray,
             localClient: ED25519Client?,
             fetchEncryptionContext: suspend (String) -> EncryptionContext
-        ): ReceivedMessage {
+        ): ReceivedMessageDto {
             val encryptedSenderUid = encryptedData.copyOfRange(0, RSA_ENCRYPTION_LENGTH)
             val decryptedSenderUid = AsymmetricEncryption.RSA.decrypt(encryptedSenderUid, localClient?.rsaPrivateKey!!)
             val senderUid = String(decryptedSenderUid)
@@ -95,7 +96,7 @@ data class ReceivedMessage(
                 }
             }
 
-            val messageParts = mutableListOf<MessagePart>()
+            val messagePartDtos = mutableListOf<MessagePartDto>()
             var offset = UID_LENGTH
             while (offset < messageContent.size) {
                 val type = messageContent.copyOfRange(offset, offset + SHORT_BYTES).toShort()
@@ -104,8 +105,8 @@ data class ReceivedMessage(
                 offset += INT_BYTES
                 val content = messageContent.copyOfRange(offset, offset + size)
                 offset += size
-                messageParts.add(
-                    MessagePart(
+                messagePartDtos.add(
+                    MessagePartDto(
                         type = ContentMessageType.entries[type.toInt()],
                         length = size,
                         content = content
@@ -113,7 +114,7 @@ data class ReceivedMessage(
                 )
             }
 
-            return ReceivedMessage(messageType, senderUid, timestamp, messageParts)
+            return ReceivedMessageDto(messageType, senderUid, timestamp, messagePartDtos)
         }
     }
 }

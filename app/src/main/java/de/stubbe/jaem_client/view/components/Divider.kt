@@ -15,14 +15,15 @@ import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
  */
 @Composable
 fun Divider(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    alpha: Float = 0.2f
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(Dimensions.Border.ThinBorder)
             .background(JAEMThemeProvider.current.border.copy(
-                alpha = 0.2f
+                alpha = alpha
             ))
     ) {}
 }

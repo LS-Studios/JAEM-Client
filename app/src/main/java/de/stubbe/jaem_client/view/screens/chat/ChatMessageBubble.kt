@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import de.stubbe.jaem_client.data.JAEMTextStyle
-import de.stubbe.jaem_client.database.entries.MessageModel
+import de.stubbe.jaem_client.database.entries.MessageEntity
 import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.enums.AttachmentType
 import de.stubbe.jaem_client.utils.formatTime
@@ -57,13 +57,13 @@ const val timeWidth = 80
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatMessageBubble(
-    message: MessageModel,
+    message: MessageEntity,
     firstMessageOfBlock: Boolean,
     isSentByUser: Boolean,
     searchValue: String,
     selectionEnabled: Boolean,
     isSelected: Boolean,
-    onSelect: (MessageModel) -> Unit,
+    onSelect: (MessageEntity) -> Unit,
 ) {
     val localDensity = LocalDensity.current
     val bubbleColor = JAEMThemeProvider.current.secondary
@@ -201,7 +201,7 @@ fun ChatMessageBubble(
 @Composable
 private fun MessageContent(
     itTimeTextInline: Boolean,
-    message: MessageModel,
+    message: MessageEntity,
     searchValue: String,
     maxBubbleWidth: Dp,
     setLineCount: (Int) -> Unit,

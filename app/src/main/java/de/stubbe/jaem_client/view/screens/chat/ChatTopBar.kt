@@ -51,6 +51,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
+import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.data.PROFILE_PICTURE_TRANSITION
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ChatPresentationModel
@@ -58,7 +59,6 @@ import de.stubbe.jaem_client.utils.mirror
 import de.stubbe.jaem_client.view.components.CrossSlide
 import de.stubbe.jaem_client.view.components.ProfilePicture
 import de.stubbe.jaem_client.view.variables.Dimensions
-import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.viewmodel.ChatViewModel
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel

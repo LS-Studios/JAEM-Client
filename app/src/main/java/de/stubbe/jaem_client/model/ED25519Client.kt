@@ -66,4 +66,24 @@ class ED25519Client {
         this.rsaPrivateKey = rsaPrivateKey
     }
 
+    fun copy(
+        profileUid: String? = this.profileUid,
+        ed25519PublicKey: Ed25519PublicKeyParameters? = this.ed25519PublicKey,
+        ed25519PrivateKey: Ed25519PrivateKeyParameters? = this.ed25519PrivateKey,
+        x25519PublicKey: X25519PublicKeyParameters? = this.x25519PublicKey,
+        x25519PrivateKey: X25519PrivateKeyParameters? = this.x25519PrivateKey,
+        rsaPublicKey: PublicKey? = this.rsaPublicKey,
+        rsaPrivateKey: PrivateKey? = this.rsaPrivateKey
+    ): ED25519Client {
+        return ED25519Client(
+            profileUid ?: "",
+            ed25519PublicKey ?: this.ed25519PublicKey!!,
+            ed25519PrivateKey ?: this.ed25519PrivateKey!!,
+            x25519PublicKey ?: this.x25519PublicKey!!,
+            x25519PrivateKey ?: this.x25519PrivateKey!!,
+            rsaPublicKey ?: this.rsaPublicKey!!,
+            rsaPrivateKey ?: this.rsaPrivateKey!!
+        )
+    }
+
 }

@@ -5,25 +5,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
-import de.stubbe.jaem_client.database.entries.ProfileModel
+import de.stubbe.jaem_client.database.entries.ProfileEntity
 import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.datastore.UserPreferences.Theme
-import de.stubbe.jaem_client.model.network.SignatureRequestBody
+import de.stubbe.jaem_client.model.enums.NetworkCallStatusType
+import de.stubbe.jaem_client.model.network.SignatureRequestBodyDto
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
-import de.stubbe.jaem_client.repositories.database.ChatRequestRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
+import de.stubbe.jaem_client.utils.fetchPicture
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
 
@@ -34,7 +33,6 @@ class MainActivityViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val messageRepository: MessageRepository,
     private val encryptionKeyRepository: EncryptionKeyRepository,
-    private val chatRequestRepository: ChatRequestRepository,
     private val networkRepository: NetworkRepository
 ): ViewModel() {
 
@@ -53,16 +51,33 @@ class MainActivityViewModel @Inject constructor(
 
     private val deviceClient = encryptionKeyRepository.getClientFlow(canCreateUserClient = true)
 
+    val noInternetConnection: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val connectionError: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
     fun getNewMessages(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val deviceClient = deviceClient.first()!!
 
             try {
-                val messages = networkRepository.receiveMessages(
-                    SignatureRequestBody(deviceClient),
+                val messagesCall = networkRepository.receiveMessages(
+                    SignatureRequestBodyDto(deviceClient),
                     deviceClient,
                     context
                 )
+
+                val messages = when (messagesCall.status) {
+                    NetworkCallStatusType.SUCCESS -> {
+                        messagesCall.response!!
+                    }
+                    NetworkCallStatusType.NO_INTERNET -> {
+                        noInternetConnection.value = true
+                        return@launch
+                    }
+                    NetworkCallStatusType.ERROR -> {
+                        connectionError.value = true
+                        return@launch
+                    }
+                }
 
                 if (messages.isNotEmpty()) {
                     messageRepository.insertMessages(messages)
@@ -78,22 +93,8 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun addExampleData() {
-        fun fetchPicture(): ByteArray {
-            val url = URL("https://picsum.photos/200")
-            val connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.doInput = true
-            connection.connect()
-
-            val inputStream: InputStream = connection.inputStream
-            val byteArray = inputStream.readBytes()
-            inputStream.close()
-
-            return byteArray
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
-            val profile = ProfileModel(
+            val profile = ProfileEntity(
                 id = 0,
                 uid = UUID.randomUUID().toString(),
                 name = "Lisa Mustermann",

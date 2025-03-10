@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
  * @param userIds: IDs der am Chat teilnehmenden Benutzer
  */
 @Entity(tableName = "chats")
-data class ChatModel(
+data class ChatEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
     @ColumnInfo(name = "profile_uid")

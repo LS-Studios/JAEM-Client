@@ -1,8 +1,8 @@
 package de.stubbe.jaem_client.model.entries
 
 import android.graphics.Bitmap
-import de.stubbe.jaem_client.database.entries.ChatModel
-import de.stubbe.jaem_client.database.entries.MessageModel
+import de.stubbe.jaem_client.database.entries.ChatEntity
+import de.stubbe.jaem_client.database.entries.MessageEntity
 
 /**
  * Model zur Darstellung von Chats
@@ -15,8 +15,8 @@ import de.stubbe.jaem_client.database.entries.MessageModel
 data class ChatPresentationModel(
     val profilePicture: Bitmap?,
     val name: String,
-    val lastMessage: MessageModel?,
-    val unreadMessages: List<MessageModel>,
+    val lastMessage: MessageEntity?,
+    val unreadMessages: List<MessageEntity>,
     val streak: Int,
-    val chat: ChatModel
+    val chat: ChatEntity
 )

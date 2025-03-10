@@ -1,170 +1,108 @@
 package de.stubbe.jaem_client.repositories
 
 import android.content.Context
-import android.util.Log
-import de.stubbe.jaem_client.database.entries.MessageModel
-import de.stubbe.jaem_client.model.Attachments
+import dagger.hilt.android.qualifiers.ApplicationContext
+import de.stubbe.jaem_client.database.entries.MessageEntity
 import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.model.ShareProfileModel
-import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
-import de.stubbe.jaem_client.model.enums.AttachmentType
-import de.stubbe.jaem_client.model.enums.ContentMessageType
-import de.stubbe.jaem_client.model.enums.MessageType
-import de.stubbe.jaem_client.model.network.EncryptionContext
-import de.stubbe.jaem_client.model.network.OutgoingMessage
-import de.stubbe.jaem_client.model.network.ReceivedMessage
-import de.stubbe.jaem_client.model.network.SignatureRequestBody
-import de.stubbe.jaem_client.network.JAEMApiService
-import de.stubbe.jaem_client.repositories.database.ChatRepository
-import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
-import de.stubbe.jaem_client.repositories.database.ProfileRepository
-import de.stubbe.jaem_client.utils.AppStorageHelper.createFileFromBytesInSharedStorage
-import de.stubbe.jaem_client.utils.splitResponse
-import de.stubbe.jaem_client.utils.toEpochSeconds
-import de.stubbe.jaem_client.utils.toLocalDateTime
+import de.stubbe.jaem_client.model.network.NetworkCallStatus
+import de.stubbe.jaem_client.model.network.OutgoingMessageDto
+import de.stubbe.jaem_client.model.network.SignatureRequestBodyDto
+import de.stubbe.jaem_client.model.network.UDSUserDto
+import de.stubbe.jaem_client.network.observeConnectivityAsFlow
 import kotlinx.coroutines.flow.first
-import okhttp3.RequestBody
 import javax.inject.Inject
 
 class NetworkRepository @Inject constructor(
-    val chatRepository: ChatRepository,
-    val encryptionKeyRepository: EncryptionKeyRepository,
-    val profileRepository: ProfileRepository,
-    val jaemApiService: JAEMApiService
+    @ApplicationContext private val context: Context,
+    private val messageDeliveryRepository: MessageDeliveryRepository,
+    private val udsRepository: UDSRepository
 ) {
+    private val connectionStateFlow = context.observeConnectivityAsFlow()
 
-    @Throws(Exception::class)
-    suspend fun receiveMessages(body: SignatureRequestBody, deviceClient: ED25519Client, context: Context): List<MessageModel> {
-        val (response, error) = jaemApiService.getMessages(RequestBody.create(null, body.toByteArray())).splitResponse()
+    // Message Delivery
 
-        if (error != null) {
-            throw Exception("Error receiving messages: ${error.string()}")
-        }
+    suspend fun receiveMessages(body: SignatureRequestBodyDto, deviceClient: ED25519Client, context: Context): NetworkCallStatus<List<MessageEntity>> {
+        val connectionState = connectionStateFlow.first()
 
-        val byteMessages = ReceivedMessage.extractMessageBytes(response!!.bytes())
-
-        val receivedMessages = byteMessages.map { message ->
-            val messageModel = ReceivedMessage.fromByteArray(
-                message,
-                deviceClient
-            ) { profileUid ->
-                EncryptionContext(
-                    deviceClient,
-                    encryptionKeyRepository.getClientFlow(profileUid).first(),
-                    SymmetricEncryption.ED25519
-                )
-            }
-            messageModel
-        }
-
-        val messages = receivedMessages.map { message ->
-            if (message.messageType == MessageType.KEY_EXCHANGE) {
-                    val exchangedProfile = ShareProfileModel.fromByteArray(message.messageParts.first().content)
-
-                    ShareProfileModel.addSharedProfileToDB(
-                        exchangedProfile,
-                        profileRepository,
-                        encryptionKeyRepository,
-                        chatRepository,
-                        deviceClient
-                    )
-
-                    if (receivedMessages.size == 1) {
-                        deleteMessage(body)
-                    }
-
-                    Log.d("NetworkRepository", "Successfully exchanged keys with profile: ${exchangedProfile.name}")
-            }
-
-            var chat = chatRepository.getChatByChatPartnerUid(message.senderUid)
-            if (chat == null) {
-                chat = chatRepository.getChatByProfileUid(deviceClient.profileUid!!)
-            }
-
-            val messageUid =  String(message.messageParts.find { it.type == ContentMessageType.UID }!!.content)
-
-            val messageContent = String(message.messageParts.find { it.type == ContentMessageType.MESSAGE }!!.content)
-
-            var attachments: Attachments? = null
-
-            if (message.messageParts.size > 2) {
-                val attachmentPaths = mutableListOf<String>()
-
-                message.messageParts.forEach { messagePart ->
-                    val newFile = createFileFromBytesInSharedStorage(messagePart.content, context)
-                    if (newFile != null) {
-                        attachmentPaths.add(newFile.absolutePath)
-                    }
-                }
-
-                val attachmentType = when (message.messageParts[2].type) {
-                    ContentMessageType.FILE -> AttachmentType.FILE
-                    ContentMessageType.IMAGE_AND_VIDEO -> AttachmentType.IMAGE_AND_VIDEO
-                    else -> AttachmentType.FILE
-                }
-
-                attachments = Attachments(attachmentType, attachmentPaths)
-            }
-
-            MessageModel(
-                id = 0,
-                uid = messageUid,
-                senderUid = message.senderUid,
-                receiverUid = deviceClient.profileUid!!,
-                chatId = chat!!.id,
-                stringContent = messageContent,
-                attachments = attachments,
-                sendTime = message.timestamp.toLocalDateTime().toEpochSeconds(),
-                deliveryTime = null
-            )
-        }
-
-        if (messages.isNotEmpty()) {
-            deleteMessage(body)
-        }
-
-        Log.d("NetworkRepository", "Received messages: $messages")
-
-        return messages
-    }
-
-    suspend fun deleteMessage(body: SignatureRequestBody){
-        val (response, error ) = jaemApiService.deleteMessage(RequestBody.create(null, body.toByteArray())).splitResponse()
-        if (error == null) {
-            Log.d("NetworkRepository", "Message deleted successfully: $response")
-        } else {
-            Log.e("NetworkRepository", "Error deleting message: ${error.string()}")
+        return NetworkCallStatus.create(connectionState) {
+            messageDeliveryRepository.receiveMessages(body, deviceClient, context)
         }
     }
 
-    suspend fun sendMessage(message: OutgoingMessage) {
-        val (response, error) = jaemApiService.sendMessage(RequestBody.create(null, message.toByteArray())).splitResponse()
-        if (error == null) {
-            Log.d("NetworkRepository", "Message sent successfully: $response")
-        } else {
-            Log.e("NetworkRepository", "Error sending message: ${error.string()}")
+    suspend fun deleteMessage(body: SignatureRequestBodyDto): NetworkCallStatus<Unit> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            messageDeliveryRepository.deleteMessage(body)
         }
     }
 
-    suspend fun shareProfile(shareProfileModel: ShareProfileModel): String? {
-        val (response, error) = jaemApiService.share(RequestBody.create(null, shareProfileModel.toByteArray())).splitResponse()
-        if (error == null) {
-            Log.d("NetworkRepository", "Profile shared successfully: $response")
-            return response!!.string()
-        } else {
-            Log.e("NetworkRepository", "Error sharing profile: ${error.string()}")
-            return null
+    suspend fun sendMessage(message: OutgoingMessageDto): NetworkCallStatus<Unit> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            messageDeliveryRepository.sendMessage(message)
         }
     }
 
-    suspend fun getSharedProfile(shareLink: String): ShareProfileModel? {
-        val (response, error) = jaemApiService.getSharedProfile(shareLink).splitResponse()
-        if (error == null) {
-            Log.d("NetworkRepository", "Shared profile received successfully: $response")
-            return ShareProfileModel.fromByteArray(response!!.bytes())
-        } else {
-            Log.e("NetworkRepository", "Error getting shared profile: ${error.string()}")
-            return null
+    suspend fun shareProfile(shareProfileModel: ShareProfileModel): NetworkCallStatus<String?> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            messageDeliveryRepository.shareProfile(shareProfileModel)
+        }
+    }
+
+    suspend fun getSharedProfile(shareLink: String): NetworkCallStatus<ShareProfileModel?> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            messageDeliveryRepository.getSharedProfile(shareLink)
+        }
+    }
+
+    // UDS
+
+    fun getUDSUserPager(query: String) = udsRepository.getUDSUserPager(query, this)
+
+    suspend fun getUserProfile(uid: String): NetworkCallStatus<UDSUserDto> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            udsRepository.getUserProfile(uid)
+        }
+    }
+
+    suspend fun getUsers(page: Int, pageSize: Int): NetworkCallStatus<List<UDSUserDto>> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            udsRepository.getUsers(page, pageSize)
+        }
+    }
+
+    suspend fun findUsersByUsername(username: String, page: Int, pageSize: Int): NetworkCallStatus<List<UDSUserDto>> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            udsRepository.findUsersByUsername(username, page, pageSize)
+        }
+    }
+
+    suspend fun joinService(url: String, udsUserDto: UDSUserDto): NetworkCallStatus<String> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            udsRepository.joinService(url, udsUserDto)
+        }
+    }
+
+    suspend fun leaveService(url: String, profileUid: String): NetworkCallStatus<Unit> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            udsRepository.leaveService(url, profileUid)
         }
     }
 

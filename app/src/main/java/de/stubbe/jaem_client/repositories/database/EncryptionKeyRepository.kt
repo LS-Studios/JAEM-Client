@@ -2,7 +2,7 @@ package de.stubbe.jaem_client.repositories.database
 
 import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.database.daos.EncryptionKeyDao
-import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
+import de.stubbe.jaem_client.database.entries.EncryptionKeyEntity
 import de.stubbe.jaem_client.model.enums.KeyType
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.utils.toEd25519PrivateKey
@@ -82,7 +82,7 @@ class EncryptionKeyRepository @Inject constructor(
             newClient.rsaPublicKey?.let { KeyType.PUBLIC_RSA to it.encoded },
             newClient.rsaPrivateKey?.let { KeyType.PRIVATE_RSA to it.encoded }
         ).map { (type, keyBytes) ->
-            EncryptionKeyModel(
+            EncryptionKeyEntity(
                 key = keyBytes,
                 type = type,
                 profileUid = profileUid
@@ -92,12 +92,12 @@ class EncryptionKeyRepository @Inject constructor(
         encryptionKeyDao.insertAll(keyPairs)
     }
 
-    suspend fun insertEncryptionKey(encryptionKey: EncryptionKeyModel) = encryptionKeyDao.insert(encryptionKey)
+    suspend fun insertEncryptionKey(encryptionKey: EncryptionKeyEntity) = encryptionKeyDao.insert(encryptionKey)
 
-    suspend fun insertAllEncryptionKeys(encryptionKeys: List<EncryptionKeyModel>) = encryptionKeyDao.insertAll(encryptionKeys)
+    suspend fun insertAllEncryptionKeys(encryptionKeys: List<EncryptionKeyEntity>) = encryptionKeyDao.insertAll(encryptionKeys)
 
-    suspend fun updateEncryptionKey(encryptionKey: EncryptionKeyModel) = encryptionKeyDao.update(encryptionKey)
+    suspend fun updateEncryptionKey(encryptionKey: EncryptionKeyEntity) = encryptionKeyDao.update(encryptionKey)
 
-    suspend fun deleteEncryptionKey(encryptionKey: EncryptionKeyModel) = encryptionKeyDao.delete(encryptionKey)
+    suspend fun deleteEncryptionKey(encryptionKey: EncryptionKeyEntity) = encryptionKeyDao.delete(encryptionKey)
 
 }

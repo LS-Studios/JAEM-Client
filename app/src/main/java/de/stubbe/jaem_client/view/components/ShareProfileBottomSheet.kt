@@ -1,6 +1,7 @@
 package de.stubbe.jaem_client.view.components
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -53,6 +56,11 @@ fun ShareProfileBottomSheet(
     val profileToShare by shareProfileViewModel.profileToShare.collectAsState()
     val isVisible by shareProfileViewModel.isShareProfileBottomSheetVisible.collectAsState()
 
+    val noInternetConnection by shareProfileViewModel.noInternetConnection.collectAsState()
+    val errorCreatingSharedProfile by shareProfileViewModel.errorCreatingSharedProfile.collectAsState()
+    val noInternetConnectionString = stringResource(R.string.no_internet_connection)
+    val errorCreatingSharedProfileString = stringResource(R.string.error_sharing_profile)
+
     val shareLinkUrl = remember(sharedProfile) {
         if (sharedProfile == null) {
             null
@@ -62,6 +70,20 @@ fun ShareProfileBottomSheet(
     }
 
     if (isVisible) {
+        DisposableEffect(Unit) {
+            onDispose {
+                shareProfileViewModel.resetErrorFlags()
+            }
+        }
+
+        LaunchedEffect(noInternetConnection) {
+            if (noInternetConnection) Toast.makeText(context, noInternetConnectionString, Toast.LENGTH_SHORT).show()
+        }
+
+        LaunchedEffect(errorCreatingSharedProfile) {
+            if (errorCreatingSharedProfile) Toast.makeText(context, errorCreatingSharedProfileString, Toast.LENGTH_SHORT).show()
+        }
+
         ModalBottomSheet(
             sheetState = sheetState,
             onDismissRequest = {

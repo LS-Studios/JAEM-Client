@@ -36,6 +36,9 @@ import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
  * Prüft, ob die Tastatur sichtbar ist
@@ -161,6 +164,23 @@ fun rememberQrBitmapPainter(
 
         BitmapPainter(currentBitmap.asImageBitmap())
     }
+}
+
+/**
+ * Lädt ein zufälliges Bild von picsum.photos
+ */
+fun fetchPicture(): ByteArray {
+    val url = URL("https://picsum.photos/200")
+    val connection = url.openConnection() as HttpURLConnection
+    connection.requestMethod = "GET"
+    connection.doInput = true
+    connection.connect()
+
+    val inputStream: InputStream = connection.inputStream
+    val byteArray = inputStream.readBytes()
+    inputStream.close()
+
+    return byteArray
 }
 
 /**

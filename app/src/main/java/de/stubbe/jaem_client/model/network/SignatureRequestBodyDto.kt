@@ -8,7 +8,7 @@ import java.nio.ByteBuffer
 /**
  * Repräsentiert eine Anfrage zum verifizieren der Identität an den Server
  */
-class SignatureRequestBody(client: ED25519Client) {
+class SignatureRequestBodyDto(client: ED25519Client) {
     private var algorithm: Byte = 0
     private var signature: ByteArray = byteArrayOf()
     private var publicKey: ByteArray = byteArrayOf()

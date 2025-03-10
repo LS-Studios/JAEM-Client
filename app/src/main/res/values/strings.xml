@@ -46,7 +46,21 @@
     <string name="shared_code_error_title">Fehler mit geteiltem code</string>
     <string name="shared_code_error_message">Es ist ein Fehler bei der erstellung des Profiles mit dem eingegebenen geteilten code entstanden.\nǓberprufe bitte die gültigkeit des Codes.</string>
     <string name="shared_code_copied_from_clipboard">Code aus Zwischenablage kopiert</string>
+    <string name="user_discovery">Nutzersuche</string>
+    <string name="edit_server_list">Serverliste anpassen</string>
+    <string name="edit_uds_server_list">Serverliste der Nutzersuche anpassen</string>
+    <string name="edit_message_delivery_server_list">Serverliste für Nachichten anpassen</string>
+    <string name="no_internet_connection">Es konnte keine Internetverbindung hergestellt werden</string>
+    <string name="connection_error">Fehler beim verbinden mit den Servern</string>
+    <string name="error_sharing_profile">Fehler beim teilen des Profiles</string>
+    <string name="new_url">Neue Server-Url</string>
+    <string name="invalid_url">Ungültige Server-Url. Muss mit http:// oder https:// beginnen.</string>
+    <string name="delete_url">Server-Url löschen</string>
+    <string name="no_servers">Es sind noch keine Server hinzugefügt.</string>
+    <string name="no_uds_user">Keine nutzer vorhanden.</string>
+    <string name="error_fetching_uds_user">Fehler beim laden der Nutzer.</string>
 
+    <string name="add_new_url_bt">Neue Server-Url hinzufügen</string>
     <string name="reply_bt">Antworten</string>
     <string name="close_bt">Schließen</string>
     <string name="back_bt">Zurück</string>

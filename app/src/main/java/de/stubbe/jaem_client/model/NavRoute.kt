@@ -11,6 +11,9 @@ sealed class NavRoute {
     data object DeviceClientSetup : NavRoute()
 
     @Serializable
+    data object UDS: NavRoute()
+
+    @Serializable
     data object ChatOverview : NavRoute()
 
     @Serializable

@@ -9,7 +9,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import de.stubbe.jaem_client.database.JAEMDatabase
 import de.stubbe.jaem_client.database.daos.ChatDao
-import de.stubbe.jaem_client.database.daos.ChatRequestDao
 import de.stubbe.jaem_client.database.daos.EncryptionKeyDao
 import de.stubbe.jaem_client.database.daos.MessageDao
 import de.stubbe.jaem_client.database.daos.ProfileDao
@@ -47,11 +46,6 @@ object DatabaseModule {
     @Provides
     fun provideEncryptionKeyDao(database: JAEMDatabase): EncryptionKeyDao {
         return database.encryptionKeyDao()
-    }
-
-    @Provides
-    fun provideChatRequestDao(database: JAEMDatabase): ChatRequestDao {
-        return database.chatRequestDao()
     }
 
 }

@@ -3,11 +3,12 @@ package de.stubbe.jaem_client.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
+import de.stubbe.jaem_client.database.entries.EncryptionKeyEntity
 import de.stubbe.jaem_client.model.ShareProfileModel
 import de.stubbe.jaem_client.model.SharedProfileModel
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.model.enums.KeyType
+import de.stubbe.jaem_client.model.enums.NetworkCallStatusType
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,9 @@ class ShareProfileViewModel @Inject constructor(
     val isShareProfileBottomSheetVisible: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     val profileToShare: MutableStateFlow<ProfilePresentationModel?> = MutableStateFlow(null)
+
+    val noInternetConnection: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val errorCreatingSharedProfile: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     val deviceClientFLow = encryptionKeyRepository.getClientFlow()
 
@@ -50,27 +54,46 @@ class ShareProfileViewModel @Inject constructor(
             val shareProfileModel = ShareProfileModel.fromProfilePresentationModel(
                 profile,
                 listOf(
-                    EncryptionKeyModel(
+                    EncryptionKeyEntity(
                         key = deviceClient.ed25519PublicKey!!.encoded,
                         type = KeyType.PUBLIC_ED25519,
                     ),
-                    EncryptionKeyModel(
+                    EncryptionKeyEntity(
                         key = deviceClient.x25519PublicKey!!.encoded,
                         type = KeyType.PUBLIC_X25519,
                     ),
-                    EncryptionKeyModel(
+                    EncryptionKeyEntity(
                         key = deviceClient.rsaPublicKey!!.encoded,
                         type = KeyType.PUBLIC_RSA,
                     )
                 )
             )
 
-            val sharedCode = networkRepository.shareProfile(shareProfileModel)
+            val sharedCodeCall = networkRepository.shareProfile(shareProfileModel)
+
+            val sharedCode = when (sharedCodeCall.status) {
+                NetworkCallStatusType.SUCCESS -> {
+                    sharedCodeCall.response
+                }
+                NetworkCallStatusType.NO_INTERNET -> {
+                    noInternetConnection.value = true
+                    return@launch
+                }
+                NetworkCallStatusType.ERROR -> {
+                    errorCreatingSharedProfile.value = true
+                    return@launch
+                }
+            }
 
             sharedProfile.value = SharedProfileModel(
                 sharedCode = sharedCode ?: "",
                 timestamp = System.currentTimeMillis()
             )
         }
+    }
+
+    fun resetErrorFlags() {
+        noInternetConnection.value = false
+        errorCreatingSharedProfile.value = false
     }
 }

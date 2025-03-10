@@ -12,7 +12,7 @@ import java.nio.file.Paths
 /**
  * Repräsentiert einen Teil einer Nachricht
  */
-data class MessagePart(
+data class MessagePartDto(
     val type: ContentMessageType,
     val length: Int,
     val content: ByteArray,
@@ -20,10 +20,10 @@ data class MessagePart(
     fun toByteArray(): ByteArray = type.ordinal.toShort().toByteArray() + length.toByteArray() + content
 
     companion object {
-        fun createMessageParts(messageUid: String, message: String, attachments: Attachments?): List<MessagePart> {
-            val uidPart = MessagePart(ContentMessageType.UID, messageUid.length, messageUid.toByteArray())
+        fun createMessageParts(messageUid: String, message: String, attachments: Attachments?): List<MessagePartDto> {
+            val uidPart = MessagePartDto(ContentMessageType.UID, messageUid.length, messageUid.toByteArray())
 
-            val textPart = MessagePart(ContentMessageType.MESSAGE, message.length, message.toByteArray())
+            val textPart = MessagePartDto(ContentMessageType.MESSAGE, message.length, message.toByteArray())
 
             if (attachments == null) return listOf(uidPart, textPart)
 
@@ -35,7 +35,7 @@ data class MessagePart(
             val attachmentParts = attachments.attachmentPaths.map { path ->
                 val file = File(path)
                 val fileBytes = Files.readAllBytes(Paths.get(path))
-                MessagePart(type, fileBytes.size, file.name.toByteArray() + SEPARATOR_BYTE + fileBytes)
+                MessagePartDto(type, fileBytes.size, file.name.toByteArray() + SEPARATOR_BYTE + fileBytes)
             }
 
             return listOf(uidPart, textPart) + attachmentParts

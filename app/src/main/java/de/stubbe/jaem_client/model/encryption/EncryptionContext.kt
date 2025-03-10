@@ -1,7 +1,6 @@
-package de.stubbe.jaem_client.model.network
+package de.stubbe.jaem_client.model.encryption
 
 import de.stubbe.jaem_client.model.ED25519Client
-import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
 
 /**
  * Hält die Verschlüsselungsdaten für eine Konversation

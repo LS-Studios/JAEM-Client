@@ -13,7 +13,7 @@ import androidx.room.PrimaryKey
  *  @param description: Beschreibung oder Status des Benutzers
  */
 @Entity(tableName = "profiles")
-data class ProfileModel(
+data class ProfileEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
     val uid: String,
@@ -26,7 +26,7 @@ data class ProfileModel(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as ProfileModel
+        other as ProfileEntity
 
         if (id != other.id) return false
         if (uid != other.uid) return false

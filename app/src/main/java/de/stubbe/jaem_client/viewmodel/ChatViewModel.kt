@@ -6,14 +6,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.stubbe.jaem_client.data.SHARING_STARTED_DEFAULT
-import de.stubbe.jaem_client.database.entries.ChatModel
-import de.stubbe.jaem_client.database.entries.MessageModel
+import de.stubbe.jaem_client.database.entries.ChatEntity
+import de.stubbe.jaem_client.database.entries.MessageEntity
 import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.NavRoute
+import de.stubbe.jaem_client.model.encryption.EncryptionContext
 import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
-import de.stubbe.jaem_client.model.network.EncryptionContext
-import de.stubbe.jaem_client.model.network.MessagePart
-import de.stubbe.jaem_client.model.network.OutgoingMessage
+import de.stubbe.jaem_client.model.enums.ContentMessageType
+import de.stubbe.jaem_client.model.enums.MessageType
+import de.stubbe.jaem_client.model.network.MessagePartDto
+import de.stubbe.jaem_client.model.network.OutgoingMessageDto
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
@@ -68,7 +70,7 @@ class ChatViewModel @Inject constructor(
     val foundItemIndices: MutableStateFlow<List<Int>> = MutableStateFlow(listOf())
     val currentFoundItemIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
 
-    val selectedMessages: MutableStateFlow<List<MessageModel>> = MutableStateFlow(emptyList())
+    val selectedMessages: MutableStateFlow<List<MessageEntity>> = MutableStateFlow(emptyList())
 
     val attachmentPickerIsOpen: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -95,7 +97,7 @@ class ChatViewModel @Inject constructor(
         currentFoundItemIndex.value = newCurrentFoundItemIndex
     }
 
-    fun changeSelectedMessages(newSelectedMessages: List<MessageModel>) {
+    fun changeSelectedMessages(newSelectedMessages: List<MessageEntity>) {
         selectedMessages.value = newSelectedMessages
     }
 
@@ -126,9 +128,9 @@ class ChatViewModel @Inject constructor(
     /**
      * Sendet die Nachricht
      */
-    fun sendMessage(chat: ChatModel) {
+    fun sendMessage(chat: ChatEntity) {
         viewModelScope.launch(Dispatchers.IO) {
-            val newMessage = MessageModel(
+            val newMessage = MessageEntity(
                 id = 0,
                 uid = UUID.randomUUID().toString(),
                 senderUid = userProfileUid.value!!,
@@ -143,13 +145,13 @@ class ChatViewModel @Inject constructor(
             messageRepository.insertMessage(newMessage)
 
             networkRepository.sendMessage(
-               OutgoingMessage.create(
+               OutgoingMessageDto.create(
                    EncryptionContext(
                        localClient = deviceClientFlow.first(),
                        remoteClient = remoteClientFlow.first(),
                        encryptionAlgorithm = SymmetricEncryption.ED25519
                    ),
-                   MessagePart.createMessageParts(
+                   MessagePartDto.createMessageParts(
                        newMessage.uid,
                        newMessage.stringContent!!,
                        newMessage.attachments
@@ -169,6 +171,26 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             selectedMessages.value.forEach { message ->
                 messageRepository.deleteMessage(message)
+
+                networkRepository.sendMessage(
+                    OutgoingMessageDto.create(
+                        context = EncryptionContext(
+                            localClient = deviceClientFlow.first(),
+                            remoteClient = remoteClientFlow.first(),
+                            encryptionAlgorithm = SymmetricEncryption.ED25519
+                        ),
+                        messagePart = listOf(
+                            message.uid.toByteArray().let { uidByteToDelete ->
+                                MessagePartDto(
+                                    ContentMessageType.NONE,
+                                    uidByteToDelete.size,
+                                    uidByteToDelete
+                                )
+                            }
+                        ),
+                        messageType = MessageType.DELETE_MESSAGE
+                    )
+                )
             }
             selectedMessages.value = emptyList()
         }

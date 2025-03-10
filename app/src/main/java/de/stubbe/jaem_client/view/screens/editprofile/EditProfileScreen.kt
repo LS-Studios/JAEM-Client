@@ -38,6 +38,7 @@ import de.stubbe.jaem_client.utils.toBitmap
 import de.stubbe.jaem_client.utils.toByteArray
 import de.stubbe.jaem_client.view.components.LoadingOverlay
 import de.stubbe.jaem_client.view.components.ProfilePicture
+import de.stubbe.jaem_client.view.components.topbars.TextWithCloseTopBar
 import de.stubbe.jaem_client.view.components.dialogs.InfoDialog
 import de.stubbe.jaem_client.view.components.filepicker.JAEMPickFileAndCrop
 import de.stubbe.jaem_client.view.screens.ScreenBase
@@ -75,8 +76,8 @@ fun EditProfileScreen(
 
     ScreenBase(
         topBar = {
-            CreateChatTopBar(
-                createProfile = createProfile,
+            TextWithCloseTopBar(
+                title = stringResource(if (createProfile) R.string.create_profile else R.string.edit_profile),
                 oClose = {
                     navigationViewModel.goBack()
                 }

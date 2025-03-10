@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Entity(tableName = "encryption_keys")
-data class EncryptionKeyModel(
+data class EncryptionKeyEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val key: ByteArray,
@@ -21,7 +21,7 @@ data class EncryptionKeyModel(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as EncryptionKeyModel
+        other as EncryptionKeyEntity
 
         if (id != other.id) return false
         if (!key.contentEquals(other.key)) return false

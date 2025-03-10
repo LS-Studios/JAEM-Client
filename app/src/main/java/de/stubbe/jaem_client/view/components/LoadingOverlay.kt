@@ -28,11 +28,8 @@ fun LoadingOverlay(
                     .background(Color.Black.copy(alpha = 0.5f))
             )
 
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = JAEMThemeProvider.current.textPrimary,
-                trackColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.2f)
-            )
+            JAEMCircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),)
         }
     }
 }

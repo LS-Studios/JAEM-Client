@@ -3,9 +3,9 @@ package de.stubbe.jaem_client.model
 import de.stubbe.jaem_client.data.INT_BYTES
 import de.stubbe.jaem_client.data.TIMESTAMP_LENGTH
 import de.stubbe.jaem_client.data.UID_LENGTH
-import de.stubbe.jaem_client.database.entries.ChatModel
-import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
-import de.stubbe.jaem_client.database.entries.ProfileModel
+import de.stubbe.jaem_client.database.entries.ChatEntity
+import de.stubbe.jaem_client.database.entries.EncryptionKeyEntity
+import de.stubbe.jaem_client.database.entries.ProfileEntity
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.model.enums.KeyType
 import de.stubbe.jaem_client.repositories.database.ChatRepository
@@ -22,7 +22,7 @@ data class ShareProfileModel(
     val name: String,
     val profilePicture: ByteArray?,
     val description: String,
-    val keys: List<EncryptionKeyModel>,
+    val keys: List<EncryptionKeyEntity>,
     val timestamp: Long
 ) {
 
@@ -43,7 +43,7 @@ data class ShareProfileModel(
             chatRepository: ChatRepository,
             deviceClient: ED25519Client
         ) {
-            val newProfile = ProfileModel(
+            val newProfile = ProfileEntity(
                 id = 0,
                 uid = sharedProfile.uid,
                 profilePicture = sharedProfile.profilePicture,
@@ -58,7 +58,7 @@ data class ShareProfileModel(
             )
 
             chatRepository.insertChat(
-                ChatModel(
+                ChatEntity(
                     id = 0,
                     profileUid = deviceClient.profileUid!!,
                     chatPartnerUid = newProfile.uid,
@@ -66,7 +66,7 @@ data class ShareProfileModel(
             )
         }
 
-        fun fromProfileModel(profile: ProfileModel, keys: List<EncryptionKeyModel>): ShareProfileModel {
+        fun fromProfileModel(profile: ProfileEntity, keys: List<EncryptionKeyEntity>): ShareProfileModel {
             return ShareProfileModel(
                 uid = profile.uid,
                 name = profile.name,
@@ -79,7 +79,7 @@ data class ShareProfileModel(
 
         fun fromProfilePresentationModel(
             profile: ProfilePresentationModel,
-            keys: List<EncryptionKeyModel>
+            keys: List<EncryptionKeyEntity>
         ): ShareProfileModel {
             return ShareProfileModel(
                 uid = profile.profile.uid,
@@ -107,7 +107,7 @@ data class ShareProfileModel(
             offset += INT_BYTES
             val description = String(byteArray.copyOfRange(offset, offset + descriptionSize))
             offset += descriptionSize
-            val keys = mutableListOf<EncryptionKeyModel>()
+            val keys = mutableListOf<EncryptionKeyEntity>()
             while (keys.size < 3 && offset < byteArray.size) {
                 val keySize = byteArray.copyOfRange(offset, offset + INT_BYTES).toInt()
                 offset += INT_BYTES
@@ -119,7 +119,7 @@ data class ShareProfileModel(
                     2 -> KeyType.PUBLIC_RSA
                     else -> throw Exception("Too many keys")
                 }
-                keys.add(EncryptionKeyModel(
+                keys.add(EncryptionKeyEntity(
                     key = key,
                     type = keyType,
                     profileUid = uid

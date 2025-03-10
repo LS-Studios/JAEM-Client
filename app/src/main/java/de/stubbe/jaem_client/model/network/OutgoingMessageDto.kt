@@ -1,5 +1,6 @@
 package de.stubbe.jaem_client.model.network
 
+import de.stubbe.jaem_client.model.encryption.EncryptionContext
 import de.stubbe.jaem_client.model.enums.AsymmetricEncryption
 import de.stubbe.jaem_client.model.enums.ContentMessageType
 import de.stubbe.jaem_client.model.enums.MessageType
@@ -9,7 +10,7 @@ import de.stubbe.jaem_client.utils.toByteArray
 /**
  * Repräsentiert eine zu sendende Nachricht
  */
-data class OutgoingMessage(
+data class OutgoingMessageDto(
     val algorithm: Byte,
     val recipientPublicKey: ByteArray,
     var encryptedContent: ByteArray,
@@ -19,14 +20,14 @@ data class OutgoingMessage(
     companion object {
         fun create(
             context: EncryptionContext,
-            messageParts: List<MessagePart>,
+            messagePart: List<MessagePartDto>,
             messageType: MessageType = MessageType.CONTENT,
-        ): OutgoingMessage {
+        ): OutgoingMessageDto {
             val (client, otherClient, algorithm) = context
 
             val timestamp = getUnixTime().toByteArray()
 
-            val messageWithUid = client!!.profileUid!!.toByteArray() + messageParts.flatMap { it.toByteArray().toList() }
+            val messageWithUid = client!!.profileUid!!.toByteArray() + messagePart.flatMap { it.toByteArray().toList() }
             val signature = algorithm.sign(messageWithUid, client.ed25519PrivateKey!!)
             val aesKey = algorithm.generateSymmetricKey(
                 otherClient!!.x25519PublicKey!!,
@@ -39,18 +40,18 @@ data class OutgoingMessage(
             val rsaEncryptedMessageType = AsymmetricEncryption.RSA.encrypt(messageType.ordinal.toShort().toByteArray(), otherClient.rsaPublicKey!!)
             val finalMessage = rsaEncryptedUid + rsaEncryptedMessageType + encryptedMessage
 
-            return OutgoingMessage(client.encryption.code, otherClient.ed25519PublicKey!!.encoded, finalMessage)
+            return OutgoingMessageDto(client.encryption.code, otherClient.ed25519PublicKey!!.encoded, finalMessage)
         }
 
         fun createKeyExchange(
             context: EncryptionContext,
             content: ByteArray,
-        ): OutgoingMessage {
+        ): OutgoingMessageDto {
             val (client, otherClient, algorithm) = context
 
             val timestamp = getUnixTime().toByteArray()
 
-            val messageWithUid = client!!.profileUid!!.toByteArray() + MessagePart(ContentMessageType.NONE, content.size, content).toByteArray()
+            val messageWithUid = client!!.profileUid!!.toByteArray() + MessagePartDto(ContentMessageType.NONE, content.size, content).toByteArray()
             val aesKey = algorithm.generateSymmetricKey(
                 otherClient!!.x25519PublicKey!!,
                 client.x25519PrivateKey!!
@@ -63,7 +64,7 @@ data class OutgoingMessage(
             val rsaEncryptedAesKey = AsymmetricEncryption.RSA.encrypt(aesKey, otherClient.rsaPublicKey!!)
             val finalMessage = rsaEncryptedUid + rsaEncryptedMessageType + rsaEncryptedAesKey + encryptedMessage
 
-            return OutgoingMessage(client.encryption.code, otherClient.ed25519PublicKey!!.encoded, finalMessage)
+            return OutgoingMessageDto(client.encryption.code, otherClient.ed25519PublicKey!!.encoded, finalMessage)
         }
     }
 }

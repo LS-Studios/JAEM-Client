@@ -5,14 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stubbe.jaem_client.database.entries.EncryptionKeyModel
+import de.stubbe.jaem_client.database.entries.EncryptionKeyEntity
 import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.ShareProfileModel
+import de.stubbe.jaem_client.model.encryption.EncryptionContext
 import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
 import de.stubbe.jaem_client.model.enums.KeyType
-import de.stubbe.jaem_client.model.network.EncryptionContext
-import de.stubbe.jaem_client.model.network.OutgoingMessage
+import de.stubbe.jaem_client.model.enums.NetworkCallStatusType
+import de.stubbe.jaem_client.model.network.OutgoingMessageDto
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
@@ -42,6 +43,7 @@ class EditProfileViewModel @Inject constructor(
 
     val createProfile = editProfileArguments.profileUid == null
 
+    val noInternetConnection: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val creationError: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val profileAlreadyExists: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -68,7 +70,19 @@ class EditProfileViewModel @Inject constructor(
             }?.launchIn(this)
 
             if (createProfile) {
-                networkRepository.getSharedProfile(editProfileArguments.sharedCode!!).let { profile ->
+                networkRepository.getSharedProfile(editProfileArguments.sharedCode!!).let { profileCall ->
+                    val profile = when (profileCall.status) {
+                        NetworkCallStatusType.SUCCESS -> profileCall.response
+                        NetworkCallStatusType.NO_INTERNET -> {
+                            noInternetConnection.value = true
+                            return@let
+                        }
+                        NetworkCallStatusType.ERROR -> {
+                            creationError.value = true
+                            return@let
+                        }
+                    }
+
                     if (profile == null) {
                         creationError.value = true
                         return@let
@@ -128,19 +142,19 @@ class EditProfileViewModel @Inject constructor(
 
                     val deviceProfile = profileRepository.getProfileByUid(deviceClient.profileUid!!)!!
                     val deviceSharedProfile = ShareProfileModel.fromProfileModel(deviceProfile, listOf(
-                        EncryptionKeyModel(
+                        EncryptionKeyEntity(
                             id = 0,
                             key = deviceClient.ed25519PublicKey!!.encoded,
                             type = KeyType.PUBLIC_ED25519,
                             profileUid = deviceProfile.uid,
                         ),
-                        EncryptionKeyModel(
+                        EncryptionKeyEntity(
                             id = 0,
                             key = deviceClient.x25519PublicKey!!.encoded,
                             type = KeyType.PUBLIC_X25519,
                             profileUid = deviceProfile.uid,
                         ),
-                        EncryptionKeyModel(
+                        EncryptionKeyEntity(
                             id = 0,
                             key = deviceClient.rsaPublicKey!!.encoded,
                             type = KeyType.PUBLIC_RSA,
@@ -149,7 +163,7 @@ class EditProfileViewModel @Inject constructor(
                     ))
 
                     networkRepository.sendMessage(
-                        OutgoingMessage.createKeyExchange(
+                        OutgoingMessageDto.createKeyExchange(
                             EncryptionContext(
                                 localClient = deviceClient,
                                 remoteClient = ED25519Client(
