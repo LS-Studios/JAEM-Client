@@ -9,7 +9,7 @@ With JAEM, you'll never receive annoying requests from bots or scammers pretendi
 ## Project Team
 
 - **Lead Developer:** [**Lennard Stubbe**](https://github.com/LS-Studios)
-- **User Discovery Service:** [**Nick Schefner**](#)
+- **User Discovery Service:** [**Nick Schefner**](https://github.com/ItsJuzoSuzuya)
 - **Server Architecture:** [**Antonio Mikley**](https://github.com/antoniomikley)
 
 ---
@@ -49,7 +49,7 @@ JAEM supports multiple languages to provide users a comfortable experience:
 ## Useful Links
 
 - [Android Client Repository](https://github.com/LS-Studios/JAEM-Client)
-- [Backend Repository](https://github.com/antoniomikley)
+- [Backend Repository](https://github.com/antoniomikley/jaem-server)
 
 ---
 
