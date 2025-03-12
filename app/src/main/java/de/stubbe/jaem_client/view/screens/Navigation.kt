@@ -1,5 +1,7 @@
 package de.stubbe.jaem_client.view.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
@@ -13,9 +15,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import de.stubbe.jaem_client.data.DEEP_LINK_URL
 import de.stubbe.jaem_client.data.jaemEnterHorizontally
-import de.stubbe.jaem_client.data.jaemEnterVertically
+import de.stubbe.jaem_client.data.jaemEnterVerticallyFromBottom
+import de.stubbe.jaem_client.data.jaemEnterVerticallyFromTop
 import de.stubbe.jaem_client.data.jaemExitHorizontally
-import de.stubbe.jaem_client.data.jaemExitVertically
+import de.stubbe.jaem_client.data.jaemExitVerticallyFromBottom
+import de.stubbe.jaem_client.data.jaemExitVerticallyFromTop
 import de.stubbe.jaem_client.data.jaemPopEnterHorizontally
 import de.stubbe.jaem_client.data.jaemPopExitHorizontally
 import de.stubbe.jaem_client.data.jeamAppearImmediately
@@ -27,8 +31,9 @@ import de.stubbe.jaem_client.utils.sharedViewModel
 import de.stubbe.jaem_client.view.screens.chat.ChatScreen
 import de.stubbe.jaem_client.view.screens.chatinfo.ChatInfoScreen
 import de.stubbe.jaem_client.view.screens.chatoverview.ChatOverviewScreen
-import de.stubbe.jaem_client.view.screens.deviceclientsetup.DeviceClientSetupScreen
 import de.stubbe.jaem_client.view.screens.editprofile.EditProfileScreen
+import de.stubbe.jaem_client.view.screens.initdevicescreen.InitDeviceScreen
+import de.stubbe.jaem_client.view.screens.settings.SettingsScreen
 import de.stubbe.jaem_client.view.screens.uds.UDSScreen
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 import de.stubbe.jaem_client.viewmodel.SharedChatViewModel
@@ -36,6 +41,7 @@ import de.stubbe.jaem_client.viewmodel.SharedChatViewModel
 /**
  * Navigation zwischen den Bildschirmen
  */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun Navigation(
@@ -56,28 +62,44 @@ fun Navigation(
             startDestination = NavRoute.ChatOverview,
             popExitTransition = { jaemPopExitHorizontally }
         ) {
-            composable<NavRoute.DeviceClientSetup> {
-                DeviceClientSetupScreen()
+            composable<NavRoute.InitDevice>(
+                enterTransition = { jaemEnterVerticallyFromTop },
+                exitTransition = { jaemExitVerticallyFromTop },
+                popExitTransition = { jaemExitVerticallyFromTop }
+            ) {
+                InitDeviceScreen(viewModel)
             }
 
-            composable<NavRoute.UDS> {
+            composable<NavRoute.UDS>(
+                enterTransition = { jaemEnterVerticallyFromBottom },
+                exitTransition = { jaemExitVerticallyFromBottom },
+                popExitTransition = { jaemExitVerticallyFromBottom }
+            ) {
                 UDSScreen(viewModel)
+            }
+
+            composable<NavRoute.Settings>(
+                enterTransition = { jaemEnterVerticallyFromTop },
+                exitTransition = { jaemExitVerticallyFromTop },
+                popExitTransition = { jaemExitVerticallyFromTop }
+            ) {
+                SettingsScreen(viewModel)
             }
 
             composable<NavRoute.ChatOverview>(
                 enterTransition = { jaemEnterHorizontally },
                 exitTransition = {
-                    if (this.targetState.isNavRouteOfType<NavRoute.EditProfile>()) {
-                        jeamFadeOut
-                    } else {
+                    if (this.targetState.isNavRouteOfType<NavRoute.Chat>()) {
                         jaemExitHorizontally
+                    } else {
+                        jeamFadeOut
                     }
                 },
                 popEnterTransition = {
-                    if (this.initialState.isNavRouteOfType<NavRoute.EditProfile>()) {
-                        jeamAppearImmediately
-                    } else {
+                    if (this.targetState.isNavRouteOfType<NavRoute.Chat>()) {
                         jaemPopEnterHorizontally
+                    } else {
+                        jeamAppearImmediately
                     }
                 },
                 popExitTransition = { jaemPopExitHorizontally }
@@ -114,9 +136,9 @@ fun Navigation(
                 }
                 composable<NavRoute.Profile>(
                     enterTransition = { jeamFadeIn },
-                    exitTransition = { jaemExitVertically },
+                    exitTransition = { jaemExitVerticallyFromBottom },
                     popEnterTransition = { jaemPopEnterHorizontally },
-                    popExitTransition = { jaemExitVertically }
+                    popExitTransition = { jaemExitVerticallyFromBottom }
                 ) { navBackStackEntry ->
                     val sharedChatViewModel = navBackStackEntry.sharedViewModel<SharedChatViewModel>(navController)
                     ChatInfoScreen(
@@ -130,13 +152,13 @@ fun Navigation(
 
             composable<NavRoute.EditProfile>(
                 enterTransition = {
-                    jaemEnterVertically
+                    jaemEnterVerticallyFromBottom
                 },
                 exitTransition = {
-                    jaemExitVertically
+                    jaemExitVerticallyFromBottom
                 },
                 popExitTransition = {
-                    jaemExitVertically
+                    jaemExitVerticallyFromBottom
                 },
                 deepLinks = listOf(
                     navDeepLink {

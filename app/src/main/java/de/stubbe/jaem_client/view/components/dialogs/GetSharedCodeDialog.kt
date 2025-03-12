@@ -65,7 +65,8 @@ fun GetSharedCodeDialog(
         )
     ) {
         OutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth(),
             value = sharedCode,
             shape = Dimensions.Shape.Rounded.Small,
             onValueChange = { newValue ->
@@ -91,7 +92,8 @@ fun GetSharedCodeDialog(
                 )
             },
             colors = JAEMTextFieldColors(),
-            maxLines = 1
+            maxLines = 1,
+            singleLine = true
         )
     }
 }

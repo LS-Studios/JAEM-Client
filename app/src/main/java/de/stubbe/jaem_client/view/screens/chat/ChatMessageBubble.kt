@@ -42,8 +42,8 @@ import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.database.entries.MessageEntity
 import de.stubbe.jaem_client.model.Attachments
 import de.stubbe.jaem_client.model.enums.AttachmentType
+import de.stubbe.jaem_client.utils.epochSecondToLocalDateTime
 import de.stubbe.jaem_client.utils.formatTime
-import de.stubbe.jaem_client.utils.toLocalDateTime
 import de.stubbe.jaem_client.utils.toSizeString
 import de.stubbe.jaem_client.view.components.ExtensionPresentation
 import de.stubbe.jaem_client.view.components.HighlightText
@@ -213,7 +213,7 @@ private fun MessageContent(
 
     }
     Column(
-        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Tiny)
+        verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Tiny)
     ) {
         if (message.attachments != null) {
             AttachmentsPresentation(
@@ -252,7 +252,7 @@ private fun MessageContent(
                     Modifier.padding(bottom = Dimensions.Padding.Tiny)
                 }
             ),
-        text = message.sendTime.toLocalDateTime().formatTime(),
+        text = message.sendTime.epochSecondToLocalDateTime().formatTime(),
         fontSize = 12.sp,
         color = Color.Gray,
         textAlign = TextAlign.End

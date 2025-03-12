@@ -32,8 +32,8 @@ import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ChatPresentationModel
 import de.stubbe.jaem_client.model.enums.AttachmentType
+import de.stubbe.jaem_client.utils.epochSecondToLocalDateTime
 import de.stubbe.jaem_client.utils.formatTime
-import de.stubbe.jaem_client.utils.toLocalDateTime
 import de.stubbe.jaem_client.view.components.ExtensionPresentation
 import de.stubbe.jaem_client.view.components.LoadingIfNull
 import de.stubbe.jaem_client.view.components.ProfilePicture
@@ -67,7 +67,7 @@ fun ChatRow(
                     bounded = true
                 )
             ) {
-                navigationViewModel.changeScreen(
+                navigationViewModel.navigateTo(
                     NavRoute.ChatMessages(
                         chatPresentationModel.chat.chatPartnerUid,
                         chatPresentationModel.chat.id,
@@ -156,7 +156,7 @@ fun ChatRow(
         ) {
             // Send time of last message
             Text(
-                text = chatPresentationModel.lastMessage?.sendTime?.toLocalDateTime()?.formatTime() ?: "",
+                text = chatPresentationModel.lastMessage?.sendTime?.epochSecondToLocalDateTime()?.formatTime() ?: "",
                 style = JAEMTextStyle(
                     MaterialTheme.typography.titleSmall,
                     color = if (chatPresentationModel.unreadMessages.isNotEmpty()) JAEMThemeProvider.current.accent else JAEMThemeProvider.current.textSecondary
@@ -169,13 +169,15 @@ fun ChatRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Streak
-                Text(
-                    text = "\uD83D\uDD25 35",
-                    style = JAEMTextStyle(
-                        MaterialTheme.typography.titleSmall,
-                        color = JAEMThemeProvider.current.textSecondary
+                if (chatPresentationModel.streak > 0) {
+                    Text(
+                        text = "\uD83D\uDD25 ${chatPresentationModel.streak}",
+                        style = JAEMTextStyle(
+                            MaterialTheme.typography.titleSmall,
+                            color = JAEMThemeProvider.current.textSecondary
+                        )
                     )
-                )
+                }
 
                 // Unread messages count
                 if (chatPresentationModel.unreadMessages.isNotEmpty()) {

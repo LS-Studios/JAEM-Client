@@ -26,4 +26,7 @@ abstract class ChatDao: BaseDao<ChatEntity> {
     @Query("SELECT * FROM chats")
     abstract fun getAllChats(): Flow<List<ChatEntity>>
 
+    @Query("DELETE FROM chats")
+    abstract fun clearAll()
+
 }

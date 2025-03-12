@@ -1,6 +1,5 @@
 package de.stubbe.jaem_client.view.components.filepicker
 
-import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -33,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,8 +46,12 @@ import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.JAEMFileType
 import de.stubbe.jaem_client.utils.OnResume
+import de.stubbe.jaem_client.utils.compressImage
+import de.stubbe.jaem_client.utils.getFileName
+import de.stubbe.jaem_client.utils.toByteArray
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,13 +59,15 @@ fun JAEMFilePicker(
     maxSelection: Int,
     types: List<JAEMFileType>,
     onDismiss: () -> Unit,
-    selected: (JAEMFileType?, List<Uri>) -> Unit,
+    selected: (JAEMFileType?, List<ByteArray>) -> Unit,
 ) {
     val context = LocalContext.current
 
     var dismissWhenOnResume by remember { mutableStateOf(false) }
     var isPermissionGrant by remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+    val coroutineScope = rememberCoroutineScope()
 
     val isPhotoPickerAvailable by remember { mutableStateOf(isPhotoPickerAvailable(context)) }
 
@@ -84,20 +90,38 @@ fun JAEMFilePicker(
     val pickMultipleMedia = if (maxSelection > 1) {
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickMultipleVisualMedia(maxSelection)) { uris ->
             if (uris.isNotEmpty()) {
-                selected(selectedType, uris)
+                coroutineScope.launch {
+                    selected(selectedType, uris.mapNotNull { uri ->
+                        uri.getFileName(context)?.toByteArray()?.let { fileName ->
+                            uri.compressImage(context, 200 * 1024L)?.let { compressedImage ->
+                                fileName + compressedImage
+                            }
+                        }
+                    })
+                }
             }
         }
     } else {
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
-                selected(selectedType, listOf(uri))
+                coroutineScope.launch {
+                    uri.getFileName(context)?.toByteArray()?.let { fileName ->
+                        uri.compressImage(context, 200 * 1024L)?.let { compressedImage ->
+                            fileName + compressedImage
+                        }
+                    }
+                }
             }
         }
     }
 
     val pickFile = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            selected(selectedType, listOf(uri))
+            coroutineScope.launch {
+                uri.toByteArray(context)?.let {
+                    selected(selectedType, listOf(it))
+                }
+            }
         }
     }
 

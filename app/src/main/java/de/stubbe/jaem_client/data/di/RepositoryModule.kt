@@ -11,7 +11,7 @@ import de.stubbe.jaem_client.database.daos.ChatDao
 import de.stubbe.jaem_client.database.daos.EncryptionKeyDao
 import de.stubbe.jaem_client.database.daos.MessageDao
 import de.stubbe.jaem_client.database.daos.ProfileDao
-import de.stubbe.jaem_client.network.JAEMApiService
+import de.stubbe.jaem_client.network.MessageDeliveryApiService
 import de.stubbe.jaem_client.network.UDSApiService
 import de.stubbe.jaem_client.repositories.MessageDeliveryRepository
 import de.stubbe.jaem_client.repositories.NetworkRepository
@@ -68,14 +68,16 @@ object RepositoryModule {
         encryptionKeyRepository: EncryptionKeyRepository,
         profileRepository: ProfileRepository,
         messageRepository: MessageRepository,
-        jaemApiService: JAEMApiService
+        messageDeliveryApiService: MessageDeliveryApiService,
+        userPreferencesRepository: UserPreferencesRepository
     ): MessageDeliveryRepository {
         return MessageDeliveryRepository(
             chatRepository,
             encryptionKeyRepository,
             profileRepository,
             messageRepository,
-            jaemApiService
+            messageDeliveryApiService,
+            userPreferencesRepository
         )
     }
 

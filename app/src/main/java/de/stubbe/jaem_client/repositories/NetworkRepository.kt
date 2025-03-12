@@ -3,6 +3,7 @@ package de.stubbe.jaem_client.repositories
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.stubbe.jaem_client.database.entries.MessageEntity
+import de.stubbe.jaem_client.datastore.ServerUrlModel
 import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.model.ShareProfileModel
 import de.stubbe.jaem_client.model.network.NetworkCallStatus
@@ -22,6 +23,14 @@ class NetworkRepository @Inject constructor(
 
     // Message Delivery
 
+    suspend fun doKeyExchange(sharedProfile: ShareProfileModel, serverUrl: ServerUrlModel?): NetworkCallStatus<Long> {
+        val connectionState = connectionStateFlow.first()
+
+        return NetworkCallStatus.create(connectionState) {
+            messageDeliveryRepository.initKeyExchange(sharedProfile, serverUrl)
+        }
+    }
+
     suspend fun receiveMessages(body: SignatureRequestBodyDto, deviceClient: ED25519Client, context: Context): NetworkCallStatus<List<MessageEntity>> {
         val connectionState = connectionStateFlow.first()
 
@@ -30,23 +39,15 @@ class NetworkRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteMessage(body: SignatureRequestBodyDto): NetworkCallStatus<Unit> {
+    suspend fun sendMessage(message: OutgoingMessageDto, url: ServerUrlModel? = null): NetworkCallStatus<Unit> {
         val connectionState = connectionStateFlow.first()
 
         return NetworkCallStatus.create(connectionState) {
-            messageDeliveryRepository.deleteMessage(body)
+            messageDeliveryRepository.sendMessage(message, url)
         }
     }
 
-    suspend fun sendMessage(message: OutgoingMessageDto): NetworkCallStatus<Unit> {
-        val connectionState = connectionStateFlow.first()
-
-        return NetworkCallStatus.create(connectionState) {
-            messageDeliveryRepository.sendMessage(message)
-        }
-    }
-
-    suspend fun shareProfile(shareProfileModel: ShareProfileModel): NetworkCallStatus<String?> {
+    suspend fun shareProfile(shareProfileModel: ShareProfileModel): NetworkCallStatus<List<Pair<ServerUrlModel, String?>>> {
         val connectionState = connectionStateFlow.first()
 
         return NetworkCallStatus.create(connectionState) {
@@ -54,7 +55,7 @@ class NetworkRepository @Inject constructor(
         }
     }
 
-    suspend fun getSharedProfile(shareLink: String): NetworkCallStatus<ShareProfileModel?> {
+    suspend fun getSharedProfile(shareLink: String): NetworkCallStatus<Pair<ServerUrlModel?, ShareProfileModel?>> {
         val connectionState = connectionStateFlow.first()
 
         return NetworkCallStatus.create(connectionState) {

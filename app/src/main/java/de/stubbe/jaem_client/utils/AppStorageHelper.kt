@@ -5,12 +5,12 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
-import android.provider.OpenableColumns
 import de.stubbe.jaem_client.data.SEPARATOR_BYTE
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.tika.Tika
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 
 object AppStorageHelper {
 
@@ -49,7 +49,7 @@ object AppStorageHelper {
             }
         }
 
-        val contentBytes = nameAndContentBytes.copyOfRange(36, nameAndContentBytes.size)
+        val contentBytes = nameAndContentBytes.copyOfRange(separatorIndex, nameAndContentBytes.size)
 
         return try {
             val uri = context.contentResolver.insert(collection, contentValues) ?: return null
@@ -63,23 +63,13 @@ object AppStorageHelper {
         }
     }
 
-    suspend fun copyUriToAppStorage(uri: Uri, context: Context): File? {
-        val contentResolver = context.contentResolver
+    suspend fun copyUriToAppStorage(nameAndContentBytes: ByteArray, context: Context): File? {
+        val tika = Tika()
 
-        // Datei-Details abrufen (Name und Erweiterung)
-        val cursor = contentResolver.query(uri, null, null, null, null)
-        var fileName: String? = null
+        val separatorIndex = nameAndContentBytes.indexOf(SEPARATOR_BYTE)
+        val fileName = String(nameAndContentBytes.copyOfRange(0, separatorIndex)).trim()
 
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (nameIndex != -1) {
-                    fileName = it.getString(nameIndex)
-                }
-            }
-        }
-
-        val mimeType = contentResolver.getType(uri) ?: return null
+        val mimeType = tika.detect(nameAndContentBytes)
 
         val fileDir = when {
             mimeType.startsWith("image/") -> "${context.getExternalFilesDir(null)}${File.separator}Images"
@@ -93,20 +83,19 @@ object AppStorageHelper {
             dir.mkdirs()
         }
 
-        if (fileName == null) return null
+        val contentBytes = nameAndContentBytes.copyOfRange(separatorIndex, nameAndContentBytes.size)
 
-        return try {
-            val inputStream: InputStream? = contentResolver.openInputStream(uri)
-            inputStream?.use { stream ->
-                val outputFile = File(fileDir, fileName!!)
+        return withContext(Dispatchers.IO) {
+            try {
+                val outputFile = File(fileDir, fileName)
                 FileOutputStream(outputFile).use { output ->
-                    stream.copyTo(output)
+                    output.write(contentBytes)
                 }
                 outputFile
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
         }
     }
 

@@ -5,14 +5,17 @@ option java_multiple_files = true;
 
 message UserPreferences {
   enum Language {
-    ENGLISH = 0;
-    GERMAN = 1;
+    GERMAN = 0;
+    ENGLISH = 1;
+    Russian = 2;
+    Korean = 3;
   }
 
   enum Theme {
-    LIGHT = 0;
+    SYSTEM = 0;
     DARK = 1;
-    SYSTEM = 2;
+    LIGHT = 2;
+    CRYPTO = 3;
   }
 
   Language language = 1;
@@ -20,6 +23,22 @@ message UserPreferences {
 
   string userProfileUid = 3;
 
-  repeated string messageDeliveryUrls = 4;
-  repeated string udsUrls = 5;
+  repeated ServerUrlModel messageDeliveryUrls = 4;
+  repeated ServerUrlModel udsUrls = 5;
+
+  repeated CachedShareLinkModel cachedShareLinks = 6;
+
+  bool isInitialized = 7;
+}
+
+message CachedShareLinkModel {
+  string profileUid = 1;
+  uint64 timestamp = 2;
+  string sharedCode = 3;
+  ServerUrlModel serverUrl = 4;
+}
+
+message ServerUrlModel {
+  string name = 1;
+  string url = 2;
 }

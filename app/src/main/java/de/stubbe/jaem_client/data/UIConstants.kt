@@ -34,11 +34,11 @@ fun JAEMTextStyle(
 fun JAEMTextFieldColors() = TextFieldDefaults.colors(
     focusedTextColor = JAEMThemeProvider.current.textPrimary,
     unfocusedTextColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.8f),
-    disabledTextColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledTextColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorTextColor = JAEMThemeProvider.current.error,
     focusedContainerColor = Color.Transparent,
     unfocusedContainerColor = Color.Transparent,
-    disabledContainerColor = JAEMThemeProvider.current.primary.copy(alpha = 0.5f),
+    disabledContainerColor = JAEMThemeProvider.current.background.copy(alpha = 0.3f),
     errorContainerColor = JAEMThemeProvider.current.error,
     cursorColor = JAEMThemeProvider.current.accent,
     errorCursorColor = JAEMThemeProvider.current.error,
@@ -48,35 +48,35 @@ fun JAEMTextFieldColors() = TextFieldDefaults.colors(
     ),
     focusedIndicatorColor = JAEMThemeProvider.current.border,
     unfocusedIndicatorColor = JAEMThemeProvider.current.border,
-    disabledIndicatorColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledIndicatorColor = JAEMThemeProvider.current.border.copy(alpha = 0.5f),
     errorIndicatorColor = JAEMThemeProvider.current.error,
     focusedLeadingIconColor = JAEMThemeProvider.current.textPrimary,
     unfocusedLeadingIconColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.8f),
-    disabledLeadingIconColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledLeadingIconColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorLeadingIconColor = JAEMThemeProvider.current.error,
     focusedTrailingIconColor = JAEMThemeProvider.current.textPrimary,
     unfocusedTrailingIconColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.8f),
-    disabledTrailingIconColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledTrailingIconColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorTrailingIconColor = JAEMThemeProvider.current.error,
     focusedLabelColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.8f),
     unfocusedLabelColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
-    disabledLabelColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledLabelColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorLabelColor = JAEMThemeProvider.current.error,
     focusedPlaceholderColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.8f),
     unfocusedPlaceholderColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.6f),
-    disabledPlaceholderColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledPlaceholderColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorPlaceholderColor = JAEMThemeProvider.current.error,
     focusedSupportingTextColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.8f),
     unfocusedSupportingTextColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.6f),
-    disabledSupportingTextColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledSupportingTextColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorSupportingTextColor = JAEMThemeProvider.current.error,
     focusedPrefixColor = JAEMThemeProvider.current.textPrimary,
     unfocusedPrefixColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.8f),
-    disabledPrefixColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledPrefixColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorPrefixColor = JAEMThemeProvider.current.error,
     focusedSuffixColor = JAEMThemeProvider.current.textPrimary,
     unfocusedSuffixColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.8f),
-    disabledSuffixColor = JAEMThemeProvider.current.textPrimary.copy(alpha = 0.6f),
+    disabledSuffixColor = JAEMThemeProvider.current.textSecondary.copy(alpha = 0.5f),
     errorSuffixColor = JAEMThemeProvider.current.error
 )
 
@@ -103,13 +103,23 @@ val jaemPopExitHorizontally = slideOutHorizontally(
     animationSpec = tween(durationMillis = durationFastMillis)
 )
 
-val jaemEnterVertically = slideInVertically(
+val jaemEnterVerticallyFromBottom = slideInVertically(
     initialOffsetY = { fullHeight -> fullHeight },
     animationSpec = tween(durationMillis = durationFastMillis)
 )
 
-val jaemExitVertically = slideOutVertically(
+val jaemEnterVerticallyFromTop = slideInVertically(
+    initialOffsetY = { fullHeight -> -fullHeight },
+    animationSpec = tween(durationMillis = durationFastMillis)
+)
+
+val jaemExitVerticallyFromBottom = slideOutVertically(
     targetOffsetY = { fullHeight -> fullHeight },
+    animationSpec = tween(durationMillis = durationSlowMillis)
+)
+
+val jaemExitVerticallyFromTop = slideOutVertically(
+    targetOffsetY = { fullHeight -> -fullHeight },
     animationSpec = tween(durationMillis = durationSlowMillis)
 )
 

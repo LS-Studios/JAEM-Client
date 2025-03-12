@@ -19,7 +19,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.network.UDSUserDto
 import de.stubbe.jaem_client.utils.base64StringToByteArray
-import de.stubbe.jaem_client.utils.toBitmap
 import de.stubbe.jaem_client.view.components.ProfilePicture
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
@@ -27,7 +26,8 @@ import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 
 @Composable
 fun UDSUserRow(
-    udsUserDto: UDSUserDto
+    udsUserDto: UDSUserDto,
+    onClick: () -> Unit
 ) {
     Row(
         Modifier
@@ -37,7 +37,7 @@ fun UDSUserRow(
                     bounded = true
                 )
             ) {
-
+                onClick()
             }
             .padding(
                 horizontal = Dimensions.Padding.Medium,
@@ -53,7 +53,7 @@ fun UDSUserRow(
         ProfilePicture(
             modifier = Modifier
                 .size(Dimensions.Size.Medium),
-            profilePicture = udsUserDto.profilePicture?.base64StringToByteArray()?.toBitmap()
+            profilePicture = udsUserDto.profilePicture?.base64StringToByteArray()
         )
 
         // User name and description

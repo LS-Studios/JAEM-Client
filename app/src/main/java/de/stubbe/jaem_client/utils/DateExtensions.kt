@@ -2,13 +2,14 @@ package de.stubbe.jaem_client.utils
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Base64
 
 /**
  * Formatierung eines LocalDateTime zu einem String im Format "dd.MM.yyyy".
  */
 fun LocalDateTime.formatTime(): String {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val formatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
     return formatter.format(this)
 }
 

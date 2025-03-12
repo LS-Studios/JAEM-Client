@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +25,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import de.stubbe.jaem_client.R
+import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.enums.ServerListType
 import de.stubbe.jaem_client.network.NetworkConnectionState
 import de.stubbe.jaem_client.network.rememberConnectivityState
@@ -34,6 +34,7 @@ import de.stubbe.jaem_client.view.components.JAEMPullToRefresh
 import de.stubbe.jaem_client.view.components.LoadingOverlay
 import de.stubbe.jaem_client.view.components.NoItemsText
 import de.stubbe.jaem_client.view.components.dialogs.EditServerListDialog
+import de.stubbe.jaem_client.view.components.dialogs.UDSUserInfoDialog
 import de.stubbe.jaem_client.view.screens.ScreenBase
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
@@ -48,24 +49,19 @@ fun UDSScreen(
     navigationViewModel: NavigationViewModel
 ) {
     val context = LocalContext.current
-
     val coroutineScope = rememberCoroutineScope()
-
+    val connectivityState by rememberConnectivityState()
     val noInternetConnectionString = stringResource(id = R.string.no_internet_connection)
 
     val viewModel: UDSViewModel = hiltViewModel()
 
     val udsUsersPagingItems = viewModel.udsUsersPagingFlow.collectAsLazyPagingItems()
-
     val searchText by viewModel.searchText.collectAsState()
 
-    val pullToRefreshState = rememberPullToRefreshState()
-
     var editServerListDialogIsOpen by remember { mutableStateOf(false) }
-
     var isUpdatingAfterUrlChange by remember { mutableStateOf(false) }
 
-    val connectivityState by rememberConnectivityState()
+    val udsUserInfo by viewModel.udsUserInfo.collectAsState()
 
     LaunchedEffect(connectivityState) {
         if (connectivityState == NetworkConnectionState.Unavailable) {
@@ -93,7 +89,8 @@ fun UDSScreen(
                     editServerListDialogIsOpen = true
                 }
             )
-        }
+        },
+        scrollable = false
     ) {
         LoadingOverlay(isUpdatingAfterUrlChange) {
             JAEMPullToRefresh(
@@ -109,7 +106,9 @@ fun UDSScreen(
                     items(
                         count = udsUsersPagingItems.itemCount,
                         key = udsUsersPagingItems.itemKey { user -> user.id }) { index ->
-                        UDSUserRow(udsUserDto = udsUsersPagingItems[index]!!)
+                        UDSUserRow(udsUserDto = udsUsersPagingItems[index]!!) {
+                            viewModel.openUserInfoDialog(udsUsersPagingItems[index]!!)
+                        }
                     }
                     item {
                         if (udsUsersPagingItems.loadState.append is LoadState.Loading) {
@@ -151,6 +150,18 @@ fun UDSScreen(
                 editServerListDialogIsOpen = false
             },
             serverListType = ServerListType.USER_DISCOVERY
+        )
+    }
+
+    if (udsUserInfo != null) {
+        UDSUserInfoDialog(
+            profile = udsUserInfo!!,
+            startChatWithProfile = { profile ->
+                viewModel.startChatWithProfile(udsUserInfo!!, navigationViewModel)
+            },
+            onDismissRequest = {
+                viewModel.closeUserInfoDialog()
+            }
         )
     }
 

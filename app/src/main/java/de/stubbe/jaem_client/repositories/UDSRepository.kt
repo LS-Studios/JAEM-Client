@@ -8,16 +8,17 @@ import de.stubbe.jaem_client.data.pagination.UDSUserRemoteMediator
 import de.stubbe.jaem_client.database.JAEMDatabase
 import de.stubbe.jaem_client.model.network.UDSUserDto
 import de.stubbe.jaem_client.network.UDSApiService
+import de.stubbe.jaem_client.utils.splitResponse
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class UDSRepository @Inject constructor(
     private val jaemDatabase: JAEMDatabase,
     private val udsApiService: UDSApiService,
-    userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository
 ) {
 
-    private val udsUrlsFlow = userPreferencesRepository.getUdsUrlsFlow
+    private val udsUrlsFlow = userPreferencesRepository.udsUrlsFlow
 
 
     @OptIn(ExperimentalPagingApi::class)
@@ -42,12 +43,14 @@ class UDSRepository @Inject constructor(
     suspend fun getUserProfile(uid: String): UDSUserDto {
         val results = mutableListOf<UDSUserDto>()
 
-        udsUrlsFlow.first().forEach { url ->
-            val result = udsApiService.getUserProfile("$url/user_by_uid/$uid")
+        udsUrlsFlow.first().forEach { serverUrl ->
+            val result = udsApiService.getUserProfile("${serverUrl.url}/user_by_uid/$uid")
             if (result.isSuccessful) {
                 results.add(result.body()!!)
             }
         }
+
+        Log.d("UDSRepository", "User profile fetched successfully: $results")
 
         return results.first()
     }
@@ -55,10 +58,12 @@ class UDSRepository @Inject constructor(
     suspend fun getUsers(page: Int, pageSize: Int): List<UDSUserDto> {
         val results = mutableListOf<UDSUserDto>()
 
-        udsUrlsFlow.first().forEach { url ->
-            val result = udsApiService.getUsers("$url/users/$page/$pageSize")
+        udsUrlsFlow.first().forEach { serverUrl ->
+            val result = udsApiService.getUsers("${serverUrl.url}/users/$page/$pageSize")
             results.addAll(result)
         }
+
+        Log.d("UDSRepository", "Users fetched successfully: $results")
 
         return results
     }
@@ -66,28 +71,39 @@ class UDSRepository @Inject constructor(
     suspend fun findUsersByUsername(username: String, page: Int, pageSize: Int): List<UDSUserDto> {
         val results = mutableListOf<UDSUserDto>()
 
-        udsUrlsFlow.first().forEach { url ->
-            val result = udsApiService.findUsersByUsername("$url/search_users/$username/$page/$pageSize")
+        udsUrlsFlow.first().forEach { serverUrl ->
+            val result = udsApiService.findUsersByUsername("${serverUrl.name}/search_users/$username/$page/$pageSize")
             results.addAll(result)
         }
+
+        Log.d("UDSRepository", "Users found successfully: $results")
 
         return results
     }
 
     suspend fun joinService(url: String, udsUserDto: UDSUserDto): String {
-        val result = udsApiService.joinService("$url/create_user", udsUserDto)
+        val (response, error) = udsApiService.joinService("$url/create_user", udsUserDto).splitResponse()
 
-        Log.d("NetworkRepository", "Service joined successfully")
+        if (error == null) {
+            Log.d("NetworkRepository", "Service joined successfully")
+        } else {
+            Log.e("NetworkRepository", "Error while joining service ${url}: ${error.string()}")
+        }
 
-        return String(result.body()!!.bytes())
+
+        return String(response!!.bytes())
     }
 
     suspend fun leaveService(url: String, uid: String): Boolean {
-        val result = udsApiService.leaveService("$url/user/$uid")
+        val (_, error) = udsApiService.leaveService("$url/user/$uid").splitResponse()
 
-        Log.d("NetworkRepository", "Service left successfully")
-
-        return result.isSuccessful
+        if (error == null) {
+            Log.d("NetworkRepository", "Service left successfully")
+            return true
+        } else {
+            Log.e("NetworkRepository", "Error while leaving service ${url}: ${error.string()}")
+            return false
+        }
     }
 
 }

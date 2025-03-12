@@ -8,9 +8,11 @@ class ProfileRepository @Inject constructor(
     private val profileDao: ProfileDao
 ) {
 
+    suspend fun getProfileById(id: Long) = profileDao.getProfileById(id)
+
     suspend fun getProfileByUid(uid: String) = profileDao.getProfileByUid(uid)
 
-    fun getProfileByUidWithChange(uid: String) = profileDao.getProfileByUidWithChange(uid)
+    fun getProfileByUidFlow(uid: String) = profileDao.getProfileByUidWithChange(uid)
 
     fun getAllProfiles() = profileDao.getAllProfiles()
 

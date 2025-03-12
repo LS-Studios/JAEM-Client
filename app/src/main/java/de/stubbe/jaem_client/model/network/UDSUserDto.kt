@@ -34,9 +34,9 @@ data class UDSUserDto(
                 listOf(
                     PublicKeyDto(
                         client.encryption,
-                        String(client.ed25519PublicKey!!.encoded),
-                        String(client.x25519PublicKey!!.encoded),
-                        String(client.rsaPublicKey!!.encoded)
+                       client.ed25519PublicKey!!.encoded.toBase64String(),
+                       client.x25519PublicKey!!.encoded.toBase64String(),
+                       client.rsaPublicKey!!.encoded.toBase64String()
                     )
                 ),
                 profile.profilePicture?.toBase64String(),

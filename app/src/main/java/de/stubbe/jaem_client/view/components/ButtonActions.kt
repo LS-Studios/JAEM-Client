@@ -101,7 +101,7 @@ fun ButtonActions(
                 Column(
                     modifier = Modifier
                         .animateContentSize(),
-                    verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small),
+                    verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small),
                     horizontalAlignment = alignment
                 ) {
                     action.subActions.forEachIndexed { index, subAction ->
@@ -136,7 +136,7 @@ fun ButtonActions(
                     Column(
                         modifier = Modifier
                             .align(action.alignment),
-                        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small),
+                        verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small),
                         horizontalAlignment = action.alignment.horizontal()
                     ) {
                         getSubActionButtons(true, action.alignment.horizontal())
@@ -161,7 +161,7 @@ fun ButtonActions(
                         modifier = Modifier
                             .align(action.alignment)
                             .animateContentSize(),
-                        verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small),
+                        verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small),
                         horizontalAlignment = action.alignment.horizontal()
                     ) {
                         ActionButton(
@@ -223,7 +223,7 @@ private fun ActionButton(
                 )
                 .then(modifier)
         },
-        horizontalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
         when (alignment) {

@@ -172,7 +172,8 @@ fun ChatScreen(
                     viewModel.deleteSelectedMessages()
                 }
             )
-        }
+        },
+        scrollable = false
     ) {
         Column {
             // Nachrichten
@@ -183,7 +184,7 @@ fun ChatScreen(
                         vertical = Dimensions.Padding.Small,
                     ),
                 state = listState,
-                verticalArrangement = Arrangement.spacedBy(Dimensions.Padding.Small)
+                verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Small)
             ) {
                 itemsIndexed(oldMessages) { index, message ->
                     val firstMessageOfBlock = when {
@@ -280,7 +281,7 @@ fun ChatScreen(
             onDismiss = {
                 viewModel.closeAttachmentPicker()
             },
-            selected = { type, uris ->
+            selected = { type, bytes ->
                 viewModel.changeAttachment(null)
                 coroutineScope.launch {
                     viewModel.changeAttachment(
@@ -289,7 +290,7 @@ fun ChatScreen(
                                 JAEMFileType.STORAGE -> AttachmentType.FILE
                                 else -> AttachmentType.IMAGE_AND_VIDEO
                             },
-                            attachmentPaths = uris.mapNotNull { AppStorageHelper.copyUriToAppStorage(it, context)?.absolutePath }
+                            attachmentPaths = bytes.mapNotNull { AppStorageHelper.copyUriToAppStorage(it, context)?.absolutePath }
                         )
                     )
                 }

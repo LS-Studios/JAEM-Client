@@ -212,7 +212,7 @@ fun ChatTopBar(
                                         }
 
                                         // Navigate to the profile screen
-                                        navigationViewModel.changeScreen(
+                                        navigationViewModel.navigateTo(
                                             NavRoute.Profile
                                         )
                                     },

@@ -20,6 +20,7 @@ import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
+import de.stubbe.jaem_client.utils.getUnixTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -118,7 +119,7 @@ class ChatViewModel @Inject constructor(
             newMessages.forEach { message ->
                 messageRepository.updateMessage(
                     message.copy(
-                        deliveryTime = System.currentTimeMillis()
+                        deliveryTime = getUnixTime()
                     )
                 )
             }
@@ -138,26 +139,28 @@ class ChatViewModel @Inject constructor(
                 chatId = chatScreenArguments.chatId,
                 stringContent = newMessageString.value,
                 attachments = newAttachments.value,
-                sendTime = System.currentTimeMillis(),
+                sendTime = getUnixTime(),
                 deliveryTime = null
             )
 
             messageRepository.insertMessage(newMessage)
 
-            networkRepository.sendMessage(
-               OutgoingMessageDto.create(
-                   EncryptionContext(
-                       localClient = deviceClientFlow.first(),
-                       remoteClient = remoteClientFlow.first(),
-                       encryptionAlgorithm = SymmetricEncryption.ED25519
-                   ),
-                   MessagePartDto.createMessageParts(
-                       newMessage.uid,
-                       newMessage.stringContent!!,
-                       newMessage.attachments
-                   )
-               )
-            )
+            if (chatScreenArguments.profileUid != userProfileUid.value) {
+                networkRepository.sendMessage(
+                    OutgoingMessageDto.create(
+                        EncryptionContext(
+                            localClient = deviceClientFlow.first(),
+                            remoteClient = remoteClientFlow.first(),
+                            encryptionAlgorithm = SymmetricEncryption.ED25519
+                        ),
+                        MessagePartDto.createMessageParts(
+                            newMessage.uid,
+                            newMessage.stringContent!!,
+                            newMessage.attachments
+                        )
+                    )
+                )
+            }
 
             newMessageString.value = ""
             newAttachments.value = null
@@ -179,7 +182,7 @@ class ChatViewModel @Inject constructor(
                             remoteClient = remoteClientFlow.first(),
                             encryptionAlgorithm = SymmetricEncryption.ED25519
                         ),
-                        messagePart = listOf(
+                        messageParts = listOf(
                             message.uid.toByteArray().let { uidByteToDelete ->
                                 MessagePartDto(
                                     ContentMessageType.NONE,

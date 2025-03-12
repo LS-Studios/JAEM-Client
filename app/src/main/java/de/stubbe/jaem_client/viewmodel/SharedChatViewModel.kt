@@ -13,7 +13,6 @@ import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
-import de.stubbe.jaem_client.utils.toBitmap
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -33,7 +32,7 @@ class SharedChatViewModel @Inject constructor(
     private val chatFlow = chatRepository.getAllChats()
     private val messageFlow = messageRepository.getAllMessages()
     private val profilesFlow = profileRepository.getAllProfiles()
-    private val profileFlow = profileRepository.getProfileByUidWithChange(chatScreenArguments.profileUid)
+    private val profileFlow = profileRepository.getProfileByUidFlow(chatScreenArguments.profileUid)
     private val clientFlow = encryptionKeyRepository.getClientFlow(chatScreenArguments.profileUid)
 
     val chat = combine(
@@ -43,16 +42,21 @@ class SharedChatViewModel @Inject constructor(
 
         val chatPartner = profiles.find { it.uid == chat.chatPartnerUid } ?: return@combine null
 
-        val unreadMessages = messages
-            .filter { it.chatId == chat.id && it.deliveryTime == null && it.senderUid == chatPartner.uid }
+        val chatMessages = messages.filter { it.chatId == chat.id }
+
+        val unreadMessages = chatMessages
+            .filter { it.deliveryTime == null && it.senderUid == chatPartner.uid }
             .sortedBy { it.sendTime }
 
+        val lastMessage = chatMessages
+            .maxByOrNull { it.sendTime }
+
         ChatPresentationModel(
-            profilePicture = chatPartner.profilePicture?.toBitmap(),
+            profilePicture = chatPartner.profilePicture,
             name = chatPartner.name,
-            lastMessage = messages.lastOrNull(),
+            lastMessage = lastMessage,
             unreadMessages = unreadMessages,
-            streak = 1,
+            streak = ChatPresentationModel.calculateStreak(chatMessages),
             chat = chat
         )
     }.stateIn(
@@ -64,11 +68,11 @@ class SharedChatViewModel @Inject constructor(
     val profile = combine(
         profileFlow, clientFlow
     ) { profile, client ->
-        if (client == null) return@combine null
+        if (client == null || profile == null) return@combine null
 
         ProfilePresentationModel(
             name = profile.name,
-            profilePicture = profile.profilePicture?.toBitmap(),
+            profilePicture = profile.profilePicture,
             description = profile.description,
             client = client,
             profile = profile

@@ -13,7 +13,8 @@ object Dimensions {
         val Small = 8.dp
         val Medium = 16.dp
         val Large = 24.dp
-        val Huge = 64.dp
+        val Huge = 32.dp
+        val SuperHuge = 64.dp
         val TopBar = PaddingValues(
             top = Tiny,
             start = Small,

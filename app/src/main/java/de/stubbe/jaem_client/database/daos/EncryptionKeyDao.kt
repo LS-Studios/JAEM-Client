@@ -17,4 +17,7 @@ abstract class EncryptionKeyDao: BaseDao<EncryptionKeyEntity> {
     @Query("SELECT * FROM encryption_keys WHERE profile_uid = :profileUid")
     abstract suspend fun getKeysFromProfile(profileUid: Int): List<EncryptionKeyEntity>
 
+    @Query("DELETE FROM encryption_keys")
+    abstract fun clearAll()
+
 }

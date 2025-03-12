@@ -11,13 +11,19 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 abstract class ProfileDao: BaseDao<ProfileEntity> {
 
+    @Query("SELECT * FROM profiles WHERE id = :id")
+    abstract suspend fun getProfileById(id: Long): ProfileEntity?
+
     @Query("SELECT * FROM profiles WHERE uid = :uid")
     abstract suspend fun getProfileByUid(uid: String): ProfileEntity?
 
     @Query("SELECT * FROM profiles WHERE uid = :uid")
-    abstract fun getProfileByUidWithChange(uid: String): Flow<ProfileEntity>
+    abstract fun getProfileByUidWithChange(uid: String): Flow<ProfileEntity?>
 
     @Query("SELECT * FROM profiles")
     abstract fun getAllProfiles(): Flow<List<ProfileEntity>>
+
+    @Query("DELETE FROM profiles")
+    abstract fun clearAll()
 
 }

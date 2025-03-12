@@ -8,20 +8,22 @@ import de.stubbe.jaem_client.database.entries.EncryptionKeyEntity
 import de.stubbe.jaem_client.database.entries.ProfileEntity
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.model.enums.KeyType
+import de.stubbe.jaem_client.model.network.UDSUserDto
 import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
+import de.stubbe.jaem_client.utils.base64StringToByteArray
+import de.stubbe.jaem_client.utils.getUnixTime
 import de.stubbe.jaem_client.utils.toByteArray
-import de.stubbe.jaem_client.utils.toEpochSeconds
 import de.stubbe.jaem_client.utils.toInt
 import de.stubbe.jaem_client.utils.toLong
-import java.time.LocalDateTime
 
 data class ShareProfileModel(
     val uid: String,
     val name: String,
     val profilePicture: ByteArray?,
     val description: String,
+    val allowProfileSharing: Boolean = true,
     val keys: List<EncryptionKeyEntity>,
     val timestamp: Long
 ) {
@@ -30,9 +32,10 @@ data class ShareProfileModel(
         val nameBytes = name.length.toByteArray() + name.toByteArray()
         val profilePictureBytes = profilePicture?.let { it.size.toByteArray() + profilePicture } ?: byteArrayOf(0)
         val descriptionBytes = description.length.toByteArray() + description.toByteArray()
+        val allowProfileSharingBytes = byteArrayOf(if (allowProfileSharing) 1 else 0)
         val keyBytes = keys.fold(ByteArray(0)) { acc, key -> acc + key.key.size.toByteArray() + key.key }
         val timestamp = timestamp.toByteArray()
-        return uid.toByteArray() + nameBytes + profilePictureBytes + descriptionBytes + keyBytes + timestamp
+        return uid.toByteArray() + nameBytes + profilePictureBytes + descriptionBytes + allowProfileSharingBytes + keyBytes + timestamp
     }
 
     companion object {
@@ -42,13 +45,14 @@ data class ShareProfileModel(
             encryptionKeyRepository: EncryptionKeyRepository,
             chatRepository: ChatRepository,
             deviceClient: ED25519Client
-        ) {
+        ): Long {
             val newProfile = ProfileEntity(
                 id = 0,
                 uid = sharedProfile.uid,
                 profilePicture = sharedProfile.profilePicture,
                 name = sharedProfile.name,
-                description = sharedProfile.description
+                description = sharedProfile.description,
+                allowProfileSharing = sharedProfile.allowProfileSharing
             )
 
             profileRepository.insertProfile(newProfile)
@@ -57,7 +61,7 @@ data class ShareProfileModel(
                 sharedProfile.keys
             )
 
-            chatRepository.insertChat(
+            return chatRepository.insertChat(
                 ChatEntity(
                     id = 0,
                     profileUid = deviceClient.profileUid!!,
@@ -73,7 +77,7 @@ data class ShareProfileModel(
                 profilePicture = profile.profilePicture,
                 description = profile.description,
                 keys = keys,
-                timestamp = LocalDateTime.now().toEpochSeconds()
+                timestamp = getUnixTime()
             )
         }
 
@@ -84,10 +88,40 @@ data class ShareProfileModel(
             return ShareProfileModel(
                 uid = profile.profile.uid,
                 name = profile.name,
-                profilePicture = profile.profilePicture?.toByteArray(),
+                profilePicture = profile.profilePicture,
                 description = profile.description,
                 keys = keys,
-                timestamp = LocalDateTime.now().toEpochSeconds()
+                timestamp = getUnixTime()
+            )
+        }
+
+        fun fromUDSUserDto(udsUserDto: UDSUserDto): ShareProfileModel {
+            return ShareProfileModel(
+                uid = udsUserDto.uid,
+                name = udsUserDto.username,
+                profilePicture = udsUserDto.profilePicture?.base64StringToByteArray(),
+                description = udsUserDto.description ?: "",
+                allowProfileSharing = true,
+                keys = udsUserDto.publicKeys.map { publicKey ->
+                    listOf(
+                        EncryptionKeyEntity(
+                            key = publicKey.signatureKey.base64StringToByteArray(),
+                            type = KeyType.PUBLIC_ED25519,
+                            profileUid = udsUserDto.uid
+                        ),
+                        EncryptionKeyEntity(
+                            key = publicKey.exchangeKey.base64StringToByteArray(),
+                            type = KeyType.PUBLIC_X25519,
+                            profileUid = udsUserDto.uid
+                        ),
+                        EncryptionKeyEntity(
+                            key = publicKey.rsaKey.base64StringToByteArray(),
+                            type = KeyType.PUBLIC_RSA,
+                            profileUid = udsUserDto.uid
+                        )
+                    )
+                }.reduce({ acc, list -> acc + list }),
+                timestamp = getUnixTime()
             )
         }
 
@@ -107,6 +141,8 @@ data class ShareProfileModel(
             offset += INT_BYTES
             val description = String(byteArray.copyOfRange(offset, offset + descriptionSize))
             offset += descriptionSize
+            val allowProfileSharing = byteArray[offset] == 1.toByte()
+            offset++
             val keys = mutableListOf<EncryptionKeyEntity>()
             while (keys.size < 3 && offset < byteArray.size) {
                 val keySize = byteArray.copyOfRange(offset, offset + INT_BYTES).toInt()
@@ -126,7 +162,7 @@ data class ShareProfileModel(
                 ))
             }
             val timestamp = byteArray.copyOfRange(offset, offset + TIMESTAMP_LENGTH).toLong()
-            return ShareProfileModel(uid, name, profilePicture, description, keys, timestamp)
+            return ShareProfileModel(uid, name, profilePicture, description, allowProfileSharing, keys, timestamp)
         }
     }
 

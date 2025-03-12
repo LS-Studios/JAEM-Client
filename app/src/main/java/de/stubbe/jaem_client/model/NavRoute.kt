@@ -8,10 +8,13 @@ import kotlinx.serialization.Serializable
 sealed class NavRoute {
 
     @Serializable
-    data object DeviceClientSetup : NavRoute()
+    data object InitDevice : NavRoute()
 
     @Serializable
     data object UDS: NavRoute()
+
+    @Serializable
+    data object Settings : NavRoute()
 
     @Serializable
     data object ChatOverview : NavRoute()

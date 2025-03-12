@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,9 @@ import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.viewmodel.ChatOverviewViewModel
 import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 import de.stubbe.jaem_client.viewmodel.ShareProfileViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Bildschirm für die Chat Übersicht
@@ -56,12 +60,23 @@ fun ChatOverviewScreen(
         it.name.contains(searchValue, ignoreCase = true)
     } }
 
-    ScreenBase(
-        topBar = {
-            ChatOverviewTopBar(searchValue) {
-                searchValue = it
+    LaunchedEffect(Unit) {
+        launch {
+            if (!viewModel.isDeviceInitialized()) {
+                withContext(Dispatchers.Main) {
+                    navigationViewModel.navigateTo(NavRoute.InitDevice)
+                }
             }
         }
+    }
+
+    ScreenBase(
+        topBar = {
+            ChatOverviewTopBar(navigationViewModel, searchValue) {
+                searchValue = it
+            }
+        },
+        scrollable = false
     ) {
         Column {
             LazyColumn(
@@ -101,7 +116,7 @@ fun ChatOverviewScreen(
                                 contentDescription = stringResource(R.string.edit_profile),
                             ) {
                                 if (userProfile != null) {
-                                    navigationViewModel.changeScreen(
+                                    navigationViewModel.navigateTo(
                                         NavRoute.EditProfile(
                                             userProfile!!.profile.uid,
                                             null
@@ -114,7 +129,7 @@ fun ChatOverviewScreen(
                                 icon = Icons.Default.Search,
                                 contentDescription = stringResource(R.string.search_for_profile),
                             ) {
-                                navigationViewModel.changeScreen(NavRoute.UDS)
+                                navigationViewModel.navigateTo(NavRoute.UDS)
                             }
                         ),
                         onClick = {
@@ -138,7 +153,7 @@ fun ChatOverviewScreen(
                                 icon = Icons.Default.Search,
                                 contentDescription = stringResource(R.string.from_server),
                             ) {
-
+                                navigationViewModel.navigateTo(NavRoute.UDS)
                             },
                         ),
                         onClick = {
@@ -156,7 +171,7 @@ fun ChatOverviewScreen(
                 getSharedCodeDialogIsOpen = false
             },
             onSubmit = { sharedCode ->
-                navigationViewModel.changeScreen(NavRoute.EditProfile(null, sharedCode))
+                navigationViewModel.navigateTo(NavRoute.EditProfile(null, sharedCode))
             }
         )
     }

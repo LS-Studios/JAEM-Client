@@ -3,7 +3,6 @@ package de.stubbe.jaem_client.view.screens.chatinfo
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -35,6 +33,7 @@ import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.entries.ProfilePresentationModel
 import de.stubbe.jaem_client.view.components.Divider
+import de.stubbe.jaem_client.view.components.JAEMButton
 import de.stubbe.jaem_client.view.components.LoadingIfNull
 import de.stubbe.jaem_client.view.components.ShareProfileBottomSheet
 import de.stubbe.jaem_client.view.screens.ScreenBase
@@ -76,32 +75,32 @@ fun ChatInfoScreen(
                 .padding(top = Dimensions.Padding.Medium),
             verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium)
         ) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimensions.Padding.Medium),
-                text = chat?.name ?: "",
-                style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
-                    textAlign = TextAlign.Center
-                )
-            )
-
-            ProfileMainActions(
-                onShareClick = {
-                    if (profile != null) {
-                        shareProfileViewModel.openShareProfileBottomSheet(profile!!)
-                    }
-                },
-                onSearchClick = {
-                    navigationViewModel.goBack<NavRoute.ChatMessages> {
-                        copy(searchEnabled = true)
-                    }
-                }
-            )
-
-            Divider()
-
             LoadingIfNull(profile) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimensions.Padding.Medium),
+                    text = chat?.name ?: "",
+                    style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
+                        textAlign = TextAlign.Center
+                    )
+                )
+
+                ProfileMainActions(
+                    onShareClick = {
+                        if (profile != null) {
+                            shareProfileViewModel.openShareProfileBottomSheet(profile!!)
+                        }
+                    },
+                    onSearchClick = {
+                        navigationViewModel.goBack<NavRoute.ChatMessages> {
+                            copy(searchEnabled = true)
+                        }
+                    }
+                )
+
+                Divider()
+
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -162,38 +161,17 @@ private fun RowScope.ProfileMainActionButton(
     text: String,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
+    JAEMButton(
         modifier = Modifier
             .weight(1f)
             .padding(
                 horizontal = Dimensions.Padding.Medium,
                 vertical = Dimensions.Padding.Small
             ),
-        colors = ButtonDefaults.buttonColors().copy(
-            containerColor = JAEMThemeProvider.current.background
-        ),
-        shape = Dimensions.Shape.Rounded.Small,
-        border = BorderStroke(
-            width = Dimensions.Border.ThinBorder,
-            color = JAEMThemeProvider.current.border
-        )
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Tiny),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = text,
-                tint = JAEMThemeProvider.current.textPrimary
-            )
-            Text(
-                text = text,
-                style = JAEMTextStyle(MaterialTheme.typography.bodyMedium)
-            )
-        }
-    }
+        text = text,
+        icon = icon,
+        onClick = onClick
+    )
 }
 
 @Composable

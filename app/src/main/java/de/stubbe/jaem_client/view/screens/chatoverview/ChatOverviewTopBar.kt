@@ -12,12 +12,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.JAEMTextStyle
+import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.view.screens.chat.SearchTopBar
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 import de.stubbe.jaem_client.view.variables.RaviPrakash
+import de.stubbe.jaem_client.viewmodel.NavigationViewModel
 
 @Composable
 fun ChatOverviewTopBar(
+    navigationViewModel: NavigationViewModel,
     searchText: String,
     onSearchTextChange: (String) -> Unit,
 ) {
@@ -26,7 +29,6 @@ fun ChatOverviewTopBar(
         searchText = searchText,
         onSearchTextChange = onSearchTextChange,
         title = {
-            // Name der App
             Text(
                 modifier = Modifier
                     .graphicsLayer {
@@ -37,9 +39,8 @@ fun ChatOverviewTopBar(
             )
         },
         extraActions = {
-            // Einstellungen-Action
             IconButton(onClick = {
-
+                navigationViewModel.navigateTo(NavRoute.Settings)
             }) {
                 Icon(
                     Icons.Default.Settings,

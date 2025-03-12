@@ -5,27 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import de.stubbe.jaem_client.database.entries.EncryptionKeyEntity
-import de.stubbe.jaem_client.model.ED25519Client
+import de.stubbe.jaem_client.datastore.ServerUrlModel
 import de.stubbe.jaem_client.model.NavRoute
 import de.stubbe.jaem_client.model.ShareProfileModel
-import de.stubbe.jaem_client.model.encryption.EncryptionContext
-import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
-import de.stubbe.jaem_client.model.enums.KeyType
 import de.stubbe.jaem_client.model.enums.NetworkCallStatusType
-import de.stubbe.jaem_client.model.network.OutgoingMessageDto
 import de.stubbe.jaem_client.repositories.NetworkRepository
 import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
-import de.stubbe.jaem_client.utils.toEd25519PublicKey
-import de.stubbe.jaem_client.utils.toRSAPublicKey
-import de.stubbe.jaem_client.utils.toX25519PublicKey
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,7 +33,7 @@ class EditProfileViewModel @Inject constructor(
 
     private val editProfileArguments = savedStateHandle.toRoute<NavRoute.EditProfile>()
 
-    private val profileFlow = editProfileArguments.profileUid?.let { profileRepository.getProfileByUidWithChange(it) }
+    private val profileFlow = editProfileArguments.profileUid?.let { profileRepository.getProfileByUidFlow(it) }
 
     val createProfile = editProfileArguments.profileUid == null
 
@@ -49,6 +43,7 @@ class EditProfileViewModel @Inject constructor(
 
     val fetchingProfile: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
+    private val serverUrlOfSharedProfile: MutableStateFlow<ServerUrlModel?> = MutableStateFlow(null)
     private val sharedProfile: MutableStateFlow<ShareProfileModel?> = MutableStateFlow(null)
 
     val profilePicture: MutableStateFlow<ByteArray?> = MutableStateFlow(null)
@@ -60,19 +55,19 @@ class EditProfileViewModel @Inject constructor(
     val deviceClientFlow = encryptionKeyRepository.getClientFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             fetchingProfile.value = true
 
             profileFlow?.onEach { profile ->
-                profilePicture.value = profile.profilePicture
-                profileName.value = profile.name
-                profileDescription.value = profile.description
+                profilePicture.value = profile?.profilePicture
+                profileName.value = profile?.name ?: ""
+                profileDescription.value = profile?.description ?: ""
             }?.launchIn(this)
 
             if (createProfile) {
                 networkRepository.getSharedProfile(editProfileArguments.sharedCode!!).let { profileCall ->
                     val profile = when (profileCall.status) {
-                        NetworkCallStatusType.SUCCESS -> profileCall.response
+                        NetworkCallStatusType.SUCCESS -> profileCall.response?.second
                         NetworkCallStatusType.NO_INTERNET -> {
                             noInternetConnection.value = true
                             return@let
@@ -95,6 +90,7 @@ class EditProfileViewModel @Inject constructor(
                         return@let
                     }
 
+                    serverUrlOfSharedProfile.value = profileCall.response?.first
                     sharedProfile.value = profile
 
                     profilePicture.value = profile.profilePicture
@@ -118,65 +114,29 @@ class EditProfileViewModel @Inject constructor(
         profileDescription.value = description
     }
 
-    fun updateProfile() {
-        viewModelScope.launch {
-            if (!createProfile) {
+    fun updateProfile(navigationViewModel: NavigationViewModel) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (!createProfile && profileFlow!!.first() != null) {
                 profileRepository.updateProfile(
-                    profileFlow!!.first().copy(
+                    profileFlow.first()!!.copy(
                         profilePicture = profilePicture.value,
                         name = profileName.value,
                         description = profileDescription.value
                     )
                 )
             } else if (sharedProfile.value != null){
-                val deviceClient = deviceClientFlow.first()!!
+                val keyExchangeCall = networkRepository.doKeyExchange(sharedProfile.value!!, serverUrlOfSharedProfile.value)
 
-                sharedProfile.value!!.let { sharedProfile ->
-                    ShareProfileModel.addSharedProfileToDB(
-                        sharedProfile,
-                        profileRepository,
-                        encryptionKeyRepository,
-                        chatRepository,
-                        deviceClient
-                    )
-
-                    val deviceProfile = profileRepository.getProfileByUid(deviceClient.profileUid!!)!!
-                    val deviceSharedProfile = ShareProfileModel.fromProfileModel(deviceProfile, listOf(
-                        EncryptionKeyEntity(
-                            id = 0,
-                            key = deviceClient.ed25519PublicKey!!.encoded,
-                            type = KeyType.PUBLIC_ED25519,
-                            profileUid = deviceProfile.uid,
-                        ),
-                        EncryptionKeyEntity(
-                            id = 0,
-                            key = deviceClient.x25519PublicKey!!.encoded,
-                            type = KeyType.PUBLIC_X25519,
-                            profileUid = deviceProfile.uid,
-                        ),
-                        EncryptionKeyEntity(
-                            id = 0,
-                            key = deviceClient.rsaPublicKey!!.encoded,
-                            type = KeyType.PUBLIC_RSA,
-                            profileUid = deviceProfile.uid,
+                if (keyExchangeCall.status == NetworkCallStatusType.SUCCESS) {
+                    withContext(Dispatchers.Main) {
+                        navigationViewModel.navigateTo(
+                            NavRoute.ChatMessages(
+                                sharedProfile.value!!.uid,
+                                keyExchangeCall.response!!.toInt(),
+                                false
+                            )
                         )
-                    ))
-
-                    networkRepository.sendMessage(
-                        OutgoingMessageDto.createKeyExchange(
-                            EncryptionContext(
-                                localClient = deviceClient,
-                                remoteClient = ED25519Client(
-                                    profileUid = sharedProfile.uid,
-                                    ed25519PublicKey = sharedProfile.keys[0].key.toEd25519PublicKey(),
-                                    x25519PublicKey = sharedProfile.keys[1].key.toX25519PublicKey(),
-                                    rsaPublicKey = sharedProfile.keys[2].key.toRSAPublicKey(),
-                                ),
-                                encryptionAlgorithm = SymmetricEncryption.ED25519
-                            ),
-                            deviceSharedProfile.toByteArray()
-                        )
-                    )
+                    }
                 }
             }
         }

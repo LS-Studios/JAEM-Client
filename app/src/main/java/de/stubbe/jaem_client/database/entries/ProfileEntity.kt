@@ -21,6 +21,7 @@ data class ProfileEntity(
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
     val profilePicture: ByteArray?,
     val description: String,
+    val allowProfileSharing: Boolean
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -33,6 +34,7 @@ data class ProfileEntity(
         if (name != other.name) return false
         if (!profilePicture.contentEquals(other.profilePicture)) return false
         if (description != other.description) return false
+        if (allowProfileSharing != other.allowProfileSharing) return false
 
         return true
     }
@@ -43,6 +45,7 @@ data class ProfileEntity(
         result = 31 * result + name.hashCode()
         result = 31 * result + profilePicture.contentHashCode()
         result = 31 * result + description.hashCode()
+        result = 31 * result + allowProfileSharing.hashCode()
         return result
     }
 }

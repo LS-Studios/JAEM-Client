@@ -1,7 +1,11 @@
 package de.stubbe.jaem_client.utils
 
+import android.app.LocaleManager
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.os.Build
+import android.os.LocaleList
 import android.view.ViewTreeObserver
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -34,6 +38,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
+import de.stubbe.jaem_client.datastore.UserPreferences.Language
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.InputStream
@@ -214,5 +219,30 @@ fun OnResume(callBack: () -> Unit) {
 fun OnPause(callBack: () -> Unit) {
     OnLifecycleEvent { owner, event ->
         if (event == Lifecycle.Event.ON_PAUSE) callBack()
+    }
+}
+
+fun changeAppLanguage(context: Context, language: Language) {
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+        context.getSystemService(LocaleManager::class.java)
+            .applicationLocales = LocaleList.forLanguageTags(
+            when (language) {
+                Language.GERMAN -> "de"
+                Language.ENGLISH -> "en"
+                Language.Russian -> "ru"
+                Language.Korean -> "ko"
+                else -> "en"
+            }
+        )
+    } else {
+        context.resources.configuration.setLocale(
+            when (language) {
+                Language.GERMAN -> java.util.Locale.GERMAN
+                Language.ENGLISH -> java.util.Locale.ENGLISH
+                Language.Russian -> java.util.Locale("ru")
+                Language.Korean -> java.util.Locale.KOREAN
+                else -> java.util.Locale.ENGLISH
+            }
+        )
     }
 }

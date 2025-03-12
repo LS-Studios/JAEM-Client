@@ -1,10 +1,12 @@
 package de.stubbe.jaem_client.view
 
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import de.stubbe.jaem_client.R
-import de.stubbe.jaem_client.datastore.UserPreferences
 import de.stubbe.jaem_client.view.screens.Navigation
 import de.stubbe.jaem_client.view.variables.JAEMTheme
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -47,8 +49,6 @@ class MainActivity : ComponentActivity() {
             val connectionErrorString = stringResource(id = R.string.connection_error)
 
             LaunchedEffect(Unit) {
-                viewModel.updateTheme(UserPreferences.Theme.DARK)
-
                 val scheduler = Executors.newScheduledThreadPool(1)
                 val task = Runnable {
                     viewModel.getNewMessages(context)
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                 scheduler.scheduleWithFixedDelay(task, 0, 5, TimeUnit.SECONDS)
 
                 //viewModel.deleteExampleData(this@MainActivity)
-                //viewModel.addExampleData()
+//                viewModel.addExampleData()
             }
 
             LaunchedEffect(noInternetConnection) {

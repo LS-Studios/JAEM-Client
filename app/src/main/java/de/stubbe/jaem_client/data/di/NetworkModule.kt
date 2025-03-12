@@ -9,7 +9,7 @@ import dagger.hilt.components.SingletonComponent
 import de.stubbe.jaem_client.model.encryption.SymmetricEncryption
 import de.stubbe.jaem_client.model.encryption.SymmetricEncryptionDeserializer
 import de.stubbe.jaem_client.model.encryption.SymmetricEncryptionSerializer
-import de.stubbe.jaem_client.network.JAEMApiService
+import de.stubbe.jaem_client.network.MessageDeliveryApiService
 import de.stubbe.jaem_client.network.UDSApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -30,12 +30,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideJAEMRetrofitInstance(): JAEMApiService {
+    fun provideJAEMRetrofitInstance(): MessageDeliveryApiService {
         return Retrofit.Builder()
             .baseUrl(JAEM_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
-            .create(JAEMApiService::class.java)
+            .create(MessageDeliveryApiService::class.java)
     }
 
     @Provides

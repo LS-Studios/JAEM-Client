@@ -23,4 +23,7 @@ abstract class MessageDao: BaseDao<MessageEntity> {
     @Query("DELETE FROM messages WHERE uid = :uid")
     abstract fun deleteMessageByUid(uid: String)
 
+    @Query("DELETE FROM messages")
+    abstract fun clearAll()
+
 }

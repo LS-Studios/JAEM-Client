@@ -11,20 +11,22 @@ import de.stubbe.jaem_client.repositories.database.ChatRepository
 import de.stubbe.jaem_client.repositories.database.EncryptionKeyRepository
 import de.stubbe.jaem_client.repositories.database.MessageRepository
 import de.stubbe.jaem_client.repositories.database.ProfileRepository
-import de.stubbe.jaem_client.utils.toBitmap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class ChatOverviewViewModel @Inject constructor(
-    chatRepository: ChatRepository,
-    messageRepository: MessageRepository,
-    profileRepository: ProfileRepository,
-    userPreferencesRepository: UserPreferencesRepository,
-    encryptionKeyRepository: EncryptionKeyRepository
+    val chatRepository: ChatRepository,
+    val messageRepository: MessageRepository,
+    val profileRepository: ProfileRepository,
+    val userPreferencesRepository: UserPreferencesRepository,
+    val encryptionKeyRepository: EncryptionKeyRepository
 ): ViewModel() {
 
     private val chatFlow = chatRepository.getAllChats()
@@ -39,16 +41,21 @@ class ChatOverviewViewModel @Inject constructor(
         chats.mapNotNull { chat ->
             val chatPartner = profiles.find { it.uid == chat.chatPartnerUid } ?: return@mapNotNull null
 
-            val unreadMessages = messages
-                .filter { it.chatId == chat.id && it.deliveryTime == null && it.senderUid == chatPartner.uid }
+            val chatMessages = messages.filter { it.chatId == chat.id }
+
+            val unreadMessages = chatMessages
+                .filter { it.deliveryTime == null && it.senderUid == chatPartner.uid }
                 .sortedBy { it.sendTime }
 
+            val lastMessage = chatMessages
+                .maxByOrNull { it.sendTime }
+
             ChatPresentationModel(
-                profilePicture = chatPartner.profilePicture?.toBitmap(),
+                profilePicture = chatPartner.profilePicture,
                 name = chatPartner.name,
-                lastMessage = messages.lastOrNull(),
+                lastMessage = lastMessage,
                 unreadMessages = unreadMessages,
-                streak = 1,
+                streak = ChatPresentationModel.calculateStreak(chatMessages),
                 chat = chat
             )
         }
@@ -67,7 +74,7 @@ class ChatOverviewViewModel @Inject constructor(
 
         ProfilePresentationModel(
             name = profile.name,
-            profilePicture = profile.profilePicture?.toBitmap(),
+            profilePicture = profile.profilePicture,
             description = profile.description,
             client = deviceClient,
             profile = profile
@@ -86,4 +93,9 @@ class ChatOverviewViewModel @Inject constructor(
             initialValue = null
         )
 
+    suspend fun isDeviceInitialized(): Boolean {
+        return withContext(Dispatchers.IO) {
+            userPreferencesRepository.isInitializedFlow.first()
+        }
+    }
 }

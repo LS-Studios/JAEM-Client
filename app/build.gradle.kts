@@ -1,3 +1,6 @@
+import org.gradle.internal.extensions.stdlib.capitalized
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -40,6 +43,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
     buildFeatures {
         compose = true
     }
@@ -129,14 +133,26 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.21.7"
-    }
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins{
-                create("java") {
-                    option("lite")
+        artifact = "com.google.protobuf:protoc:3.25.0"
+
+        generateProtoTasks {
+            all().forEach { task ->
+                task.builtins {
+                    create("java") {
+                        option("lite")
+                    }
                 }
+            }
+        }
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        afterEvaluate {
+            val capName = variant.name.capitalized()
+            tasks.getByName<KotlinCompile>("ksp${capName}Kotlin") {
+                setSource(tasks.getByName("generate${capName}Proto").outputs)
             }
         }
     }

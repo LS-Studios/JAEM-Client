@@ -1,8 +1,7 @@
 package de.stubbe.jaem_client.model.entries
 
-import de.stubbe.jaem_client.model.ED25519Client
-import android.graphics.Bitmap
 import de.stubbe.jaem_client.database.entries.ProfileEntity
+import de.stubbe.jaem_client.model.ED25519Client
 
 /**
  * Model zur Darstellung von Profilinformationen
@@ -15,7 +14,7 @@ import de.stubbe.jaem_client.database.entries.ProfileEntity
  */
 data class ProfilePresentationModel(
     val name: String,
-    val profilePicture: Bitmap?,
+    val profilePicture: ByteArray?,
     val description: String,
     val client: ED25519Client,
     val profile: ProfileEntity

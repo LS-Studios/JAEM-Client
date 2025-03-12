@@ -1,8 +1,8 @@
 package de.stubbe.jaem_client.repositories.database
 
-import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.database.daos.EncryptionKeyDao
 import de.stubbe.jaem_client.database.entries.EncryptionKeyEntity
+import de.stubbe.jaem_client.model.ED25519Client
 import de.stubbe.jaem_client.model.enums.KeyType
 import de.stubbe.jaem_client.repositories.UserPreferencesRepository
 import de.stubbe.jaem_client.utils.toEd25519PrivateKey
@@ -28,7 +28,7 @@ class EncryptionKeyRepository @Inject constructor(
      * @param profileId Profil id, wenn Null wird die des DeviceClients verwendet
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getClientFlow(profileUid: String? = null, canCreateUserClient: Boolean = false): Flow<ED25519Client?> {
+    fun getClientFlow(profileUid: String? = null): Flow<ED25519Client?> {
         return userPreferencesRepository.userPreferencesFlow.flatMapLatest { userPreferences ->
             val actualProfileUid = profileUid ?: userPreferences.userProfileUid
 
@@ -50,10 +50,6 @@ class EncryptionKeyRepository @Inject constructor(
                             x25519PublicKey!!, x25519PrivateKey!!,
                             rsaPublicKey!!, rsaPrivateKey!!
                         )
-                    } else if (canCreateUserClient) {
-                        val client = ED25519Client(actualProfileUid)
-                        insertNewClient(client, actualProfileUid)
-                        client
                     } else {
                         null
                     }

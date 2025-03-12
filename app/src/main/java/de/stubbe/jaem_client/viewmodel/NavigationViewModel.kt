@@ -44,7 +44,7 @@ class NavigationViewModel: ViewModel() {
      *
      * @param navRoute Bildschirm zu dem gewechselt werden soll
      */
-    fun changeScreen(navRoute: NavRoute) {
+    fun navigateTo(navRoute: NavRoute) {
         navHostController.value?.navigate(navRoute)
     }
 

@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,11 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.JAEMTextStyle
 import de.stubbe.jaem_client.model.Attachments
@@ -201,7 +201,7 @@ private fun Attachment(
         } else {
             LazyRow(
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(Dimensions.Padding.Tiny)
+                horizontalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Tiny)
             ) {
                 items(attachments.attachmentPaths) { filePath ->
                     var bitmap: Bitmap? by remember { mutableStateOf(null) }
@@ -220,12 +220,14 @@ private fun Attachment(
                         contentAlignment = Alignment.Center
                     ) {
                         LoadingIfNull(bitmap) {
-                            Image(
+                            AsyncImage(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .aspectRatio(1f)
                                     .clip(Dimensions.Shape.Rounded.Small),
-                                bitmap = bitmap!!.asImageBitmap(),
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(bitmap!!)
+                                    .build(),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop
                             )

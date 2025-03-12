@@ -4,13 +4,18 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,6 +42,9 @@ import androidx.compose.ui.text.style.TextAlign
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.DEEP_LINK_URL
 import de.stubbe.jaem_client.data.JAEMTextStyle
+import de.stubbe.jaem_client.data.SHARE_LINK_EXPIRATION_TIME
+import de.stubbe.jaem_client.model.SharedProfileModel
+import de.stubbe.jaem_client.utils.getUnixTime
 import de.stubbe.jaem_client.utils.rememberQrBitmapPainter
 import de.stubbe.jaem_client.view.variables.Dimensions
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
@@ -52,8 +60,7 @@ fun ShareProfileBottomSheet(
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
 
-    val sharedProfile by shareProfileViewModel.sharedProfile.collectAsState()
-    val profileToShare by shareProfileViewModel.profileToShare.collectAsState()
+    val sharedProfiles by shareProfileViewModel.sharedProfiles.collectAsState()
     val isVisible by shareProfileViewModel.isShareProfileBottomSheetVisible.collectAsState()
 
     val noInternetConnection by shareProfileViewModel.noInternetConnection.collectAsState()
@@ -61,15 +68,9 @@ fun ShareProfileBottomSheet(
     val noInternetConnectionString = stringResource(R.string.no_internet_connection)
     val errorCreatingSharedProfileString = stringResource(R.string.error_sharing_profile)
 
-    val shareLinkUrl = remember(sharedProfile) {
-        if (sharedProfile == null) {
-            null
-        } else {
-            "$DEEP_LINK_URL/share/${sharedProfile?.sharedCode}"
-        }
-    }
-
     if (isVisible) {
+        val pager = rememberPagerState { sharedProfiles?.size ?: 0 }
+
         DisposableEffect(Unit) {
             onDispose {
                 shareProfileViewModel.resetErrorFlags()
@@ -97,74 +98,71 @@ fun ShareProfileBottomSheet(
             },
         ) {
             LoadingIfNull(
-                profileToShare,
-                sharedProfile,
+                sharedProfiles,
                 modifier = Modifier.fillMaxWidth().padding(Dimensions.Padding.Medium),
                 size = Dimensions.Size.SuperHuge,
                 strokeWidth = Dimensions.Border.ThickBorder
             ) {
+                val shareLinkUrls = remember {
+                    sharedProfiles!!.map { sharedProfile ->
+                        "$DEEP_LINK_URL/share/${sharedProfile.sharedCode}"
+                    }
+                }
+
                 Column(
                     verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Dimensions.Padding.Medium),
-                        text = sharedProfile?.sharedCode ?: "",
-                        style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
+                    if (shareLinkUrls.isEmpty()) {
+                        NoItemsText(stringResource(R.string.nn_server_joined))
+                        return@Column
+                    }
+                    HorizontalPager(
+                        state = pager
+                    ) { page ->
+                        SharedProfilePage(shareLinkUrls[page], sharedProfiles!![page])
+                    }
 
-                    Divider()
-
-                    if (shareLinkUrl != null) {
-                        ShareProfileQRCode(shareLinkUrl)
-
-                        Text(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = Dimensions.Padding.Medium),
-                            text = stringResource(
-                                R.string.link_available_for_n_minutes,
-                                calculateMinutesUntilExpiration(
-                                    sharedProfile!!.timestamp,
-                                    10
+                    if (sharedProfiles!!.size > 1) {
+                        Row {
+                            sharedProfiles?.indices?.forEach { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(Dimensions.Size.Tiny)
+                                        .padding(Dimensions.Padding.Tiny)
+                                        .background(
+                                            if (pager.currentPage == index) JAEMThemeProvider.current.textPrimary
+                                            else JAEMThemeProvider.current.textPrimary.copy(
+                                                alpha = 0.4f
+                                            ),
+                                            CircleShape
+                                        )
                                 )
-                            ),
-                            style = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
-                                textAlign = TextAlign.Center,
-                            )
-                        )
+                            }
+                        }
                     }
 
                     Divider()
 
                     ShareProfileActions(
                         onShare = {
-                            if (sharedProfile != null) {
-                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                    putExtra(
-                                        Intent.EXTRA_TEXT,
-                                        shareLinkUrl
-                                    )
-                                    type = "text/plain"
-                                }
-                                val shareIntent = Intent.createChooser(sendIntent, null)
-
-                                context.startActivity(shareIntent, null)
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    shareLinkUrls[pager.currentPage]
+                                )
+                                type = "text/plain"
                             }
+                            val shareIntent = Intent.createChooser(sendIntent, null)
+
+                            context.startActivity(shareIntent, null)
                         },
                         onCopy = {
-                            if (sharedProfile != null) {
-                                clipboardManager.setText(
-                                    AnnotatedString(
-                                        shareLinkUrl ?: ""
-                                    )
+                            clipboardManager.setText(
+                                AnnotatedString(
+                                    shareLinkUrls[pager.currentPage]
                                 )
-                            }
+                            )
                         }
                     )
                 }
@@ -173,12 +171,61 @@ fun ShareProfileBottomSheet(
     }
 }
 
-fun calculateMinutesUntilExpiration(createdAt: Long, maxMinutesUntilExpiration: Int): Int {
-    val currentTime = System.currentTimeMillis()
-    val timeDifference = currentTime - createdAt
-    val minutesDifference = timeDifference / 1000 / 60
+@Composable
+fun SharedProfilePage(
+    shareLinkUrl: String,
+    sharedProfile: SharedProfileModel
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimensions.Padding.Medium),
+            text = sharedProfile.sharedCode,
+            style = JAEMTextStyle(MaterialTheme.typography.headlineMedium).copy(
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
+            )
+        )
 
-    return maxMinutesUntilExpiration - minutesDifference.toInt()
+        Divider()
+
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimensions.Padding.Medium),
+            text = sharedProfile.serverUrl.name,
+            style = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
+                textAlign = TextAlign.Center,
+            )
+        )
+
+        ShareProfileQRCode(shareLinkUrl)
+
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimensions.Padding.Medium),
+            text = stringResource(
+                R.string.link_available_for_n_minutes,
+                calculateMinutesUntilExpiration(sharedProfile.timestamp)
+            ),
+            style = JAEMTextStyle(MaterialTheme.typography.titleMedium).copy(
+                textAlign = TextAlign.Center,
+            )
+        )
+    }
+}
+
+fun calculateMinutesUntilExpiration(createdAt: Long): Int {
+    val shareLinkExpirationTimeInMinutes = SHARE_LINK_EXPIRATION_TIME / 60
+    val currentTime = getUnixTime()
+    val timeDifference = currentTime - createdAt
+    val timeDifferenceInMinutes = timeDifference / 60
+    return (shareLinkExpirationTimeInMinutes - timeDifferenceInMinutes).toInt()
 }
 
 @Composable
@@ -241,35 +288,3 @@ private fun RowScope.ShareProfileActionButton(
         )
     }
 }
-
-/*@Composable
-private fun KeyMatrix(key: String) {
-    LazyVerticalGrid(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(Dimensions.Padding.Medium)
-            .background(
-                color = JAEMThemeProvider.current.primary,
-                shape = Dimensions.Shape.Rounded.Small
-            )
-            .border(
-                color = JAEMThemeProvider.current.border,
-                width = Dimensions.Border.ThinBorder,
-                shape = Dimensions.Shape.Rounded.Small
-            )
-            .padding(
-                vertical = Dimensions.Padding.Medium
-            ),
-        columns = GridCells.Fixed(8),
-        verticalArrangement = Arrangement.spacedBy(Dimensions.Spacing.Medium),
-    ) {
-        items(key.toList()) { char ->
-            Text(
-                text = char.toString(),
-                style = JaemTextStyle(MaterialTheme.typography.titleLarge).copy(
-                    textAlign = TextAlign.Center
-                )
-            )
-        }
-    }
-}*/

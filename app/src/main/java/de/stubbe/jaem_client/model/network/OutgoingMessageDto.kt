@@ -20,14 +20,14 @@ data class OutgoingMessageDto(
     companion object {
         fun create(
             context: EncryptionContext,
-            messagePart: List<MessagePartDto>,
+            messageParts: List<MessagePartDto>,
             messageType: MessageType = MessageType.CONTENT,
         ): OutgoingMessageDto {
             val (client, otherClient, algorithm) = context
 
             val timestamp = getUnixTime().toByteArray()
 
-            val messageWithUid = client!!.profileUid!!.toByteArray() + messagePart.flatMap { it.toByteArray().toList() }
+            val messageWithUid = client!!.profileUid!!.toByteArray() + messageParts.flatMap { it.toByteArray().toList() }
             val signature = algorithm.sign(messageWithUid, client.ed25519PrivateKey!!)
             val aesKey = algorithm.generateSymmetricKey(
                 otherClient!!.x25519PublicKey!!,
@@ -61,8 +61,8 @@ data class OutgoingMessageDto(
             val encryptedMessage = algorithm.encrypt(message, aesKey)
             val rsaEncryptedUid = AsymmetricEncryption.RSA.encrypt(client.profileUid!!.toByteArray(), otherClient.rsaPublicKey!!)
             val rsaEncryptedMessageType = AsymmetricEncryption.RSA.encrypt(MessageType.KEY_EXCHANGE.ordinal.toShort().toByteArray(), otherClient.rsaPublicKey!!)
-            val rsaEncryptedAesKey = AsymmetricEncryption.RSA.encrypt(aesKey, otherClient.rsaPublicKey!!)
-            val finalMessage = rsaEncryptedUid + rsaEncryptedMessageType + rsaEncryptedAesKey + encryptedMessage
+            val rsaEncryptedXPubKey = AsymmetricEncryption.RSA.encrypt(client.x25519PublicKey!!.encoded, otherClient.rsaPublicKey!!)
+            val finalMessage = rsaEncryptedUid + rsaEncryptedMessageType + rsaEncryptedXPubKey + encryptedMessage
 
             return OutgoingMessageDto(client.encryption.code, otherClient.ed25519PublicKey!!.encoded, finalMessage)
         }

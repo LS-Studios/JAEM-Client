@@ -14,3 +14,5 @@ const val TIMESTAMP_LENGTH = 8
 const val MESSAGE_SIZE_BYTES = 8
 const val SHORT_BYTES = 2
 const val INT_BYTES = 4
+
+const val SHARE_LINK_EXPIRATION_TIME = 10 * 60L

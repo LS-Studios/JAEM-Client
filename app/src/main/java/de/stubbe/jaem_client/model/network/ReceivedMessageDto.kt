@@ -15,6 +15,7 @@ import de.stubbe.jaem_client.model.enums.MessageType
 import de.stubbe.jaem_client.utils.toInt
 import de.stubbe.jaem_client.utils.toLong
 import de.stubbe.jaem_client.utils.toShort
+import org.bouncycastle.crypto.params.X25519PublicKeyParameters
 
 /**
  * Repräsentiert eine empfangene Nachricht
@@ -60,8 +61,13 @@ data class ReceivedMessageDto(
             val (client, otherClient, algorithm) = encryptionContext
 
             if (messageType == MessageType.KEY_EXCHANGE) {
-                val aesKey = AsymmetricEncryption.RSA.decrypt(encryptedMessage.copyOfRange(0, RSA_ENCRYPTION_LENGTH), client!!.rsaPrivateKey!!)
+                val xPublicKey = AsymmetricEncryption.RSA.decrypt(encryptedMessage.copyOfRange(0, RSA_ENCRYPTION_LENGTH), client!!.rsaPrivateKey!!)
                 val encryptedMessageContent = encryptedMessage.copyOfRange(RSA_ENCRYPTION_LENGTH, encryptedMessage.size)
+
+                val aesKey = algorithm.generateSymmetricKey(
+                    X25519PublicKeyParameters(xPublicKey),
+                    client.x25519PrivateKey!!
+                )
 
                 val decryptedMessage = algorithm.decrypt(encryptedMessageContent, aesKey)
 

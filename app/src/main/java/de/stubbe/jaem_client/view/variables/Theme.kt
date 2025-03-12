@@ -49,6 +49,25 @@ val darkTheme = object : JAEMTheme {
         get() = ErrorDark
 }
 
+val cryptoTheme = object : JAEMTheme {
+    override val primary: Color
+        get() = PrimaryCrypto
+    override val secondary: Color
+        get() = SecondaryCrypto
+    override val accent: Color
+        get() = AccentCrypto
+    override val background: Color
+        get() = BackgroundCrypto
+    override val textPrimary: Color
+        get() = TextPrimaryCrypto
+    override val textSecondary: Color
+        get() = TextSecondaryCrypto
+    override val border: Color
+        get() = BorderCrypto
+    override val error: Color
+        get() = ErrorCrypto
+}
+
 val LocalJAEMTheme = staticCompositionLocalOf {
     lightTheme
 }
@@ -63,9 +82,10 @@ fun JAEMTheme(
     content: @Composable () -> Unit
 ) {
     val jaemTheme = when (theme) {
-        Theme.LIGHT -> lightTheme
-        Theme.DARK -> darkTheme
         Theme.SYSTEM -> if (isSystemInDarkTheme()) darkTheme else lightTheme
+        Theme.DARK -> darkTheme
+        Theme.LIGHT -> lightTheme
+        Theme.CRYPTO -> cryptoTheme
         else -> lightTheme
     }
 

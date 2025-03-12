@@ -1,6 +1,5 @@
 package de.stubbe.jaem_client.view.screens.chatinfo
 
-import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -30,7 +29,7 @@ import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
 fun ChatInfoTopBar(
     animatedVisibilityScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
-    profilePicture: Bitmap?,
+    profilePicture: ByteArray?,
     onClose: () -> Unit,
 ) {
     CenterAlignedTopAppBar(
@@ -46,7 +45,7 @@ fun ChatInfoTopBar(
                             rememberSharedContentState(key = PROFILE_PICTURE_TRANSITION),
                             animatedVisibilityScope = animatedVisibilityScope
                         ),
-                    profilePicture = profilePicture,
+                    profilePicture = profilePicture
                 )
             }
         },

@@ -3,15 +3,20 @@ package de.stubbe.jaem_client.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.datastore.dataStore
 import de.stubbe.jaem_client.data.USER_PREFERENCES_NAME
 import de.stubbe.jaem_client.data.UserPreferencesSerializer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
+import kotlin.math.roundToInt
 
 
 /**
@@ -23,41 +28,10 @@ val Context.userPreferencesDataStore by dataStore(
 )
 
 /**
- * Konvertiert einen Long-Wert (Millisekunden seit der Unix-Epoche) in ein LocalDateTime.
+ * Konvertiert einen Long-Wert (Sekunden seit der Unix-Epoche) in ein LocalDateTime.
  */
-fun Long.toLocalDateTime(): LocalDateTime {
+fun Long.epochSecondToLocalDateTime(): LocalDateTime {
     return LocalDateTime.ofInstant(Instant.ofEpochSecond(this), ZoneId.systemDefault())
-}
-
-/**
- * Konvertiert ein LocalDateTime in einen Long-Wert (Millisekunden seit der Unix-Epoche).
- */
-fun LocalDateTime.toEpochSeconds(): Long {
-    return this.toInstant(ZoneOffset.UTC).toEpochMilli() / 1000
-}
-
-/**
- * Umwandlung eines ByteArrays in ein Bitmap.
- */
-fun ByteArray.toBitmap(): Bitmap {
-    return BitmapFactory.decodeByteArray(this, 0, this.size)
-}
-
-/**
- * Umwandlung eines Bitmaps in ein ByteArray.
- */
-fun Bitmap.toByteArray(): ByteArray {
-    val stream = ByteArrayOutputStream()
-    this.compress(Bitmap.CompressFormat.PNG, 100, stream)
-    return stream.toByteArray()
-}
-
-/**
- * Umwandlung einer Datei in ein Bitmap.
- */
-fun File.toBitmap(): Bitmap? {
-    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    return BitmapFactory.decodeFile(this.absolutePath, options).takeIf { options.outWidth != -1 && options.outHeight != -1 }
 }
 
 /**
@@ -76,4 +50,82 @@ fun Long.toSizeString(): String {
 
 fun getUnixTime(): Long {
     return Instant.now().epochSecond
+}
+
+suspend fun Uri.toByteArray(context: Context): ByteArray? {
+    val uri = this
+
+    return withContext(Dispatchers.IO) {
+        context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+    }
+}
+
+/**
+ * Komprimiert ein Bild, das durch eine Uri repräsentiert wird.
+ */
+suspend fun Uri.compressImage(
+    context: Context,
+    compressionThreshold: Long
+): ByteArray? {
+    val uri = this
+
+    return withContext(Dispatchers.IO) {
+        val mimeType = context.contentResolver.getType(uri)
+
+        val inputBytes = uri.toByteArray(context) ?: return@withContext null
+
+        ensureActive()
+
+        withContext(Dispatchers.Default) {
+            val bitmap =
+                BitmapFactory.decodeByteArray(inputBytes, 0, inputBytes.size)
+
+            ensureActive()
+
+            val compressFormat = when (mimeType) {
+                "image/jpeg" -> Bitmap.CompressFormat.JPEG
+                "image/png" -> Bitmap.CompressFormat.PNG
+                "image/webp" -> Bitmap.CompressFormat.WEBP_LOSSLESS
+                else -> Bitmap.CompressFormat.JPEG
+            }
+
+            var outputBytes: ByteArray
+            var quality = 100
+
+            do {
+                ByteArrayOutputStream().use { outputStream ->
+                    bitmap.compress(compressFormat, quality, outputStream)
+                    outputBytes = outputStream.toByteArray()
+                    quality -= (quality * 0.1).roundToInt()
+                }
+            } while (isActive &&
+                outputBytes.size > compressionThreshold &&
+                quality > 5 &&
+                compressFormat != Bitmap.CompressFormat.PNG
+            )
+
+            outputBytes
+        }
+    }
+}
+
+suspend fun Uri.getFileName(context: Context): String? {
+    val uri = this
+    return withContext(Dispatchers.IO) {
+        val contentResolver = context.contentResolver
+
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        var fileName: String? = null
+
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    fileName = it.getString(nameIndex)
+                }
+            }
+        }
+
+        fileName
+    }
 }

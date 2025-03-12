@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import de.stubbe.jaem_client.R
 import de.stubbe.jaem_client.data.JAEMTextStyle
-import de.stubbe.jaem_client.model.JameMenuItemModel
+import de.stubbe.jaem_client.model.JAEMMenuItemModel
 import de.stubbe.jaem_client.view.components.JAEMDropMenu
 import de.stubbe.jaem_client.view.screens.chat.SearchTopBar
 import de.stubbe.jaem_client.view.variables.JAEMThemeProvider
@@ -58,7 +58,7 @@ fun UDSTopBar(
                 visible = showDropDownMenu,
                 onDismissRequest = { showDropDownMenu = false },
                 menuItems = listOf(
-                    JameMenuItemModel(
+                    JAEMMenuItemModel(
                         title = stringResource(R.string.edit_server_list),
                         leadingIcon = Icons.Filled.Edit,
                         onClick = {
