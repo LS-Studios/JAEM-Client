@@ -55,6 +55,7 @@ JAEM supports multiple languages to provide users a comfortable experience:
 
 ## Planned Features / To-do
 
+- [ ] Korean names cause error when try to parse from byte array
 - [ ] Restrict message deletion to user's own messages only
 - [ ] Allow editing of messages
 - [ ] Support deleting and editing user profiles
