@@ -2,7 +2,7 @@
 
 <!-- App Icon -->
 <p align="center">
-  <img src="icons/jaem_icon.png" alt="App Icon" width="120"/>
+  <img src="icon.png" alt="App Icon" width="120"/>
 </p>
 
 ## 📝 Description
