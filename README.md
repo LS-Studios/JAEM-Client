@@ -41,8 +41,9 @@ Messages are stored only until your recipient receives them, ensuring that **nob
 ## 🖼️ Screenshots
 <!-- Replace with actual paths to your screenshots -->
 <p align="center">
-  <img src="screenshots/jaem1.png" width="250"/>
-  <img src="screenshots/jaem2.png" width="250"/>
+  <img src="screenshots/Screenshot-Chats.jpg" width="250"/>
+  <img src="screenshots/Screenshot-Chat.jpg" width="250"/>
+  <img src="screenshots/Screenshot-Profile.jpg" width="250"/>
 </p>
 
 ---
