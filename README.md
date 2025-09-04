@@ -48,7 +48,6 @@ Messages are stored only until your recipient receives them, ensuring that **nob
 ---
 
 ## 🌐 Useful Links
-- [📱 Android Client Repository](https://github.com/LS-Studios/JAEM-Client)  
 - [🖥️ Backend Repository](https://github.com/antoniomikley/jaem-server)  
 
 ---
