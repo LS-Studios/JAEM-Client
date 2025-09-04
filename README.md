@@ -1,61 +1,74 @@
-# JAEM – Just Another Encrypted Messenger
+# 🔐 JAEM – Just Another Encrypted Messenger
 
-JAEM is an encrypted messaging app designed for secure, private, and distraction-free communication.
+<!-- App Icon -->
+<p align="center">
+  <img src="icons/jaem_icon.png" alt="App Icon" width="120"/>
+</p>
 
-With JAEM, you'll never receive annoying requests from bots or scammers pretending to be someone else—such as your mom—but instead communicate privately, securely, and confidentially. JAEM ensures your privacy through strong end-to-end encryption, and messages are stored only until your communication partner receives them. That means nobody, except you and the person you're messaging, can ever see your conversation.
+## 📝 Description
+**JAEM** is an encrypted messaging app designed for secure, private, and distraction-free communication.  
 
-## Project Team
+With JAEM, you'll never receive annoying requests from bots or scammers pretending to be someone else. Instead, you can communicate **confidentially and securely** through strong end-to-end encryption.  
 
-- **Lead Developer:** [**Lennard Stubbe**](https://github.com/LS-Studios)
-- **User Discovery Service:** [**Nick Schefner**](https://github.com/ItsJuzoSuzuya)
-- **Server Architecture:** [**Antonio Mikley**](https://github.com/antoniomikley)
-
-## Features
-
-### **End-to-End Encryption**
-JAEM ensures privacy with end-to-end encryption, meaning only you and your conversation partner can read your messages.
-
-### **No Spam, No Bots**
-JAEM prevents annoying requests from bots or unwanted contacts, ensuring clean and meaningful conversations.
-
-### **Temporary Message Storage**
-Messages are only stored temporarily—just until your recipient receives them. Once delivered, messages are permanently deleted.
-
-### **Dynamic Servers**
-You can easily select and change backend servers through the settings. This flexibility allows you to dynamically join and leave servers anytime.
-
-### **Themes**
-JAEM offers multiple stylish themes:
-- **System Default** (Adapts to your device's dark or light mode)
-- **Light**
-- **Dark**
-- **Crypto**
-
-### **Languages**
-JAEM supports multiple languages to provide users a comfortable experience:
-
-- **English**
-- **German**
-- **Korean**
-- **Russian**
-- **More languages coming soon!**
+Messages are stored only until your recipient receives them, ensuring that **nobody except you and your conversation partner** can ever read your conversations.  
 
 ---
 
-## Useful Links
-
-- [Android Client Repository](https://github.com/LS-Studios/JAEM-Client)
-- [Backend Repository](https://github.com/antoniomikley/jaem-server)
+## ✨ Key Features
+- **End-to-End Encryption** – Only you and your conversation partner can read your messages.  
+- **No Spam, No Bots** – Clean, meaningful communication without unwanted requests.  
+- **Temporary Storage** – Messages are deleted permanently once delivered.  
+- **Dynamic Servers** – Select and switch backend servers anytime.  
+- **Themes** – Multiple stylish themes (System Default, Light, Dark, Crypto).  
+- **Languages** – Supports *English, German, Korean, Russian* (more coming soon).  
 
 ---
 
-## Planned Features / To-do
+## 🚀 Development Status
+- [x] Core end-to-end encryption implemented  
+- [x] Multi-language support (English, German, Korean, Russian)  
+- [ ] Fix parsing issues with Korean names  
+- [ ] Restrict message deletion to sender only  
+- [ ] Message editing support  
+- [ ] Profile editing & deletion  
+- [ ] Message attachments  
+- [ ] Improved server sync (send messages only to joined servers)  
+- [ ] More encryption algorithms  
+- [ ] Bug fixes & error handling improvements  
 
-- [ ] Korean names cause error when try to parse from byte array
-- [ ] Restrict message deletion to user's own messages only
-- [ ] Allow editing of messages
-- [ ] Support deleting and editing user profiles
-- [ ] Implement attachments in messages
-- [ ] Send messages only to servers where both users have joined (requires message delivery service endpoint integration)
-- [ ] Fix known messaging bugs and improve error handling when switching servers
-- [ ] Implementing more encryption algorithms
+---
+
+## 🖼️ Screenshots
+<!-- Replace with actual paths to your screenshots -->
+<p align="center">
+  <img src="screenshots/jaem1.png" width="250"/>
+  <img src="screenshots/jaem2.png" width="250"/>
+</p>
+
+---
+
+## 🌐 Useful Links
+- [📱 Android Client Repository](https://github.com/LS-Studios/JAEM-Client)  
+- [🖥️ Backend Repository](https://github.com/antoniomikley/jaem-server)  
+
+---
+
+## 🛠️ Technology
+- **Frontend / Client**: Android (Kotlin, Jetpack Compose)  
+- **Backend**: Custom server (Rust/Go/…) *(adjust if needed)*  
+- **Encryption**: End-to-end with planned algorithm extensions  
+
+---
+
+## 👥 Project Team
+| Name               | Role                     | GitHub                                      |
+|--------------------|--------------------------|---------------------------------------------|
+| Lennard Stubbe     | Lead Developer           | [@LS-Studios](https://github.com/LS-Studios) |
+| Nick Schefner      | User Discovery Service   | [@ItsJuzoSuzuya](https://github.com/ItsJuzoSuzuya) |
+| Antonio Mikley     | Server Architecture      | [@antoniomikley](https://github.com/antoniomikley) |
+
+---
+
+## ⚖️ License
+This project is licensed under the **MIT License**.  
+See [LICENSE](LICENSE) for details.
